@@ -1,0 +1,2 @@
+D:/set elkol app/set_elkol_app/android/app/.cxx/RelWithDebInfo/2pa423m6/armeabi-v7a/CMakeFiles/edit_cache.dir
+D:/set elkol app/set_elkol_app/android/app/.cxx/RelWithDebInfo/2pa423m6/armeabi-v7a/CMakeFiles/rebuild_cache.dir

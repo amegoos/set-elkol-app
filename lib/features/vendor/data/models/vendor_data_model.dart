@@ -1,0 +1,51 @@
+import '../../../../core/domain/entities/vendor.dart';
+
+class VendorDataModel extends Vendor {
+  const VendorDataModel({
+    required super.id,
+    required super.name,
+    required super.isActive,
+    required super.offersDelivery,
+    required super.offersPickup,
+    required super.createdAt,
+    super.logoUrl,
+    super.description,
+    super.governorate,
+    super.area,
+    super.rating,
+    super.totalReviews,
+    super.deliveryFee,
+    super.minOrder,
+    super.deliveryRadiusKm,
+    super.avgPrepTimeMinutes,
+    super.latitude,
+    super.longitude,
+    super.isVerified,
+    super.updatedAt,
+  });
+
+  factory VendorDataModel.fromJson(Map<String, dynamic> json) {
+    return VendorDataModel(
+      id: json['id'] as String,
+      name: (json['business_name'] ?? json['name']) as String,
+      logoUrl: json['logo_url'] as String? ?? json['cover_image'] as String?,
+      description: json['description'] as String? ?? json['bio'] as String?,
+      governorate: json['governorate'] as String?,
+      area: json['area'] as String?,
+      rating: (json['rating_avg'] as num?)?.toDouble() ?? (json['rating'] as num?)?.toDouble() ?? 0.0,
+      totalReviews: (json['rating_count'] as int?) ?? (json['total_reviews'] as int?) ?? 0,
+      isActive: json['is_active'] as bool? ?? true,
+      offersDelivery: json['offers_delivery'] as bool? ?? json['delivery_available'] as bool? ?? true,
+      offersPickup: json['offers_pickup'] as bool? ?? json['pickup_available'] as bool? ?? false,
+      deliveryFee: (json['delivery_fee'] as num?)?.toDouble(),
+      minOrder: json['min_order'] != null ? (json['min_order'] as num).toDouble() : (json['min_order_amount'] as num?)?.toDouble(),
+      deliveryRadiusKm: (json['delivery_radius_km'] as num?)?.toDouble(),
+      avgPrepTimeMinutes: json['avg_prep_time_minutes'] as int?,
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
+      isVerified: json['is_verified'] as bool?,
+      createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ?? DateTime.now(),
+      updatedAt: DateTime.tryParse(json['updated_at'] as String? ?? ''),
+    );
+  }
+}
