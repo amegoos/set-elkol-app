@@ -1,4 +1,4 @@
-﻿import 'package:equatable/equatable.dart';
+import 'package:equatable/equatable.dart';
 import 'product.dart';
 
 class OrderItem extends Equatable {
@@ -16,18 +16,25 @@ class OrderItem extends Equatable {
   final String id;
   final String orderId;
   final String productId;
+
   /// Snapshot of the product name at time of order to preserve history.
   final String productNameSnapshot;
   final int quantity;
   final double unitPrice;
   final double subtotal;
+
   /// Populated only when joined with the products table.
   final Product? product;
 
   OrderItem copyWith({
-    String? id, String? orderId, String? productId,
-    String? productNameSnapshot, int? quantity,
-    double? unitPrice, double? subtotal, Product? product,
+    String? id,
+    String? orderId,
+    String? productId,
+    String? productNameSnapshot,
+    int? quantity,
+    double? unitPrice,
+    double? subtotal,
+    Product? product,
   }) {
     return OrderItem(
       id: id ?? this.id,
@@ -43,7 +50,13 @@ class OrderItem extends Equatable {
 
   @override
   List<Object?> get props => [
-        id, orderId, productId, productNameSnapshot,
-        quantity, unitPrice, subtotal, product,
+        id,
+        orderId,
+        productId,
+        productNameSnapshot,
+        quantity,
+        unitPrice,
+        subtotal,
+        product,
       ];
 }

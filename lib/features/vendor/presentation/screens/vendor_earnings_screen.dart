@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -26,7 +26,7 @@ class VendorEarningsScreen extends ConsumerWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
+                  gradient: LinearGradient(
                     colors: [AppColors.primary, AppColors.primaryDark],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -37,12 +37,15 @@ class VendorEarningsScreen extends ConsumerWidget {
                   children: [
                     Text(
                       'إجمالي هذا الشهر',
-                      style: AppTypography.bodyMedium.copyWith(color: Colors.white70),
+                      style: AppTypography.bodyMedium.copyWith(
+                          color:
+                              AppColors.textOnPrimary.withValues(alpha: 0.7)),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       '${e.monthTotal.toStringAsFixed(0)} ج.م',
-                      style: AppTypography.displayMedium.copyWith(color: Colors.white),
+                      style: AppTypography.displayMedium
+                          .copyWith(color: AppColors.textOnPrimary),
                     ),
                   ],
                 ),
@@ -124,8 +127,11 @@ class _EarningCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(value, style: AppTypography.titleMedium.copyWith(color: color)),
-                Text(label, style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
+                Text(value,
+                    style: AppTypography.titleMedium.copyWith(color: color)),
+                Text(label,
+                    style: AppTypography.bodySmall
+                        .copyWith(color: AppColors.textSecondary)),
               ],
             ),
           ),

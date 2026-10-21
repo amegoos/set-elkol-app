@@ -1,4 +1,4 @@
-﻿import 'package:equatable/equatable.dart';
+import 'package:equatable/equatable.dart';
 
 /// Domain entity for a food category.
 class Category extends Equatable {
@@ -12,8 +12,8 @@ class Category extends Equatable {
   });
 
   final String id;
-  final String name;    // Arabic name
-  final String nameEn;  // English name
+  final String name; // Arabic name
+  final String nameEn; // English name
   final String? iconUrl;
   final int sortOrder;
   final bool isActive;

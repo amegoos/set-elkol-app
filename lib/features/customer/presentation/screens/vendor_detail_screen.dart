@@ -1,4 +1,4 @@
-﻿import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -36,12 +36,14 @@ class VendorDetailScreen extends ConsumerWidget {
                           fit: BoxFit.cover,
                           errorWidget: (_, __, ___) => Container(
                             color: AppColors.secondary,
-                            child: const Icon(Icons.store, size: 60, color: AppColors.primary),
+                            child: const Icon(Icons.store,
+                                size: 60, color: AppColors.primary),
                           ),
                         )
                       : Container(
                           color: AppColors.secondary,
-                          child: const Icon(Icons.store, size: 60, color: AppColors.primary),
+                          child: const Icon(Icons.store,
+                              size: 60, color: AppColors.primary),
                         ),
                 ),
               ),
@@ -86,8 +88,8 @@ class VendorDetailScreen extends ConsumerWidget {
                                     size: 14, color: AppColors.textSecondary),
                                 Text(
                                   v.area!,
-                                  style: AppTypography.bodySmall.copyWith(
-                                      color: AppColors.textSecondary),
+                                  style: AppTypography.bodySmall
+                                      .copyWith(color: AppColors.textSecondary),
                                 ),
                               ],
                             ),
@@ -98,7 +100,8 @@ class VendorDetailScreen extends ConsumerWidget {
                         children: [
                           if (v.offersDelivery && v.deliveryFee != null)
                             _InfoChip(
-                              label: 'توصيل ${v.deliveryFee!.toStringAsFixed(0)} ج.م',
+                              label:
+                                  'توصيل ${v.deliveryFee!.toStringAsFixed(0)} ج.م',
                               icon: Icons.delivery_dining,
                               color: AppColors.deliveryBadge,
                             ),
@@ -124,7 +127,8 @@ class VendorDetailScreen extends ConsumerWidget {
                       childCount: ps.length,
                     ),
                   ),
-                  loading: () => const SliverToBoxAdapter(child: AppLoadingSpinner()),
+                  loading: () =>
+                      const SliverToBoxAdapter(child: AppLoadingSpinner()),
                   error: (e, _) => SliverToBoxAdapter(
                     child: AppErrorWidget(message: 'تعذر تحميل المنتجات'),
                   ),
@@ -141,7 +145,8 @@ class VendorDetailScreen extends ConsumerWidget {
 }
 
 class _InfoChip extends StatelessWidget {
-  const _InfoChip({required this.label, required this.icon, required this.color});
+  const _InfoChip(
+      {required this.label, required this.icon, required this.color});
   final String label;
   final IconData icon;
   final Color color;
@@ -177,7 +182,8 @@ class _ProductListItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return GestureDetector(
-      onTap: () => context.push('/home/vendor/${product.vendorId}/product/${product.id}'),
+      onTap: () => context
+          .push('/home/vendor/${product.vendorId}/product/${product.id}'),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(12),
@@ -201,7 +207,8 @@ class _ProductListItem extends ConsumerWidget {
                       width: 80,
                       height: 80,
                       color: AppColors.secondary,
-                      child: const Icon(Icons.restaurant, color: AppColors.primary),
+                      child: const Icon(Icons.restaurant,
+                          color: AppColors.primary),
                     ),
             ),
             const SizedBox(width: 12),
@@ -216,8 +223,8 @@ class _ProductListItem extends ConsumerWidget {
                       product.description!,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textSecondary),
+                      style: AppTypography.bodySmall
+                          .copyWith(color: AppColors.textSecondary),
                     ),
                   ],
                   const SizedBox(height: 8),
@@ -226,14 +233,17 @@ class _ProductListItem extends ConsumerWidget {
                     children: [
                       Text(
                         '${product.price.toStringAsFixed(0)} ج.م',
-                        style: AppTypography.titleSmall.copyWith(color: AppColors.primary),
+                        style: AppTypography.titleSmall
+                            .copyWith(color: AppColors.primary),
                       ),
                       GestureDetector(
                         onTap: () {
-                          final conflict = ref.read(cartProvider.notifier).addItem(product);
+                          final conflict =
+                              ref.read(cartProvider.notifier).addItem(product);
                           if (!conflict) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('تم الإضافة للسلة ✓')),
+                              const SnackBar(
+                                  content: Text('تم الإضافة للسلة ✓')),
                             );
                           }
                         },
@@ -243,7 +253,8 @@ class _ProductListItem extends ConsumerWidget {
                             color: AppColors.primary,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(Icons.add, color: Colors.white, size: 18),
+                          child: const Icon(Icons.add,
+                              color: Colors.white, size: 18),
                         ),
                       ),
                     ],

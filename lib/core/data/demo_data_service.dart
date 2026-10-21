@@ -39,75 +39,91 @@ class DemoDataService extends ChangeNotifier {
   static const List<DishPhotoPreset> dishPresets = [
     DishPhotoPreset(
       title: 'محشي مشكل مصري (كرنب وورق عنب وكوسة)',
-      imageUrl: 'https://images.unsplash.com/photo-1541518763669-27fef04b14ea?auto=format&fit=crop&w=800&q=80',
+      imageUrl:
+          'https://images.unsplash.com/photo-1541518763669-27fef04b14ea?auto=format&fit=crop&w=800&q=80',
       categoryName: 'محاشي',
       suggestedPrice: 110.0,
       suggestedPrepTime: 45,
       suggestedQuantity: 15,
-      suggestedDescription: 'تشكيلة محاشي مشكلة (كرنب دايت بالسمنة الفلاحي، ورق عنب بدبس الرمان، وكوسة وبتنجان) بخلطة الأرز المصرية بالكزبرة والشبت.',
+      suggestedDescription:
+          'تشكيلة محاشي مشكلة (كرنب دايت بالسمنة الفلاحي، ورق عنب بدبس الرمان، وكوسة وبتنجان) بخلطة الأرز المصرية بالكزبرة والشبت.',
     ),
     DishPhotoPreset(
       title: 'ملوخية خضراء بالطشة والفراخ البلدي',
-      imageUrl: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=800&q=80',
+      imageUrl:
+          'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=800&q=80',
       categoryName: 'أكل مصري',
       suggestedPrice: 135.0,
       suggestedPrepTime: 35,
       suggestedQuantity: 12,
-      suggestedDescription: 'ملوخية خضراء مفرومة طازة مطبوخة بشوربة الفراخ البلدي الدسمة مع طشة الثوم والكزبرة المقرمشة، تقدم مع طبق أرز وشوربة.',
+      suggestedDescription:
+          'ملوخية خضراء مفرومة طازة مطبوخة بشوربة الفراخ البلدي الدسمة مع طشة الثوم والكزبرة المقرمشة، تقدم مع طبق أرز وشوربة.',
     ),
     DishPhotoPreset(
       title: 'صينية مكرونة بشاميل باللحمة المفرومة',
-      imageUrl: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=800&q=80',
+      imageUrl:
+          'https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=800&q=80',
       categoryName: 'مكرونة',
       suggestedPrice: 125.0,
       suggestedPrepTime: 50,
       suggestedQuantity: 10,
-      suggestedDescription: 'مكرونة قلم بصوص البشاميل الكريمي الغني مع لحمة مفرومة بلدي معصجة بالبهارات والجبنة الموتزاريلا الذهبية.',
+      suggestedDescription:
+          'مكرونة قلم بصوص البشاميل الكريمي الغني مع لحمة مفرومة بلدي معصجة بالبهارات والجبنة الموتزاريلا الذهبية.',
     ),
     DishPhotoPreset(
       title: 'وجبة نصف فرخة بلدي محمرة مع أرز وخضار',
-      imageUrl: 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=800&q=80',
+      imageUrl:
+          'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=800&q=80',
       categoryName: 'فراخ',
       suggestedPrice: 140.0,
       suggestedPrepTime: 40,
       suggestedQuantity: 18,
-      suggestedDescription: 'نصف فرخة بلدي محمرة في السمنة البلدي حتى القرمشة، مع أرز بالشعرية وطاجن خضار مشكل وشوربة لسان عصفور.',
+      suggestedDescription:
+          'نصف فرخة بلدي محمرة في السمنة البلدي حتى القرمشة، مع أرز بالشعرية وطاجن خضار مشكل وشوربة لسان عصفور.',
     ),
     DishPhotoPreset(
       title: 'فرخة بلدي كاملة مشوية بتتبيلة ست الكل',
-      imageUrl: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=800&q=80',
+      imageUrl:
+          'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=800&q=80',
       categoryName: 'فراخ',
       suggestedPrice: 240.0,
       suggestedPrepTime: 60,
       suggestedQuantity: 8,
-      suggestedDescription: 'دجاجة كاملة بلدي متبلة بالزبادي والليمون والبهارات الشرقية ومشوية في الفرن حتى اللون الذهبي، تكفي 4 أفراد.',
+      suggestedDescription:
+          'دجاجة كاملة بلدي متبلة بالزبادي والليمون والبهارات الشرقية ومشوية في الفرن حتى اللون الذهبي، تكفي 4 أفراد.',
     ),
     DishPhotoPreset(
       title: 'طاجن بامية باللحمة الضاني البلدي',
-      imageUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
+      imageUrl:
+          'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
       categoryName: 'طواجن',
       suggestedPrice: 185.0,
       suggestedPrepTime: 55,
       suggestedQuantity: 7,
-      suggestedDescription: 'بامية صغيرة بلدي مطهية في صلصة الطماطم بالثوم والليمون مع قطع لحم ضاني دايبة من الفرن مباشرة.',
+      suggestedDescription:
+          'بامية صغيرة بلدي مطهية في صلصة الطماطم بالثوم والليمون مع قطع لحم ضاني دايبة من الفرن مباشرة.',
     ),
     DishPhotoPreset(
       title: 'صينية رقاق فلاحي مقرمش باللحمة المفرومة',
-      imageUrl: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=800&q=80',
+      imageUrl:
+          'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=800&q=80',
       categoryName: 'أكل مصري',
       suggestedPrice: 115.0,
       suggestedPrepTime: 40,
       suggestedQuantity: 9,
-      suggestedDescription: 'رقاق مصري مورق ومسقي بالشوربة الدسمة والسمن الفلاحي ومحشو باللحم المفروم المتبل.',
+      suggestedDescription:
+          'رقاق مصري مورق ومسقي بالشوربة الدسمة والسمن الفلاحي ومحشو باللحم المفروم المتبل.',
     ),
     DishPhotoPreset(
       title: 'صينية كنافة بالقشطة والشربات الخفيف',
-      imageUrl: 'https://images.unsplash.com/photo-1579954115545-a95591f28bfc?auto=format&fit=crop&w=800&q=80',
+      imageUrl:
+          'https://images.unsplash.com/photo-1579954115545-a95591f28bfc?auto=format&fit=crop&w=800&q=80',
       categoryName: 'حلويات',
       suggestedPrice: 130.0,
       suggestedPrepTime: 30,
       suggestedQuantity: 10,
-      suggestedDescription: 'كنافة ذهبية مقرمشة محشية قشطة بلدي طازة ومسقية بشربات خفيف مزينة بالمكسرات.',
+      suggestedDescription:
+          'كنافة ذهبية مقرمشة محشية قشطة بلدي طازة ومسقية بشربات خفيف مزينة بالمكسرات.',
     ),
   ];
 
@@ -149,8 +165,10 @@ class DemoDataService extends ChangeNotifier {
         isFeatured: json['is_featured'] as bool? ?? false,
         isVegetarian: json['is_vegetarian'] as bool? ?? false,
         isSpicy: json['is_spicy'] as bool? ?? false,
-        createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ?? DateTime.now(),
-        updatedAt: DateTime.tryParse(json['updated_at'] as String? ?? '') ?? DateTime.now(),
+        createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ??
+            DateTime.now(),
+        updatedAt: DateTime.tryParse(json['updated_at'] as String? ?? '') ??
+            DateTime.now(),
         vendor: vendorMatch,
         category: categoryMatch,
       );
@@ -159,25 +177,40 @@ class DemoDataService extends ChangeNotifier {
 
   void _initData() {
     _categories = [
-      const Category(id: 'cat-1', name: 'أكل مصري', nameEn: 'Egyptian Food', sortOrder: 1),
-      const Category(id: 'cat-2', name: 'محاشي', nameEn: 'Mahshi', sortOrder: 2),
-      const Category(id: 'cat-3', name: 'طواجن', nameEn: 'Tagines', sortOrder: 3),
-      const Category(id: 'cat-4', name: 'فراخ', nameEn: 'Chicken', sortOrder: 4),
+      const Category(
+          id: 'cat-1', name: 'أكل مصري', nameEn: 'Egyptian Food', sortOrder: 1),
+      const Category(
+          id: 'cat-2', name: 'محاشي', nameEn: 'Mahshi', sortOrder: 2),
+      const Category(
+          id: 'cat-3', name: 'طواجن', nameEn: 'Tagines', sortOrder: 3),
+      const Category(
+          id: 'cat-4', name: 'فراخ', nameEn: 'Chicken', sortOrder: 4),
       const Category(id: 'cat-5', name: 'لحوم', nameEn: 'Meat', sortOrder: 5),
-      const Category(id: 'cat-6', name: 'مكرونة', nameEn: 'Pasta', sortOrder: 6),
-      const Category(id: 'cat-7', name: 'حلويات', nameEn: 'Desserts', sortOrder: 7),
-      const Category(id: 'cat-8', name: 'مخبوزات', nameEn: 'Baked Goods', sortOrder: 8),
-      const Category(id: 'cat-9', name: 'أكل صحي', nameEn: 'Healthy Food', sortOrder: 9),
-      const Category(id: 'cat-10', name: 'فطار', nameEn: 'Breakfast', sortOrder: 10),
-      const Category(id: 'cat-11', name: 'وجبات عائلية', nameEn: 'Family Meals', sortOrder: 11),
+      const Category(
+          id: 'cat-6', name: 'مكرونة', nameEn: 'Pasta', sortOrder: 6),
+      const Category(
+          id: 'cat-7', name: 'حلويات', nameEn: 'Desserts', sortOrder: 7),
+      const Category(
+          id: 'cat-8', name: 'مخبوزات', nameEn: 'Baked Goods', sortOrder: 8),
+      const Category(
+          id: 'cat-9', name: 'أكل صحي', nameEn: 'Healthy Food', sortOrder: 9),
+      const Category(
+          id: 'cat-10', name: 'فطار', nameEn: 'Breakfast', sortOrder: 10),
+      const Category(
+          id: 'cat-11',
+          name: 'وجبات عائلية',
+          nameEn: 'Family Meals',
+          sortOrder: 11),
     ];
 
     _vendors = [
       Vendor(
         id: '00000000-0000-0000-0000-000000000001',
         name: 'مطبخ ست الكل (أم أحمد)',
-        description: 'أكل بيتي مصري أصيل بالسمنة البلدي والنَفَس الطيب ❤️ — خبرة ٢٠ سنة في العزومات والأكلات الشعبية.',
-        logoUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80',
+        description:
+            'أكل بيتي مصري أصيل بالسمنة البلدي والنَفَس الطيب ❤️ — خبرة ٢٠ سنة في العزومات والأكلات الشعبية.',
+        logoUrl:
+            'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80',
         governorate: 'القاهرة',
         area: 'مدينة نصر والتجمع',
         rating: 4.9,
@@ -198,8 +231,10 @@ class DemoDataService extends ChangeNotifier {
       Vendor(
         id: '00000000-0000-0000-0000-000000000010',
         name: 'طبيخ زمان (الحاجة فاطمة)',
-        description: 'طواجن فخار ومحاشي بلدي على الكانون، سمن فلاحي ومكونات طازة يومياً.',
-        logoUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80',
+        description:
+            'طواجن فخار ومحاشي بلدي على الكانون، سمن فلاحي ومكونات طازة يومياً.',
+        logoUrl:
+            'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80',
         governorate: 'الجيزة',
         area: 'الدقي والمهندسين',
         rating: 4.8,
@@ -220,8 +255,10 @@ class DemoDataService extends ChangeNotifier {
       Vendor(
         id: '00000000-0000-0000-0000-000000000011',
         name: 'أكلات أم مريم البيتي',
-        description: 'متخصصون في المكرونات البشاميل، الكفتة المشوية، والمخبوزات والحلويات الشرقية.',
-        logoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+        description:
+            'متخصصون في المكرونات البشاميل، الكفتة المشوية، والمخبوزات والحلويات الشرقية.',
+        logoUrl:
+            'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
         governorate: 'القاهرة',
         area: 'مصر الجديدة',
         rating: 4.7,
@@ -248,9 +285,11 @@ class DemoDataService extends ChangeNotifier {
         'vendor_id': '00000000-0000-0000-0000-000000000001',
         'category_id': 'cat-2',
         'name': 'محشي مشكل مصري (كرنب وورق عنب وكوسة)',
-        'description': 'تشكيلة محاشي مشكلة (كرنب دايت بالسمنة الفلاحي، ورق عنب بدبس الرمان، وكوسة وبتنجان) بخلطة الأرز المصرية بالكزبرة والشبت.',
+        'description':
+            'تشكيلة محاشي مشكلة (كرنب دايت بالسمنة الفلاحي، ورق عنب بدبس الرمان، وكوسة وبتنجان) بخلطة الأرز المصرية بالكزبرة والشبت.',
         'price': 110.0,
-        'image_url': 'https://images.unsplash.com/photo-1541518763669-27fef04b14ea?auto=format&fit=crop&w=800&q=80',
+        'image_url':
+            'https://images.unsplash.com/photo-1541518763669-27fef04b14ea?auto=format&fit=crop&w=800&q=80',
         'available_quantity': 15,
         'preparation_time_minutes': 45,
         'is_available': true,
@@ -265,9 +304,11 @@ class DemoDataService extends ChangeNotifier {
         'vendor_id': '00000000-0000-0000-0000-000000000001',
         'category_id': 'cat-1',
         'name': 'ملوخية خضراء بالطشة والفراخ البلدي',
-        'description': 'ملوخية خضراء مفرومة طازة مطبوخة بشوربة الفراخ البلدي الدسمة مع طشة الثوم والكزبرة المقرمشة، تقدم مع طبق أرز وشوربة.',
+        'description':
+            'ملوخية خضراء مفرومة طازة مطبوخة بشوربة الفراخ البلدي الدسمة مع طشة الثوم والكزبرة المقرمشة، تقدم مع طبق أرز وشوربة.',
         'price': 135.0,
-        'image_url': 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=800&q=80',
+        'image_url':
+            'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=800&q=80',
         'available_quantity': 12,
         'preparation_time_minutes': 35,
         'is_available': true,
@@ -282,9 +323,11 @@ class DemoDataService extends ChangeNotifier {
         'vendor_id': '00000000-0000-0000-0000-000000000001',
         'category_id': 'cat-6',
         'name': 'صينية مكرونة بشاميل باللحمة المفرومة',
-        'description': 'مكرونة قلم بصوص البشاميل الكريمي الغني مع لحمة مفرومة بلدي معصجة بالبهارات والجبنة الموتزاريلا الذهبية.',
+        'description':
+            'مكرونة قلم بصوص البشاميل الكريمي الغني مع لحمة مفرومة بلدي معصجة بالبهارات والجبنة الموتزاريلا الذهبية.',
         'price': 125.0,
-        'image_url': 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=800&q=80',
+        'image_url':
+            'https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=800&q=80',
         'available_quantity': 10,
         'preparation_time_minutes': 50,
         'is_available': true,
@@ -299,9 +342,11 @@ class DemoDataService extends ChangeNotifier {
         'vendor_id': '00000000-0000-0000-0000-000000000001',
         'category_id': 'cat-4',
         'name': 'وجبة نصف فرخة بلدي محمرة مع أرز وخضار',
-        'description': 'نصف فرخة بلدي محمرة في السمنة البلدي حتى القرمشة، مع أرز بالشعرية وطاجن خضار مشكل وشوربة لسان عصفور.',
+        'description':
+            'نصف فرخة بلدي محمرة في السمنة البلدي حتى القرمشة، مع أرز بالشعرية وطاجن خضار مشكل وشوربة لسان عصفور.',
         'price': 140.0,
-        'image_url': 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=800&q=80',
+        'image_url':
+            'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=800&q=80',
         'available_quantity': 18,
         'preparation_time_minutes': 40,
         'is_available': true,
@@ -316,9 +361,11 @@ class DemoDataService extends ChangeNotifier {
         'vendor_id': '00000000-0000-0000-0000-000000000001',
         'category_id': 'cat-4',
         'name': 'فرخة بلدي كاملة مشوية بتتبيلة ست الكل',
-        'description': 'دجاجة كاملة بلدي متبلة بالزبادي والليمون والبهارات الشرقية ومشوية في الفرن حتى اللون الذهبي، تكفي 4 أفراد.',
+        'description':
+            'دجاجة كاملة بلدي متبلة بالزبادي والليمون والبهارات الشرقية ومشوية في الفرن حتى اللون الذهبي، تكفي 4 أفراد.',
         'price': 240.0,
-        'image_url': 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=800&q=80',
+        'image_url':
+            'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=800&q=80',
         'available_quantity': 8,
         'preparation_time_minutes': 60,
         'is_available': true,
@@ -333,9 +380,11 @@ class DemoDataService extends ChangeNotifier {
         'vendor_id': '00000000-0000-0000-0000-000000000001',
         'category_id': 'cat-3',
         'name': 'طاجن بامية باللحمة الضاني البلدي',
-        'description': 'بامية صغيرة بلدي مطهية في صلصة الطماطم بالثوم والليمون مع قطع لحم ضاني دايبة من الفرن مباشرة.',
+        'description':
+            'بامية صغيرة بلدي مطهية في صلصة الطماطم بالثوم والليمون مع قطع لحم ضاني دايبة من الفرن مباشرة.',
         'price': 185.0,
-        'image_url': 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
+        'image_url':
+            'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
         'available_quantity': 7,
         'preparation_time_minutes': 55,
         'is_available': true,
@@ -350,9 +399,11 @@ class DemoDataService extends ChangeNotifier {
         'vendor_id': '00000000-0000-0000-0000-000000000001',
         'category_id': 'cat-1',
         'name': 'صينية رقاق فلاحي مقرمش باللحمة المفرومة',
-        'description': 'رقاق مصري مورق ومسقي بالشوربة الدسمة والسمن الفلاحي ومحشو باللحم المفروم المتبل.',
+        'description':
+            'رقاق مصري مورق ومسقي بالشوربة الدسمة والسمن الفلاحي ومحشو باللحم المفروم المتبل.',
         'price': 115.0,
-        'image_url': 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=800&q=80',
+        'image_url':
+            'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=800&q=80',
         'available_quantity': 9,
         'preparation_time_minutes': 40,
         'is_available': true,
@@ -367,9 +418,11 @@ class DemoDataService extends ChangeNotifier {
         'vendor_id': '00000000-0000-0000-0000-000000000001',
         'category_id': 'cat-7',
         'name': 'صينية كنافة بالقشطة والشربات الخفيف',
-        'description': 'كنافة ذهبية مقرمشة محشية قشطة بلدي طازة ومسقية بشربات خفيف مزينة بالمكسرات.',
+        'description':
+            'كنافة ذهبية مقرمشة محشية قشطة بلدي طازة ومسقية بشربات خفيف مزينة بالمكسرات.',
         'price': 130.0,
-        'image_url': 'https://images.unsplash.com/photo-1579954115545-a95591f28bfc?auto=format&fit=crop&w=800&q=80',
+        'image_url':
+            'https://images.unsplash.com/photo-1579954115545-a95591f28bfc?auto=format&fit=crop&w=800&q=80',
         'available_quantity': 10,
         'preparation_time_minutes': 30,
         'is_available': true,
@@ -562,7 +615,8 @@ class DemoDataService extends ChangeNotifier {
         'updated_at': DateTime.now().toIso8601String(),
       };
     } else {
-      final newId = data['id'] ?? 'prod-${DateTime.now().millisecondsSinceEpoch}';
+      final newId =
+          data['id'] ?? 'prod-${DateTime.now().millisecondsSinceEpoch}';
       _rawProducts.insert(0, {
         ...data,
         'id': newId,

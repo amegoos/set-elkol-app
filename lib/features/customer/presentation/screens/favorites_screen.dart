@@ -1,4 +1,4 @@
-﻿import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -38,7 +38,8 @@ class FavoritesScreen extends ConsumerWidget {
             itemBuilder: (_, i) {
               final product = favs[i];
               return GestureDetector(
-                onTap: () => context.push('/home/vendor/${product.vendorId}/product/${product.id}'),
+                onTap: () => context.push(
+                    '/home/vendor/${product.vendorId}/product/${product.id}'),
                 child: Container(
                   decoration: BoxDecoration(
                     color: AppColors.surface,
@@ -51,7 +52,8 @@ class FavoritesScreen extends ConsumerWidget {
                       Expanded(
                         flex: 3,
                         child: ClipRRect(
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                          borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(12)),
                           child: product.imageUrl != null
                               ? CachedNetworkImage(
                                   imageUrl: product.imageUrl!,
@@ -60,7 +62,8 @@ class FavoritesScreen extends ConsumerWidget {
                                 )
                               : Container(
                                   color: AppColors.secondary,
-                                  child: const Icon(Icons.restaurant, color: AppColors.primary),
+                                  child: const Icon(Icons.restaurant,
+                                      color: AppColors.primary),
                                 ),
                         ),
                       ),
@@ -71,10 +74,14 @@ class FavoritesScreen extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(product.name, style: AppTypography.titleSmall, maxLines: 1, overflow: TextOverflow.ellipsis),
+                              Text(product.name,
+                                  style: AppTypography.titleSmall,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis),
                               Text(
                                 '${product.price.toStringAsFixed(0)} ج.م',
-                                style: AppTypography.labelMedium.copyWith(color: AppColors.primary),
+                                style: AppTypography.labelMedium
+                                    .copyWith(color: AppColors.primary),
                               ),
                             ],
                           ),

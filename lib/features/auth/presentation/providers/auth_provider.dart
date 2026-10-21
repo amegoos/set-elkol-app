@@ -61,7 +61,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
     // 1. Listen to Supabase auth state changes (this fires for initial session restoration too)
     _client.auth.onAuthStateChange.listen((data) {
-      debugPrint('[Auth] session/auth state received: event=${data.event}, hasSession=${data.session != null}, userId=${data.session?.user.id}');
+      debugPrint(
+          '[Auth] session/auth state received: event=${data.event}, hasSession=${data.session != null}, userId=${data.session?.user.id}');
       final user = data.session?.user;
       if (user != null) {
         _loadProfile(user);
@@ -90,27 +91,32 @@ class AuthNotifier extends StateNotifier<AuthState> {
   void _setupDeepLinkListener() {
     final appLinks = AppLinks();
     _deepLinkSub = appLinks.uriLinkStream.listen((uri) async {
-      debugPrint('[DeepLink] OAuth callback received: scheme=${uri.scheme}, host=${uri.host}');
-      if (uri.scheme == 'io.supabase.setelkol' && uri.host == 'login-callback') {
+      debugPrint(
+          '[DeepLink] OAuth callback received: scheme=${uri.scheme}, host=${uri.host}');
+      if (uri.scheme == 'io.supabase.setelkol' &&
+          uri.host == 'login-callback') {
         try {
           final errorParam = uri.queryParameters['error_description'] ??
               uri.queryParameters['error'];
           if (errorParam != null && errorParam.isNotEmpty) {
             debugPrint('[DeepLink] OAuth callback error param: $errorParam');
             final msg = _friendlyAuthError(errorParam);
-            state = AuthState(status: AuthStatus.unauthenticated, errorMessage: msg);
+            state = AuthState(
+                status: AuthStatus.unauthenticated, errorMessage: msg);
             return;
           }
 
           if (_client.auth.currentSession == null) {
-            debugPrint('[DeepLink] Processing session exchange from callback URL...');
+            debugPrint(
+                '[DeepLink] Processing session exchange from callback URL...');
             await _client.auth.getSessionFromUrl(uri);
             debugPrint('[DeepLink] Session exchange completed');
           }
         } catch (e) {
           debugPrint('[DeepLink] OAuth error in callback processing: $e');
           final msg = _friendlyAuthError(e);
-          state = AuthState(status: AuthStatus.unauthenticated, errorMessage: msg);
+          state =
+              AuthState(status: AuthStatus.unauthenticated, errorMessage: msg);
         }
       }
     }, onError: (err) {
@@ -121,15 +127,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
     appLinks.getInitialLink().then((uri) async {
       if (uri != null) {
-        debugPrint('[DeepLink] Initial OAuth callback detected: scheme=${uri.scheme}, host=${uri.host}');
-        if (uri.scheme == 'io.supabase.setelkol' && uri.host == 'login-callback') {
+        debugPrint(
+            '[DeepLink] Initial OAuth callback detected: scheme=${uri.scheme}, host=${uri.host}');
+        if (uri.scheme == 'io.supabase.setelkol' &&
+            uri.host == 'login-callback') {
           try {
             final errorParam = uri.queryParameters['error_description'] ??
                 uri.queryParameters['error'];
             if (errorParam != null && errorParam.isNotEmpty) {
               debugPrint('[DeepLink] Initial OAuth error param: $errorParam');
               final msg = _friendlyAuthError(errorParam);
-              state = AuthState(status: AuthStatus.unauthenticated, errorMessage: msg);
+              state = AuthState(
+                  status: AuthStatus.unauthenticated, errorMessage: msg);
               return;
             }
 
@@ -139,7 +148,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
           } catch (e) {
             debugPrint('[DeepLink] Initial OAuth error: $e');
             final msg = _friendlyAuthError(e);
-            state = AuthState(status: AuthStatus.unauthenticated, errorMessage: msg);
+            state = AuthState(
+                status: AuthStatus.unauthenticated, errorMessage: msg);
           }
         }
       }
@@ -154,7 +164,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     debugPrint('[Auth] Profile lookup started: userId=${user.id}');
 
     // Check if this is the admin email
-    final isAdminEmail = user.email?.toLowerCase() == 'setelkol.support@gmail.com';
+    final isAdminEmail =
+        user.email?.toLowerCase() == 'setelkol.support@gmail.com';
 
     try {
       final data = await _client
@@ -174,7 +185,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         final role = isAdminEmail
             ? UserRole.admin
             : (metaRole != null && metaRole.isNotEmpty
-                ? UserRole.values.firstWhere((r) => r.name == metaRole, orElse: () => UserRole.customer)
+                ? UserRole.values.firstWhere((r) => r.name == metaRole,
+                    orElse: () => UserRole.customer)
                 : null);
 
         if (role != null) {
@@ -183,7 +195,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
             'id': user.id,
             'email': user.email,
             'phone': user.phone ?? user.userMetadata?['phone'],
-            'full_name': user.userMetadata?['full_name'] ?? user.phone ?? user.email ?? 'مستخدم',
+            'full_name': user.userMetadata?['full_name'] ??
+                user.phone ??
+                user.email ??
+                'مستخدم',
             'role': role.name,
             'avatar_url': user.userMetadata?['avatar_url'],
             'created_at': DateTime.now().toIso8601String(),
@@ -194,7 +209,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
           if (role == UserRole.vendor) {
             await _client.from('vendors').upsert({
               'id': user.id,
-              'business_name': user.userMetadata?['full_name'] ?? user.phone ?? user.email ?? 'متجر جديد',
+              'business_name': user.userMetadata?['full_name'] ??
+                  user.phone ??
+                  user.email ??
+                  'متجر جديد',
               'is_active': true,
               'created_at': DateTime.now().toIso8601String(),
               'updated_at': DateTime.now().toIso8601String(),
@@ -203,7 +221,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
           final profile = UserProfile(
             id: user.id,
-            name: user.userMetadata?['full_name'] as String? ?? user.phone ?? user.email ?? 'مستخدم',
+            name: user.userMetadata?['full_name'] as String? ??
+                user.phone ??
+                user.email ??
+                'مستخدم',
             phone: user.phone ?? user.userMetadata?['phone'] as String?,
             email: user.email,
             profileImage: user.userMetadata?['avatar_url'] as String?,
@@ -214,9 +235,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
           debugPrint('[Auth] Role found: ${profile.role.name}');
 
           String target;
-          if (profile.isAdmin) target = RouteNames.adminDashboard;
-          else if (profile.isVendor) target = RouteNames.vendorDashboard;
-          else target = RouteNames.customerHome;
+          if (profile.isAdmin) {
+            target = RouteNames.adminDashboard;
+          } else if (profile.isVendor) {
+            target = RouteNames.vendorDashboard;
+          } else {
+            target = RouteNames.customerHome;
+          }
 
           debugPrint('[Auth] Navigation target: $target');
           state = AuthState(
@@ -241,7 +266,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
       if (isAdminEmail && roleStr != 'admin') {
         roleStr = 'admin';
         try {
-          await _client.from('profiles').update({'role': 'admin'}).eq('id', user.id);
+          await _client
+              .from('profiles')
+              .update({'role': 'admin'}).eq('id', user.id);
         } catch (e) {
           debugPrint('[Auth] Error updating role to admin: $e');
         }
@@ -253,19 +280,29 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       final profile = UserProfile(
         id: data['id'] as String,
-        name: data['full_name'] as String? ?? user.userMetadata?['full_name'] as String? ?? user.phone ?? user.email ?? 'مستخدم',
-        phone: data['phone'] as String? ?? user.phone ?? user.userMetadata?['phone'] as String?,
+        name: data['full_name'] as String? ??
+            user.userMetadata?['full_name'] as String? ??
+            user.phone ??
+            user.email ??
+            'مستخدم',
+        phone: data['phone'] as String? ??
+            user.phone ??
+            user.userMetadata?['phone'] as String?,
         email: data['email'] as String? ?? user.email,
         profileImage: data['avatar_url'] as String?,
         role: role,
-        createdAt: DateTime.tryParse(data['created_at'] as String? ?? '') ?? DateTime.now(),
-        updatedAt: DateTime.tryParse(data['updated_at'] as String? ?? '') ?? DateTime.now(),
+        createdAt: DateTime.tryParse(data['created_at'] as String? ?? '') ??
+            DateTime.now(),
+        updatedAt: DateTime.tryParse(data['updated_at'] as String? ?? '') ??
+            DateTime.now(),
       );
 
       debugPrint('[Auth] Role found: ${profile.role.name}');
       final target = profile.isAdmin
           ? RouteNames.adminDashboard
-          : (profile.isVendor ? RouteNames.vendorDashboard : RouteNames.customerHome);
+          : (profile.isVendor
+              ? RouteNames.vendorDashboard
+              : RouteNames.customerHome);
       debugPrint('[Auth] Navigation target: $target');
 
       state = AuthState(
@@ -304,7 +341,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
         );
         final profile = UserProfile(
           id: user.id,
-          name: user.userMetadata?['full_name'] as String? ?? user.phone ?? user.email ?? 'مستخدم',
+          name: user.userMetadata?['full_name'] as String? ??
+              user.phone ??
+              user.email ??
+              'مستخدم',
           phone: user.phone ?? user.userMetadata?['phone'] as String?,
           email: user.email,
           profileImage: user.userMetadata?['avatar_url'] as String?,
@@ -312,7 +352,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         );
-        debugPrint('[Auth] Role fallback from metadata after profile error: ${profile.role.name}');
+        debugPrint(
+            '[Auth] Role fallback from metadata after profile error: ${profile.role.name}');
         state = AuthState(
           status: AuthStatus.authenticated,
           user: user,
@@ -325,7 +366,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         status: AuthStatus.authenticated,
         user: user,
         profile: null,
-        errorMessage: 'تعذر تحميل بيانات الملف الشخصي: ${_friendlyAuthError(e)}',
+        errorMessage:
+            'تعذر تحميل بيانات الملف الشخصي: ${_friendlyAuthError(e)}',
       );
     }
   }
@@ -335,22 +377,30 @@ class AuthNotifier extends StateNotifier<AuthState> {
   String _friendlyAuthError(dynamic e) {
     if (e is AuthException) {
       final msg = e.message.toLowerCase();
-      if (msg.contains('invalid login credentials') || msg.contains('invalid credentials')) {
+      if (msg.contains('invalid login credentials') ||
+          msg.contains('invalid credentials')) {
         return 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
       }
-      if (msg.contains('user already registered') || msg.contains('already exists')) {
+      if (msg.contains('user already registered') ||
+          msg.contains('already exists')) {
         return 'هذا البريد الإلكتروني مسجل بالفعل. يرجى تسجيل الدخول';
       }
-      if (msg.contains('password should be at least') || msg.contains('weak_password')) {
+      if (msg.contains('password should be at least') ||
+          msg.contains('weak_password')) {
         return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
       }
-      if (msg.contains('email not confirmed') || msg.contains('email_not_confirmed')) {
+      if (msg.contains('email not confirmed') ||
+          msg.contains('email_not_confirmed')) {
         return 'يرجى تأكيد بريدك الإلكتروني أولاً عبر الرابط المرسل إليك';
       }
-      if (msg.contains('over email rate limit') || msg.contains('rate limit') || msg.contains('too many requests')) {
+      if (msg.contains('over email rate limit') ||
+          msg.contains('rate limit') ||
+          msg.contains('too many requests')) {
         return 'تم تجاوز الحد المسموح. يرجى الانتظار قليلاً والمحاولة لاحقاً';
       }
-      if (msg.contains('invalid api key') || msg.contains('invalid apikey') || e.statusCode == '401') {
+      if (msg.contains('invalid api key') ||
+          msg.contains('invalid apikey') ||
+          e.statusCode == '401') {
         return 'مفتاح Supabase API غير مهيأ أو غير صالح في .env';
       }
       if (msg.contains('user not found') || msg.contains('user_not_found')) {
@@ -362,7 +412,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return e.message;
     }
     if (e is PostgrestException) {
-      if (e.code == '42501' || e.message.toLowerCase().contains('permission denied')) {
+      if (e.code == '42501' ||
+          e.message.toLowerCase().contains('permission denied')) {
         return 'لا تملك الصلاحية الكافية للوصول إلى هذه البيانات';
       }
       return 'حدث خطأ في قاعدة البيانات: ${e.message}';
@@ -375,7 +426,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
         str.contains('timed out')) {
       return 'تعذر الاتصال بالخادم. تحقق من اتصال الإنترنت';
     }
-    if (str.contains('invalid api key') || str.contains('invalid apikey') || str.contains('401')) {
+    if (str.contains('invalid api key') ||
+        str.contains('invalid apikey') ||
+        str.contains('401')) {
       return 'مفتاح Supabase API غير مهيأ أو غير صالح في .env';
     }
     return 'حدث خطأ أثناء معالجة الطلب. يرجى المحاولة مرة أخرى';
@@ -386,9 +439,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<String?> signInWithEmail(String email, String password) async {
     debugPrint('[Auth] Sign-in started: email=$email');
     if (!SupabaseConfig.hasValidKey) {
-      debugPrint('[Auth] Sign-in aborted: Supabase key is missing or placeholder');
-      const msg = 'تعذر الاتصال بـ Supabase: يرجى إضافة مفتاح Supabase Anon في ملف .env';
-      state = const AuthState(status: AuthStatus.unauthenticated, errorMessage: msg);
+      debugPrint(
+          '[Auth] Sign-in aborted: Supabase key is missing or placeholder');
+      const msg =
+          'تعذر الاتصال بـ Supabase: يرجى إضافة مفتاح Supabase Anon في ملف .env';
+      state = const AuthState(
+          status: AuthStatus.unauthenticated, errorMessage: msg);
       return msg;
     }
 
@@ -401,20 +457,25 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       final hasUser = response.user != null;
       final hasSession = response.session != null;
-      debugPrint('[Auth] Sign-in response received: hasUser=$hasUser, hasSession=$hasSession');
+      debugPrint(
+          '[Auth] Sign-in response received: hasUser=$hasUser, hasSession=$hasSession');
       debugPrint('[Auth] Session exists: $hasSession');
       debugPrint('[Auth] User ID exists: $hasUser');
 
       if (response.user != null) {
         await _loadProfile(response.user!);
+        // Success - state is already set to authenticated by _loadProfile
+        // Don't override in finally block
         return null; // success
       } else {
         const msg = 'فشل تسجيل الدخول: لم يتم استلام بيانات المستخدم من الخادم';
-        state = const AuthState(status: AuthStatus.unauthenticated, errorMessage: msg);
+        state = const AuthState(
+            status: AuthStatus.unauthenticated, errorMessage: msg);
         return msg;
       }
     } on AuthException catch (e) {
-      debugPrint('[Auth] Sign-in AuthException: ${e.message} (code: ${e.statusCode})');
+      debugPrint(
+          '[Auth] Sign-in AuthException: ${e.message} (code: ${e.statusCode})');
       final msg = _friendlyAuthError(e);
       state = AuthState(
         status: AuthStatus.unauthenticated,
@@ -427,19 +488,21 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final msg = _friendlyAuthError(e);
       state = AuthState(status: AuthStatus.unauthenticated, errorMessage: msg);
       return msg;
-    } finally {
-      if (state.isLoading) {
-        state = state.copyWith(status: AuthStatus.unauthenticated);
-      }
     }
+    // Note: No finally block that overrides authenticated state
+    // _loadProfile sets authenticated state on success
   }
 
   Future<String?> signInWithGoogle() async {
-    debugPrint('[Auth] Google OAuth started: redirectTo=io.supabase.setelkol://login-callback');
+    debugPrint(
+        '[Auth] Google OAuth started: redirectTo=io.supabase.setelkol://login-callback');
     if (!SupabaseConfig.hasValidKey) {
-      debugPrint('[Auth] Google OAuth aborted: Supabase key is missing or placeholder');
-      const msg = 'تعذر الاتصال بـ Supabase: يرجى إضافة مفتاح Supabase Anon في ملف .env';
-      state = const AuthState(status: AuthStatus.unauthenticated, errorMessage: msg);
+      debugPrint(
+          '[Auth] Google OAuth aborted: Supabase key is missing or placeholder');
+      const msg =
+          'تعذر الاتصال بـ Supabase: يرجى إضافة مفتاح Supabase Anon في ملف .env';
+      state = const AuthState(
+          status: AuthStatus.unauthenticated, errorMessage: msg);
       return msg;
     }
 
@@ -451,11 +514,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
         authScreenLaunchMode: LaunchMode.externalApplication,
       );
       debugPrint('[Auth] signInWithOAuth browser launched: $success');
-      // Set to unauthenticated while browser is active so UI is not stuck in loading
-      state = state.copyWith(status: AuthStatus.unauthenticated);
+      // Don't set to unauthenticated here - the auth state listener will handle
+      // the session once the user returns from the browser
+      // Keep loading state until auth state changes
       return null;
     } on AuthException catch (e) {
-      debugPrint('[Auth] Google OAuth error: ${e.message} (code: ${e.statusCode})');
+      debugPrint(
+          '[Auth] Google OAuth error: ${e.message} (code: ${e.statusCode})');
       final msg = _friendlyAuthError(e);
       state = AuthState(status: AuthStatus.unauthenticated, errorMessage: msg);
       return msg;
@@ -465,10 +530,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final msg = _friendlyAuthError(e);
       state = AuthState(status: AuthStatus.unauthenticated, errorMessage: msg);
       return msg;
-    } finally {
-      if (state.isLoading) {
-        state = state.copyWith(status: AuthStatus.unauthenticated);
-      }
     }
   }
 
@@ -480,11 +541,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String name,
     String? phone,
   }) async {
-    debugPrint('[Auth] Sign-up started: email=$email, hasPhone=${phone != null}');
+    debugPrint(
+        '[Auth] Sign-up started: email=$email, hasPhone=${phone != null}');
     if (!SupabaseConfig.hasValidKey) {
-      debugPrint('[Auth] Sign-up aborted: Supabase key is missing or placeholder');
-      const msg = 'تعذر الاتصال بـ Supabase: يرجى إضافة مفتاح Supabase Anon في ملف .env';
-      state = const AuthState(status: AuthStatus.unauthenticated, errorMessage: msg);
+      debugPrint(
+          '[Auth] Sign-up aborted: Supabase key is missing or placeholder');
+      const msg =
+          'تعذر الاتصال بـ Supabase: يرجى إضافة مفتاح Supabase Anon في ملف .env';
+      state = const AuthState(
+          status: AuthStatus.unauthenticated, errorMessage: msg);
       return msg;
     }
 
@@ -501,7 +566,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       final hasUser = response.user != null;
       final hasSession = response.session != null;
-      debugPrint('[Auth] Sign-up response received: hasUser=$hasUser, hasSession=$hasSession');
+      debugPrint(
+          '[Auth] Sign-up response received: hasUser=$hasUser, hasSession=$hasSession');
       debugPrint('[Auth] Session exists: $hasSession');
       debugPrint('[Auth] User ID exists: $hasUser');
 
@@ -510,21 +576,25 @@ class AuthNotifier extends StateNotifier<AuthState> {
           // Immediate session established (email confirmation disabled or auto-confirmed)
           debugPrint('[Auth] Session established immediately upon sign up');
           await _loadProfile(response.user!);
+          // Success - state is already set to authenticated by _loadProfile
           return null;
         } else {
           // Supabase project requires email confirmation before a session exists
           debugPrint('[Auth] Email confirmation required: session is null');
-          debugPrint('[Auth] Navigation target: stay on auth and show confirmation dialog');
+          debugPrint(
+              '[Auth] Navigation target: stay on auth and show confirmation dialog');
           state = const AuthState(status: AuthStatus.unauthenticated);
           return 'confirm_email';
         }
       } else {
         const msg = 'تعذر إنشاء الحساب. يرجى المحاولة مرة أخرى';
-        state = const AuthState(status: AuthStatus.unauthenticated, errorMessage: msg);
+        state = const AuthState(
+            status: AuthStatus.unauthenticated, errorMessage: msg);
         return msg;
       }
     } on AuthException catch (e) {
-      debugPrint('[Auth] Sign-up AuthException: ${e.message} (code: ${e.statusCode})');
+      debugPrint(
+          '[Auth] Sign-up AuthException: ${e.message} (code: ${e.statusCode})');
       final msg = _friendlyAuthError(e);
       state = AuthState(status: AuthStatus.unauthenticated, errorMessage: msg);
       return msg;
@@ -534,11 +604,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final msg = _friendlyAuthError(e);
       state = AuthState(status: AuthStatus.unauthenticated, errorMessage: msg);
       return msg;
-    } finally {
-      if (state.isLoading) {
-        state = state.copyWith(status: AuthStatus.unauthenticated);
-      }
     }
+    // Note: No finally block that overrides state
   }
 
   // ── Phone Authentication (SMS OTP) ────────────────────────────────────────
@@ -547,9 +614,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<String?> signInWithPhoneOtp({required String phone}) async {
     debugPrint('[Auth] Phone sign-in OTP requested');
     if (!SupabaseConfig.hasValidKey) {
-      debugPrint('[Auth] Phone OTP aborted: Supabase key is missing or placeholder');
-      const msg = 'تعذر الاتصال بـ Supabase: يرجى إضافة مفتاح Supabase Anon في ملف .env';
-      state = const AuthState(status: AuthStatus.unauthenticated, errorMessage: msg);
+      debugPrint(
+          '[Auth] Phone OTP aborted: Supabase key is missing or placeholder');
+      const msg =
+          'تعذر الاتصال بـ Supabase: يرجى إضافة مفتاح Supabase Anon في ملف .env';
+      state = const AuthState(
+          status: AuthStatus.unauthenticated, errorMessage: msg);
       return msg;
     }
 
@@ -564,7 +634,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(status: AuthStatus.unauthenticated);
       return null; // success
     } on AuthException catch (e) {
-      debugPrint('[Auth] signInWithPhoneOtp AuthException: ${e.message} (code: ${e.statusCode})');
+      debugPrint(
+          '[Auth] signInWithPhoneOtp AuthException: ${e.message} (code: ${e.statusCode})');
       final msg = _friendlyPhoneAuthError(e);
       state = AuthState(status: AuthStatus.unauthenticated, errorMessage: msg);
       return msg;
@@ -574,10 +645,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final msg = _friendlyPhoneAuthError(e);
       state = AuthState(status: AuthStatus.unauthenticated, errorMessage: msg);
       return msg;
-    } finally {
-      if (state.isLoading) {
-        state = state.copyWith(status: AuthStatus.unauthenticated);
-      }
     }
   }
 
@@ -588,9 +655,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }) async {
     debugPrint('[Auth] Phone OTP verification started');
     if (!SupabaseConfig.hasValidKey) {
-      debugPrint('[Auth] verifyPhoneOtp aborted: Supabase key is missing or placeholder');
-      const msg = 'تعذر الاتصال بـ Supabase: يرجى إضافة مفتاح Supabase Anon في ملف .env';
-      state = const AuthState(status: AuthStatus.unauthenticated, errorMessage: msg);
+      debugPrint(
+          '[Auth] verifyPhoneOtp aborted: Supabase key is missing or placeholder');
+      const msg =
+          'تعذر الاتصال بـ Supabase: يرجى إضافة مفتاح Supabase Anon في ملف .env';
+      state = const AuthState(
+          status: AuthStatus.unauthenticated, errorMessage: msg);
       return msg;
     }
 
@@ -604,7 +674,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       final hasUser = response.user != null;
       final hasSession = response.session != null;
-      debugPrint('[Auth] Phone verification response received: hasUser=$hasUser, hasSession=$hasSession');
+      debugPrint(
+          '[Auth] Phone verification response received: hasUser=$hasUser, hasSession=$hasSession');
       debugPrint('[Auth] Session exists: $hasSession');
       debugPrint('[Auth] User ID exists: $hasUser');
 
@@ -613,11 +684,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
         return null; // success — session created
       } else {
         const msg = 'رمز التحقق غير صحيح أو منتهي الصلاحية';
-        state = const AuthState(status: AuthStatus.unauthenticated, errorMessage: msg);
+        state = const AuthState(
+            status: AuthStatus.unauthenticated, errorMessage: msg);
         return msg;
       }
     } on AuthException catch (e) {
-      debugPrint('[Auth] verifyPhoneOtp AuthException: ${e.message} (code: ${e.statusCode})');
+      debugPrint(
+          '[Auth] verifyPhoneOtp AuthException: ${e.message} (code: ${e.statusCode})');
       final msg = _friendlyPhoneAuthError(e);
       state = AuthState(status: AuthStatus.unauthenticated, errorMessage: msg);
       return msg;
@@ -627,10 +700,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final msg = _friendlyPhoneAuthError(e);
       state = AuthState(status: AuthStatus.unauthenticated, errorMessage: msg);
       return msg;
-    } finally {
-      if (state.isLoading) {
-        state = state.copyWith(status: AuthStatus.unauthenticated);
-      }
     }
   }
 
@@ -657,7 +726,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
           msg.contains('unsupported phone')) {
         return 'رقم الهاتف غير صحيح أو غير مدعوم';
       }
-      if (msg.contains('sms provider') || msg.contains('provider is not enabled')) {
+      if (msg.contains('sms provider') ||
+          msg.contains('provider is not enabled')) {
         return 'خدمة الرسائل القصيرة SMS غير مفعلة في لوحة تحكم Supabase';
       }
       return e.message;
@@ -684,7 +754,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
         'id': user.id,
         'email': user.email,
         'phone': user.phone ?? user.userMetadata?['phone'],
-        'full_name': user.userMetadata?['full_name'] ?? user.phone ?? user.email ?? 'مستخدم',
+        'full_name': user.userMetadata?['full_name'] ??
+            user.phone ??
+            user.email ??
+            'مستخدم',
         'role': role.name,
         'created_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
@@ -706,15 +779,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
     final currentProfile = state.profile;
     if (user == null || currentProfile == null) return 'لا يوجد مستخدم';
 
-    final newRole = currentProfile.isVendor ? UserRole.customer : UserRole.vendor;
-    debugPrint('[Auth] switchRole: ${currentProfile.role.name} -> ${newRole.name} for user ${user.id}');
+    final newRole =
+        currentProfile.isVendor ? UserRole.customer : UserRole.vendor;
+    debugPrint(
+        '[Auth] switchRole: ${currentProfile.role.name} -> ${newRole.name} for user ${user.id}');
 
     try {
       await _client.from('profiles').upsert({
         'id': user.id,
         'email': user.email,
         'phone': user.phone ?? user.userMetadata?['phone'],
-        'full_name': user.userMetadata?['full_name'] ?? user.phone ?? user.email ?? 'مستخدم',
+        'full_name': user.userMetadata?['full_name'] ??
+            user.phone ??
+            user.email ??
+            'مستخدم',
         'role': newRole.name,
         'created_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
@@ -732,7 +810,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
         if (vendorExists == null) {
           await _client.from('vendors').insert({
             'id': user.id,
-            'business_name': user.userMetadata?['full_name'] ?? user.phone ?? user.email ?? 'متجر جديد',
+            'business_name': user.userMetadata?['full_name'] ??
+                user.phone ??
+                user.email ??
+                'متجر جديد',
             'is_active': true,
             'created_at': DateTime.now().toIso8601String(),
             'updated_at': DateTime.now().toIso8601String(),
@@ -777,9 +858,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
     final demoName = role == UserRole.admin
         ? 'أحمد أمجد (مدير التطبيق)'
-        : (role == UserRole.vendor
-            ? 'أم أحمد (ست الكل)'
-            : 'سارة محمود');
+        : (role == UserRole.vendor ? 'أم أحمد (ست الكل)' : 'سارة محمود');
 
     final demoEmail = role == UserRole.admin
         ? 'setelkol.support@gmail.com'
@@ -827,7 +906,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     // Force unauthenticated state immediately
     state = const AuthState(status: AuthStatus.unauthenticated);
   }
-
 
   @override
   void dispose() {

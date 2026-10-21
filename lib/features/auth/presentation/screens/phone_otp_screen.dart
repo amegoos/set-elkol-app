@@ -64,7 +64,8 @@ class _PhoneOtpScreenState extends ConsumerState<PhoneOtpScreen> {
   Future<void> _verifyOtp() async {
     final token = _otpController.text.trim();
     if (token.length < 6) {
-      context.showSnack('يرجى إدخال رمز التحقق المكون من 6 أرقام', isError: true);
+      context.showSnack('يرجى إدخال رمز التحقق المكون من 6 أرقام',
+          isError: true);
       return;
     }
 
@@ -126,7 +127,8 @@ class _PhoneOtpScreenState extends ConsumerState<PhoneOtpScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
       ),
@@ -239,13 +241,16 @@ class _PhoneOtpScreenState extends ConsumerState<PhoneOtpScreen> {
                                   border: Border.all(
                                     color: isCurrent
                                         ? AppColors.primary
-                                        : (isFilled ? AppColors.primaryDark : AppColors.inputBorder),
+                                        : (isFilled
+                                            ? AppColors.primaryDark
+                                            : AppColors.inputBorder),
                                     width: isCurrent || isFilled ? 2.0 : 1.2,
                                   ),
                                   boxShadow: [
                                     if (isCurrent)
                                       BoxShadow(
-                                        color: AppColors.primary.withValues(alpha: 0.15),
+                                        color: AppColors.primary
+                                            .withValues(alpha: 0.15),
                                         blurRadius: 8,
                                         offset: const Offset(0, 3),
                                       ),
@@ -310,7 +315,8 @@ class _PhoneOtpScreenState extends ConsumerState<PhoneOtpScreen> {
                             ? const SizedBox(
                                 width: 16,
                                 height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               )
                             : const Icon(Icons.refresh_rounded, size: 20),
                         label: Text(
@@ -324,7 +330,8 @@ class _PhoneOtpScreenState extends ConsumerState<PhoneOtpScreen> {
                     : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.timer_outlined, size: 18, color: AppColors.textSecondary),
+                          const Icon(Icons.timer_outlined,
+                              size: 18, color: AppColors.textSecondary),
                           const SizedBox(width: 6),
                           Text(
                             'إعادة إرسال الرمز بعد $_secondsRemaining ثانية',

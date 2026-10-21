@@ -20,8 +20,7 @@ abstract final class AppValidators {
     if (value == null || value.trim().isEmpty) {
       return 'البريد الإلكتروني مطلوب';
     }
-    final emailRegex =
-        RegExp(r'^[\w.+\-]+@([a-zA-Z0-9\-]+\.)+[a-zA-Z]{2,}$');
+    final emailRegex = RegExp(r'^[\w.+\-]+@([a-zA-Z0-9\-]+\.)+[a-zA-Z]{2,}$');
     if (!emailRegex.hasMatch(value.trim())) {
       return 'البريد الإلكتروني غلط';
     }
@@ -111,8 +110,7 @@ abstract final class AppValidators {
   /// Returns true if valid email format.
   static bool isValidEmail(String? value) {
     if (value == null || value.trim().isEmpty) return false;
-    final emailRegex =
-        RegExp(r'^[\w.+\-]+@([a-zA-Z0-9\-]+\.)+[a-zA-Z]{2,}$');
+    final emailRegex = RegExp(r'^[\w.+\-]+@([a-zA-Z0-9\-]+\.)+[a-zA-Z]{2,}$');
     return emailRegex.hasMatch(value.trim());
   }
 

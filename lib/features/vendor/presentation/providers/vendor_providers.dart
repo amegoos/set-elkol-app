@@ -13,7 +13,8 @@ final myVendorProfileProvider = FutureProvider<Vendor?>((ref) async {
     final client = ref.watch(supabaseClientProvider);
     final userId = client.auth.currentUser?.id;
     if (userId != null) {
-      final data = await client.from('vendors').select().eq('id', userId).maybeSingle();
+      final data =
+          await client.from('vendors').select().eq('id', userId).maybeSingle();
       if (data != null) {
         return VendorDataModel.fromJson(data as Map<String, dynamic>);
       }
@@ -52,7 +53,8 @@ class VendorOrder {
       totalAmount: (json['total_amount'] as num).toDouble(),
       paymentMethod: json['payment_method'] as String? ?? 'cash',
       createdAt: DateTime.parse(json['created_at'] as String),
-      customerName: (json['profiles'] as Map<String, dynamic>?)?['full_name'] as String?,
+      customerName:
+          (json['profiles'] as Map<String, dynamic>?)?['full_name'] as String?,
       deliveryAddress: json['delivery_address'] as String?,
       items: (json['order_items'] as List<dynamic>?)
               ?.map((e) => e as Map<String, dynamic>)
@@ -86,7 +88,8 @@ final vendorOrdersListProvider = FutureProvider<List<VendorOrder>>((ref) async {
 
 // ── Vendor Products ────────────────────────────────────────────────────────────
 
-final myProductsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final myProductsProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final demoData = ref.watch(demoDataServiceProvider);
   try {
     final client = ref.watch(supabaseClientProvider);

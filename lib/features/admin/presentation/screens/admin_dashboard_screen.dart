@@ -16,7 +16,8 @@ class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
 
   @override
-  ConsumerState<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
+  ConsumerState<AdminDashboardScreen> createState() =>
+      _AdminDashboardScreenState();
 }
 
 class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
@@ -61,9 +62,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
       appBar: AppBar(
         title: const Row(
           children: [
-            Icon(Icons.admin_panel_settings_rounded, color: AppColors.primary, size: 26),
+            Icon(Icons.admin_panel_settings_rounded,
+                color: AppColors.primary, size: 26),
             SizedBox(width: 8),
-            Text('لوحة تحكم الإدارة — ست الكل', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            Text('لوحة تحكم الإدارة — ست الكل',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           ],
         ),
         actions: [
@@ -101,7 +104,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildOverviewTab(rawProducts.length, vendors.length, orders.length),
+                _buildOverviewTab(
+                    rawProducts.length, vendors.length, orders.length),
                 _buildVendorsTab(vendors),
                 _buildOrdersTab(orders),
                 _buildProductsTab(rawProducts),
@@ -124,12 +128,16 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
       ),
       child: Row(
         children: [
-          const Icon(Icons.swap_horiz_rounded, color: AppColors.primary, size: 22),
+          const Icon(Icons.swap_horiz_rounded,
+              color: AppColors.primary, size: 22),
           const SizedBox(width: 8),
           const Expanded(
             child: Text(
               'تبديل سريع للعرض التجريبي:',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textPrimary),
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: AppColors.textPrimary),
             ),
           ),
           OutlinedButton.icon(
@@ -137,11 +145,13 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               minimumSize: Size.zero,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
               side: const BorderSide(color: AppColors.primary),
             ),
             icon: const Icon(Icons.person, size: 14, color: AppColors.primary),
-            label: const Text('عميل', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+            label: const Text('عميل',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
           ),
           const SizedBox(width: 8),
           ElevatedButton.icon(
@@ -152,10 +162,12 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               minimumSize: Size.zero,
               elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
             ),
             icon: const Icon(Icons.restaurant_menu, size: 14),
-            label: const Text('ست الكل', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+            label: const Text('ست الكل',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -163,7 +175,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
   }
 
   // ── 1. Overview Tab ────────────────────────────────────────────────────────
-  Widget _buildOverviewTab(int productsCount, int vendorsCount, int ordersCount) {
+  Widget _buildOverviewTab(
+      int productsCount, int vendorsCount, int ordersCount) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -212,7 +225,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
                   value: '$productsCount أكلة',
                   subtitle: 'بأصناف وأسعار حقيقية',
                   icon: Icons.ramen_dining_rounded,
-                  color: Colors.deepPurple,
+                  color: AppColors.primaryLight,
                 ),
               ),
             ],
@@ -224,15 +237,15 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF2E7D32), Color(0xFF1B5E20)],
+              gradient: LinearGradient(
+                colors: [AppColors.accentDark, AppColors.accent],
                 begin: Alignment.topRight,
                 end: Alignment.bottomLeft,
               ),
               borderRadius: AppRadius.card,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.green.withOpacity(0.2),
+                  color: AppColors.accent.withOpacity(0.2),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -240,7 +253,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
             ),
             child: const Row(
               children: [
-                Icon(Icons.account_balance_wallet_rounded, color: Colors.white, size: 36),
+                Icon(Icons.account_balance_wallet_rounded,
+                    color: Colors.white, size: 36),
                 SizedBox(width: 16),
                 Expanded(
                   child: Column(
@@ -252,14 +266,20 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
                       ),
                       Text(
                         '4,850.00 ج.م',
-                        style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
                 ),
                 Text(
                   'مستحقة الصرف',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12),
                 ),
               ],
             ),
@@ -268,7 +288,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
           const SizedBox(height: 20),
 
           // Platform Quality & Safety Controls
-          Text('إجراءات التحكم والمراقبة', style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
+          Text('إجراءات التحكم والمراقبة',
+              style: AppTypography.titleMedium
+                  .copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
 
           Card(
@@ -277,22 +299,26 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
               children: [
                 ListTile(
                   leading: const CircleAvatar(
-                    backgroundColor: Color(0xFFE8F5E9),
-                    child: Icon(Icons.verified_user_rounded, color: AppColors.success),
+                    backgroundColor: AppColors.accentContainer,
+                    child: Icon(Icons.verified_user_rounded,
+                        color: AppColors.success),
                   ),
                   title: const Text('توثيق المطابخ وشهادات الصحة'),
-                  subtitle: const Text('فحص نظافة المطبخ وجودة التغليف قبل التفعيل'),
+                  subtitle:
+                      const Text('فحص نظافة المطبخ وجودة التغليف قبل التفعيل'),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () => _tabController.animateTo(1),
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const CircleAvatar(
-                    backgroundColor: Color(0xFFFFF3E0),
-                    child: Icon(Icons.fastfood_rounded, color: AppColors.accent),
+                    backgroundColor: AppColors.primaryContainer,
+                    child:
+                        Icon(Icons.fastfood_rounded, color: AppColors.primary),
                   ),
                   title: const Text('مراجعة أسعار الأكلات والكميات'),
-                  subtitle: const Text('التأكد من التزام المطابخ بالأسعار العادلة ومطابقة الصور'),
+                  subtitle: const Text(
+                      'التأكد من التزام المطابخ بالأسعار العادلة ومطابقة الصور'),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () => _tabController.animateTo(3),
                 ),
@@ -331,7 +357,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(title, style: AppTypography.labelMedium.copyWith(color: AppColors.textSecondary)),
+              Text(title,
+                  style: AppTypography.labelMedium
+                      .copyWith(color: AppColors.textSecondary)),
               CircleAvatar(
                 radius: 16,
                 backgroundColor: color.withOpacity(0.12),
@@ -340,9 +368,13 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
             ],
           ),
           const SizedBox(height: 8),
-          Text(value, style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold)),
+          Text(value,
+              style: AppTypography.titleLarge
+                  .copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          Text(subtitle, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+          Text(subtitle,
+              style: TextStyle(
+                  fontSize: 11, color: color, fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -365,7 +397,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: CachedNetworkImage(
-                    imageUrl: v.logoUrl ?? 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80',
+                    imageUrl: v.logoUrl ??
+                        'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80',
                     width: 65,
                     height: 65,
                     fit: BoxFit.cover,
@@ -381,11 +414,13 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
                           Expanded(
                             child: Text(
                               v.name,
-                              style: AppTypography.titleSmall.copyWith(fontWeight: FontWeight.bold),
+                              style: AppTypography.titleSmall
+                                  .copyWith(fontWeight: FontWeight.bold),
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
                               color: AppColors.success.withOpacity(0.12),
                               borderRadius: BorderRadius.circular(10),
@@ -393,9 +428,14 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
                             child: const Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.verified, color: AppColors.success, size: 13),
+                                Icon(Icons.verified,
+                                    color: AppColors.success, size: 13),
                                 SizedBox(width: 3),
-                                Text('موثق', style: TextStyle(color: AppColors.success, fontSize: 11, fontWeight: FontWeight.bold)),
+                                Text('موثق',
+                                    style: TextStyle(
+                                        color: AppColors.success,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold)),
                               ],
                             ),
                           ),
@@ -404,16 +444,23 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
                       const SizedBox(height: 4),
                       Text(
                         '${v.governorate ?? "القاهرة"} — ${v.area ?? "مدينة نصر"}',
-                        style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                        style: AppTypography.bodySmall
+                            .copyWith(color: AppColors.textSecondary),
                       ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
                           const Icon(Icons.star, color: Colors.amber, size: 15),
                           const SizedBox(width: 3),
-                          Text('${v.rating ?? 4.9} (${v.totalReviews ?? 120} تقييم)', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                          Text(
+                              '${v.rating ?? 4.9} (${v.totalReviews ?? 120} تقييم)',
+                              style: const TextStyle(
+                                  fontSize: 12, fontWeight: FontWeight.w600)),
                           const Spacer(),
-                          Text('حد أدنى: ${v.minOrder ?? 80} ج.م', style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                          Text('حد أدنى: ${v.minOrder ?? 80} ج.م',
+                              style: const TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.textSecondary)),
                         ],
                       ),
                     ],
@@ -448,19 +495,33 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('طلب #${o.id.substring(o.id.length > 6 ? o.id.length - 6 : 0)}', style: AppTypography.titleSmall.copyWith(fontWeight: FontWeight.bold)),
+                    Text(
+                        'طلب #${o.id.substring(o.id.length > 6 ? o.id.length - 6 : 0)}',
+                        style: AppTypography.titleSmall
+                            .copyWith(fontWeight: FontWeight.bold)),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: isCompleted
                             ? AppColors.success.withOpacity(0.12)
-                            : (isPreparing ? AppColors.accent.withOpacity(0.12) : AppColors.primary.withOpacity(0.12)),
+                            : (isPreparing
+                                ? AppColors.accent.withOpacity(0.12)
+                                : AppColors.primary.withOpacity(0.12)),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        isCompleted ? 'تم التسليم ✓' : (isPreparing ? 'جاري التحضير 👩‍🍳' : 'قيد المراجعة ⏳'),
+                        isCompleted
+                            ? 'تم التسليم ✓'
+                            : (isPreparing
+                                ? 'جاري التحضير 👩‍🍳'
+                                : 'قيد المراجعة ⏳'),
                         style: TextStyle(
-                          color: isCompleted ? AppColors.success : (isPreparing ? AppColors.accent : AppColors.primary),
+                          color: isCompleted
+                              ? AppColors.success
+                              : (isPreparing
+                                  ? AppColors.accent
+                                  : AppColors.primary),
                           fontWeight: FontWeight.bold,
                           fontSize: 11,
                         ),
@@ -469,15 +530,26 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text('العميل: ${o.customerName ?? "سارة محمود"}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                Text('العميل: ${o.customerName ?? "سارة محمود"}',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 13)),
                 if (o.deliveryAddress != null)
-                  Text('العنوان: ${o.deliveryAddress}', style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
+                  Text('العنوان: ${o.deliveryAddress}',
+                      style: AppTypography.bodySmall
+                          .copyWith(color: AppColors.textSecondary)),
                 const Divider(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('طريقة الدفع: ${o.paymentMethod == "instapay" ? "إنستاباي (InstaPay)" : (o.paymentMethod == "vodafone_cash" ? "فودافون كاش" : "كاش عند الاستلام")}', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                    Text('${o.totalAmount.toStringAsFixed(0)} ج.م', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.primary)),
+                    Text(
+                        'طريقة الدفع: ${o.paymentMethod == "instapay" ? "إنستاباي (InstaPay)" : (o.paymentMethod == "vodafone_cash" ? "فودافون كاش" : "كاش عند الاستلام")}',
+                        style: const TextStyle(
+                            fontSize: 12, color: AppColors.textSecondary)),
+                    Text('${o.totalAmount.toStringAsFixed(0)} ج.م',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: AppColors.primary)),
                   ],
                 ),
               ],
@@ -508,7 +580,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
                   child: CachedNetworkImage(
-                    imageUrl: p['image_url'] as String? ?? 'https://images.unsplash.com/photo-1541518763669-27fef04b14ea?auto=format&fit=crop&w=200&q=80',
+                    imageUrl: p['image_url'] as String? ??
+                        'https://images.unsplash.com/photo-1541518763669-27fef04b14ea?auto=format&fit=crop&w=200&q=80',
                     width: 75,
                     height: 75,
                     fit: BoxFit.cover,
@@ -519,27 +592,39 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(p['name'] as String, style: AppTypography.titleSmall.copyWith(fontWeight: FontWeight.bold)),
+                      Text(p['name'] as String,
+                          style: AppTypography.titleSmall
+                              .copyWith(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          Text('${(p['price'] as num).toStringAsFixed(0)} ج.م', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 14)),
+                          Text('${(p['price'] as num).toStringAsFixed(0)} ج.م',
+                              style: const TextStyle(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14)),
                           const SizedBox(width: 12),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
                               color: AppColors.secondary,
                               borderRadius: BorderRadius.circular(6),
                             ),
-                            child: Text('الكمية: $qty', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                            child: Text('الكمية: $qty',
+                                style: const TextStyle(
+                                    fontSize: 11, fontWeight: FontWeight.w600)),
                           ),
                         ],
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        isAvailable ? 'متاح للطلب الفوري ✓' : 'غير متوفر حالياً ✕',
+                        isAvailable
+                            ? 'متاح للطلب الفوري ✓'
+                            : 'غير متوفر حالياً ✕',
                         style: TextStyle(
-                          color: isAvailable ? AppColors.success : AppColors.error,
+                          color:
+                              isAvailable ? AppColors.success : AppColors.error,
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),

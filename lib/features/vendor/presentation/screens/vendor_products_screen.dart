@@ -47,10 +47,12 @@ class VendorProductsScreen extends ConsumerWidget {
               final p = products[i];
               return _ProductTile(
                 product: p,
-                onEdit: () => context.push('${RouteNames.vendorProducts}/${p['id']}/edit'),
+                onEdit: () => context
+                    .push('${RouteNames.vendorProducts}/${p['id']}/edit'),
                 onToggle: () async {
                   final newAvailable = !(p['is_available'] as bool? ?? true);
-                  DemoDataService.instance.toggleProductAvailability(p['id'] as String, newAvailable);
+                  DemoDataService.instance.toggleProductAvailability(
+                      p['id'] as String, newAvailable);
                   try {
                     final client = ref.read(supabaseClientProvider);
                     await client.from('products').update({
@@ -77,7 +79,8 @@ class VendorProductsScreen extends ConsumerWidget {
 }
 
 class _ProductTile extends StatelessWidget {
-  const _ProductTile({required this.product, required this.onEdit, required this.onToggle});
+  const _ProductTile(
+      {required this.product, required this.onEdit, required this.onToggle});
   final Map<String, dynamic> product;
   final VoidCallback onEdit;
   final VoidCallback onToggle;
@@ -95,70 +98,75 @@ class _ProductTile extends StatelessWidget {
           borderRadius: AppRadius.card,
           border: Border.all(color: AppColors.cardBorder),
         ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: product['image_url'] != null
-                ? CachedNetworkImage(
-                    imageUrl: product['image_url'] as String,
-                    width: 70,
-                    height: 70,
-                    fit: BoxFit.cover,
-                  )
-                : Container(
-                    width: 70,
-                    height: 70,
-                    color: AppColors.secondary,
-                    child: const Icon(Icons.restaurant, color: AppColors.primary),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: product['image_url'] != null
+                  ? CachedNetworkImage(
+                      imageUrl: product['image_url'] as String,
+                      width: 70,
+                      height: 70,
+                      fit: BoxFit.cover,
+                    )
+                  : Container(
+                      width: 70,
+                      height: 70,
+                      color: AppColors.secondary,
+                      child: const Icon(Icons.restaurant,
+                          color: AppColors.primary),
+                    ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(product['name'] as String,
+                      style: AppTypography.titleSmall),
+                  Text(
+                    '${(product['price'] as num).toStringAsFixed(0)} ج.م',
+                    style: AppTypography.labelMedium
+                        .copyWith(color: AppColors.primary),
                   ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(product['name'] as String, style: AppTypography.titleSmall),
-                Text(
-                  '${(product['price'] as num).toStringAsFixed(0)} ج.م',
-                  style: AppTypography.labelMedium.copyWith(color: AppColors.primary),
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: isAvailable
-                        ? AppColors.success.withOpacity(0.1)
-                        : AppColors.error.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    isAvailable ? 'متاح' : 'غير متاح',
-                    style: AppTypography.labelSmall.copyWith(
-                      color: isAvailable ? AppColors.success : AppColors.error,
+                  const SizedBox(height: 4),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: isAvailable
+                          ? AppColors.success.withOpacity(0.1)
+                          : AppColors.error.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      isAvailable ? 'متاح' : 'غير متاح',
+                      style: AppTypography.labelSmall.copyWith(
+                        color:
+                            isAvailable ? AppColors.success : AppColors.error,
+                      ),
                     ),
                   ),
+                ],
+              ),
+            ),
+            Column(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined, size: 20),
+                  onPressed: onEdit,
+                  color: AppColors.primary,
+                ),
+                Switch(
+                  value: isAvailable,
+                  onChanged: (_) => onToggle(),
+                  activeColor: AppColors.success,
                 ),
               ],
             ),
-          ),
-          Column(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.edit_outlined, size: 20),
-                onPressed: onEdit,
-                color: AppColors.primary,
-              ),
-              Switch(
-                value: isAvailable,
-                onChanged: (_) => onToggle(),
-                activeColor: AppColors.success,
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 }

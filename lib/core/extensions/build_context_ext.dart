@@ -1,3 +1,4 @@
+import '../theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 extension BuildContextX on BuildContext {
@@ -22,7 +23,7 @@ extension BuildContextX on BuildContext {
             fontSize: 14,
           ),
         ),
-        backgroundColor: isError ? Colors.red.shade700 : const Color(0xFF2E7D32),
+        backgroundColor: isError ? Colors.red.shade700 : AppColors.success,
         behavior: SnackBarBehavior.floating,
         duration: Duration(seconds: isError ? 5 : 3),
       ),

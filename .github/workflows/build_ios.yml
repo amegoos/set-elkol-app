@@ -1,0 +1,55 @@
+﻿name: Build iOS (IPA)
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch: # Allows manual trigger from GitHub UI with 1 click
+
+jobs:
+  build-ios:
+    name: Build iOS App (.ipa)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.3'
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Verify Code Quality
+        run: |
+          dart format --output=none --set-exit-if-changed lib
+          flutter analyze
+          flutter test
+
+      - name: Build iOS Application (Unsigned IPA)
+        run: |
+          flutter build ios --release --no-codesign
+          cd build/ios/iphoneos
+          mkdir -p Payload
+          cp -r Runner.app Payload/
+          zip -r SetElKol.ipa Payload
+
+      - name: Upload iOS IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: set-elkol-ios-ipa
+          path: build/ios/iphoneos/SetElKol.ipa
+          retention-days: 14
+
+      - name: Upload Runner.app (For Simulator / Direct testing)
+        uses: actions/upload-artifact@v4
+        with:
+          name: set-elkol-runner-app
+          path: build/ios/iphoneos/Runner.app
+          retention-days: 14

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -50,26 +50,41 @@ class _OrderCard extends StatelessWidget {
 
   Color get _statusColor {
     switch (order.status) {
-      case 'pending': return AppColors.pendingStatus;
-      case 'accepted': return AppColors.acceptedStatus;
-      case 'preparing': return AppColors.preparingStatus;
-      case 'ready': return AppColors.readyStatus;
-      case 'delivered': return AppColors.completedStatus;
-      case 'cancelled': return AppColors.cancelledStatus;
-      default: return AppColors.textSecondary;
+      case 'pending':
+        return AppColors.pendingStatus;
+      case 'accepted':
+        return AppColors.acceptedStatus;
+      case 'preparing':
+        return AppColors.preparingStatus;
+      case 'ready':
+        return AppColors.readyStatus;
+      case 'delivered':
+        return AppColors.completedStatus;
+      case 'cancelled':
+        return AppColors.cancelledStatus;
+      default:
+        return AppColors.textSecondary;
     }
   }
 
   String get _statusLabel {
     switch (order.status) {
-      case 'pending': return 'في الانتظار';
-      case 'accepted': return 'مقبول';
-      case 'preparing': return 'قيد التحضير';
-      case 'ready': return 'جاهز';
-      case 'out_for_delivery': return 'في الطريق';
-      case 'delivered': return 'تم التسليم';
-      case 'cancelled': return 'ملغي';
-      default: return order.status;
+      case 'pending':
+        return 'في الانتظار';
+      case 'accepted':
+        return 'مقبول';
+      case 'preparing':
+        return 'قيد التحضير';
+      case 'ready':
+        return 'جاهز';
+      case 'out_for_delivery':
+        return 'في الطريق';
+      case 'delivered':
+        return 'تم التسليم';
+      case 'cancelled':
+        return 'ملغي';
+      default:
+        return order.status;
     }
   }
 
@@ -96,14 +111,16 @@ class _OrderCard extends StatelessWidget {
                   style: AppTypography.titleSmall,
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: _statusColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     _statusLabel,
-                    style: AppTypography.labelSmall.copyWith(color: _statusColor),
+                    style:
+                        AppTypography.labelSmall.copyWith(color: _statusColor),
                   ),
                 ),
               ],
@@ -111,12 +128,14 @@ class _OrderCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               '${order.totalAmount.toStringAsFixed(0)} ج.م',
-              style: AppTypography.titleMedium.copyWith(color: AppColors.primary),
+              style:
+                  AppTypography.titleMedium.copyWith(color: AppColors.primary),
             ),
             const SizedBox(height: 4),
             Text(
               _formatDate(order.createdAt),
-              style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+              style: AppTypography.bodySmall
+                  .copyWith(color: AppColors.textSecondary),
             ),
             const SizedBox(height: 8),
             const Row(
@@ -124,7 +143,8 @@ class _OrderCard extends StatelessWidget {
               children: [
                 Text('تفاصيل', style: TextStyle(color: AppColors.primary)),
                 SizedBox(width: 4),
-                Icon(Icons.arrow_forward_ios, size: 12, color: AppColors.primary),
+                Icon(Icons.arrow_forward_ios,
+                    size: 12, color: AppColors.primary),
               ],
             ),
           ],

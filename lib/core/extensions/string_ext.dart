@@ -1,4 +1,4 @@
-﻿extension StringX on String {
+extension StringX on String {
   bool get isValidEmail {
     return RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(this);
   }
@@ -12,7 +12,8 @@
   String get withCommas {
     final n = double.tryParse(this);
     if (n == null) return this;
-    return n.toStringAsFixed(n == n.truncateToDouble() ? 0 : 2)
+    return n
+        .toStringAsFixed(n == n.truncateToDouble() ? 0 : 2)
         .replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (m) => ',');
   }
 }

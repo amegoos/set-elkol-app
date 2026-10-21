@@ -164,7 +164,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1E130E), // Deep earthy charcoal
+      backgroundColor: AppColors.background,
       body: Stack(
         children: [
           // ── Real Food Photography Background (Molokhia Hero) ──
@@ -200,7 +200,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   colors: [
                     Colors.black.withValues(alpha: 0.35),
                     Colors.black.withValues(alpha: 0.65),
-                    const Color(0xFF190D08).withValues(alpha: 0.95),
+                    AppColors.background.withValues(alpha: 0.95),
                   ],
                   stops: const [0.0, 0.5, 1.0],
                 ),
@@ -211,11 +211,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           // ── Natural Steam Particle Effect Overlay ──
           Positioned.fill(
             child: Stack(
-              children: List.generate(8, (i) => _SteamParticle(
-                controller: _steamController,
-                index: i,
-                screenSize: size,
-              )),
+              children: List.generate(
+                  8,
+                  (i) => _SteamParticle(
+                        controller: _steamController,
+                        index: i,
+                        screenSize: size,
+                      )),
             ),
           ),
 
@@ -229,7 +231,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
                   // ── Brand Logo Icon & Badge ──
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withValues(alpha: 0.85),
                       borderRadius: BorderRadius.circular(30),
@@ -242,14 +245,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       children: [
                         const Icon(
                           Icons.soup_kitchen_rounded,
-                          color: Colors.white,
+                          color: AppColors.textOnPrimary,
                           size: 20,
                         ),
                         const SizedBox(width: 8),
                         Text(
                           'ست الكل • Set El Kol',
                           style: AppTypography.labelMedium.copyWith(
-                            color: Colors.white,
+                            color: AppColors.textOnPrimary,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 0.5,
                           ),
@@ -270,7 +273,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                           Text(
                             'أكل الست المصرية مختلف',
                             style: AppTypography.displayLarge.copyWith(
-                              color: Colors.white,
+                              color: AppColors.textOnPrimary,
                               fontWeight: FontWeight.w900,
                               fontSize: 34,
                               height: 1.3,
@@ -317,9 +320,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                 onPressed: () => context.go(RouteNames.login),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.primary,
-                                  foregroundColor: Colors.white,
+                                  foregroundColor: AppColors.textOnPrimary,
                                   elevation: 4,
-                                  shadowColor: AppColors.primary.withValues(alpha: 0.5),
+                                  shadowColor:
+                                      AppColors.primary.withValues(alpha: 0.5),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: AppRadius.button,
                                   ),
@@ -327,7 +331,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                 child: Text(
                                   'إنشاء حساب جديد',
                                   style: AppTypography.labelLarge.copyWith(
-                                    color: Colors.white,
+                                    color: AppColors.textOnPrimary,
                                     fontWeight: FontWeight.w700,
                                     fontSize: 16,
                                   ),
@@ -344,9 +348,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                               child: OutlinedButton(
                                 onPressed: () => context.go(RouteNames.login),
                                 style: OutlinedButton.styleFrom(
-                                  foregroundColor: Colors.white,
+                                  foregroundColor: AppColors.textOnPrimary,
                                   side: BorderSide(
-                                    color: Colors.white.withValues(alpha: 0.7),
+                                    color: AppColors.textOnPrimary
+                                        .withValues(alpha: 0.7),
                                     width: 1.5,
                                   ),
                                   shape: RoundedRectangleBorder(
@@ -356,7 +361,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                 child: Text(
                                   'تسجيل الدخول',
                                   style: AppTypography.labelLarge.copyWith(
-                                    color: Colors.white,
+                                    color: AppColors.textOnPrimary,
                                     fontWeight: FontWeight.w700,
                                     fontSize: 16,
                                   ),
@@ -376,11 +381,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                   ),
                                 ),
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 14),
                                   child: Text(
                                     'أو الدخول بـ',
                                     style: AppTypography.bodySmall.copyWith(
-                                      color: Colors.white.withValues(alpha: 0.7),
+                                      color: AppColors.textOnPrimary
+                                          .withValues(alpha: 0.7),
                                     ),
                                   ),
                                 ),
@@ -404,8 +411,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                   context.go(RouteNames.login);
                                 },
                                 style: OutlinedButton.styleFrom(
-                                  backgroundColor: Colors.white.withValues(alpha: 0.12),
-                                  foregroundColor: Colors.white,
+                                  backgroundColor:
+                                      Colors.white.withValues(alpha: 0.12),
+                                  foregroundColor: AppColors.textOnPrimary,
                                   side: BorderSide(
                                     color: Colors.white.withValues(alpha: 0.35),
                                   ),
@@ -420,7 +428,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                       width: 22,
                                       height: 22,
                                       decoration: const BoxDecoration(
-                                        color: Colors.white,
+                                        color: AppColors.textOnPrimary,
                                         shape: BoxShape.circle,
                                       ),
                                       child: const Center(
@@ -438,7 +446,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                     Text(
                                       'المتابعة مع Google',
                                       style: AppTypography.labelLarge.copyWith(
-                                        color: Colors.white,
+                                        color: AppColors.textOnPrimary,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
@@ -456,7 +464,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       width: 28,
                       height: 28,
                       child: CircularProgressIndicator(
-                        color: Colors.white,
+                        color: AppColors.textOnPrimary,
                         strokeWidth: 2.5,
                       ),
                     ),
@@ -489,7 +497,8 @@ class _SteamParticle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final random = math.Random(index * 999);
-    final startX = screenSize.width * 0.2 + random.nextDouble() * screenSize.width * 0.6;
+    final startX =
+        screenSize.width * 0.2 + random.nextDouble() * screenSize.width * 0.6;
     final startY = screenSize.height * 0.6;
     final size = 20.0 + random.nextDouble() * 35;
     final speed = 0.4 + random.nextDouble() * 0.6;

@@ -38,7 +38,8 @@ void main() async {
 
   // Initialize Supabase via centralized SupabaseConfig
   debugPrint('[Supabase] Initializing: url=${SupabaseConfig.url}');
-  debugPrint('[Supabase] Valid API key configured: ${SupabaseConfig.hasValidKey}');
+  debugPrint(
+      '[Supabase] Valid API key configured: ${SupabaseConfig.hasValidKey}');
 
   await Supabase.initialize(
     url: SupabaseConfig.url,

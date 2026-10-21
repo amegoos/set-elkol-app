@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -12,7 +12,8 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() =>
+      _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
@@ -30,7 +31,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   Future<void> _send() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
-    final error = await ref.read(authProvider.notifier).resetPassword(_email.text.trim());
+    final error =
+        await ref.read(authProvider.notifier).resetPassword(_email.text.trim());
     if (!mounted) return;
     setState(() => _isLoading = false);
     if (error != null) {
@@ -49,12 +51,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(24),
-        child: _sent ? _SuccessView(email: _email.text, onBack: context.pop) : _FormView(
-          formKey: _formKey,
-          emailController: _email,
-          isLoading: _isLoading,
-          onSend: _send,
-        ),
+        child: _sent
+            ? _SuccessView(email: _email.text, onBack: context.pop)
+            : _FormView(
+                formKey: _formKey,
+                emailController: _email,
+                isLoading: _isLoading,
+                onSend: _send,
+              ),
       ),
     );
   }
@@ -84,7 +88,8 @@ class _FormView extends StatelessWidget {
           const SizedBox(height: 20),
           Text(
             'أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة تعيين كلمة المرور.',
-            style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+            style: AppTypography.bodyMedium
+                .copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 28),
           AppTextField(
@@ -124,7 +129,8 @@ class _SuccessView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.mark_email_read_outlined, color: AppColors.success, size: 64),
+        const Icon(Icons.mark_email_read_outlined,
+            color: AppColors.success, size: 64),
         const SizedBox(height: 20),
         Text(
           'تم الإرسال!',
@@ -134,7 +140,8 @@ class _SuccessView extends StatelessWidget {
         Text(
           'تم إرسال رابط استعادة كلمة المرور إلى:\n$email\n\nتحقق من بريدك الإلكتروني.',
           textAlign: TextAlign.center,
-          style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+          style:
+              AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
         ),
         const SizedBox(height: 32),
         AppButton(label: 'العودة لتسجيل الدخول', onPressed: onBack),

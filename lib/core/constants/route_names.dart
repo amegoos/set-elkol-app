@@ -38,7 +38,8 @@ abstract final class RouteNames {
   static const String vendorDashboard = '/vendor-dashboard';
   static const String vendorProducts = '/vendor-dashboard/products';
   static const String addProduct = '/vendor-dashboard/products/add';
-  static const String editProduct = '/vendor-dashboard/products/:productId/edit';
+  static const String editProduct =
+      '/vendor-dashboard/products/:productId/edit';
   static const String vendorOrders = '/vendor-dashboard/orders';
   static const String vendorOrderDetail = '/vendor-dashboard/orders/:orderId';
   static const String vendorEarnings = '/vendor-dashboard/earnings';

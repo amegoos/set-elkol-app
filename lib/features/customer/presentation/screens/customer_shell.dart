@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/route_names.dart';
@@ -17,13 +17,13 @@ class CustomerShell extends ConsumerWidget {
     return Scaffold(
       body: shell,
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.navBackground,
           boxShadow: [
             BoxShadow(
-              color: Color(0x14000000),
+              color: AppColors.shadow,
               blurRadius: 12,
-              offset: Offset(0, -4),
+              offset: const Offset(0, -4),
             ),
           ],
         ),
@@ -119,7 +119,8 @@ class _NavItem extends StatelessWidget {
             Text(
               label,
               style: AppTypography.labelSmall.copyWith(
-                color: isActive ? AppColors.navSelected : AppColors.navUnselected,
+                color:
+                    isActive ? AppColors.navSelected : AppColors.navUnselected,
                 fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
               ),
             ),
@@ -165,7 +166,9 @@ class _NavItemBadge extends StatelessWidget {
               children: [
                 Icon(
                   isActive ? activeIcon : icon,
-                  color: isActive ? AppColors.navSelected : AppColors.navUnselected,
+                  color: isActive
+                      ? AppColors.navSelected
+                      : AppColors.navUnselected,
                   size: 24,
                 ),
                 if (badgeCount > 0)
@@ -173,7 +176,8 @@ class _NavItemBadge extends StatelessWidget {
                     top: -6,
                     right: -8,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 5, vertical: 1),
                       decoration: BoxDecoration(
                         color: AppColors.primary,
                         borderRadius: BorderRadius.circular(10),
@@ -181,7 +185,7 @@ class _NavItemBadge extends StatelessWidget {
                       child: Text(
                         badgeCount > 99 ? '99+' : '$badgeCount',
                         style: AppTypography.labelSmall.copyWith(
-                          color: Colors.white,
+                          color: AppColors.textOnPrimary,
                           fontSize: 9,
                           fontWeight: FontWeight.w700,
                         ),
@@ -194,7 +198,8 @@ class _NavItemBadge extends StatelessWidget {
             Text(
               label,
               style: AppTypography.labelSmall.copyWith(
-                color: isActive ? AppColors.navSelected : AppColors.navUnselected,
+                color:
+                    isActive ? AppColors.navSelected : AppColors.navUnselected,
                 fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
               ),
             ),

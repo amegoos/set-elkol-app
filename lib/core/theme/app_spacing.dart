@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 /// Spacing scale and EdgeInsets helpers for ست الكل.
 /// All layout spacing should come from these constants for consistency.

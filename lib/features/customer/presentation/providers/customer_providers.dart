@@ -6,6 +6,7 @@ import '../../../../core/domain/entities/product.dart';
 import '../../../../core/domain/entities/vendor.dart';
 import '../../../../core/domain/entities/category.dart';
 import '../../../../core/domain/entities/order_model.dart';
+import '../../../../core/domain/entities/promo_code.dart';
 import '../../data/models/product_model.dart';
 import '../../data/models/vendor_model.dart';
 import '../../data/models/category_model.dart';
@@ -22,12 +23,25 @@ class CartItem {
 }
 
 class CartState {
-  CartState({this.items = const {}, this.vendorId});
+  CartState({
+    this.items = const {},
+    this.vendorId,
+    this.appliedPromo,
+    this.promoDiscount = 0.0,
+    this.isFreeDelivery = false,
+  });
+
   final Map<String, CartItem> items; // productId -> CartItem
   final String? vendorId; // only one vendor per cart
+  final PromoCode? appliedPromo;
+  final double promoDiscount;
+  final bool isFreeDelivery;
 
   double get subtotal => items.values
       .fold(0, (sum, item) => sum + item.product.price * item.quantity);
+
+  double get totalAfterDiscount =>
+      (subtotal - promoDiscount).clamp(0, double.infinity);
 
   int get totalItems =>
       items.values.fold(0, (sum, item) => sum + item.quantity);
@@ -78,6 +92,30 @@ class CartNotifier extends StateNotifier<CartState> {
 
   void clear() {
     state = CartState();
+  }
+
+  void applyPromo({
+    required PromoCode promo,
+    required double discount,
+    bool isFreeDelivery = false,
+  }) {
+    state = CartState(
+      items: state.items,
+      vendorId: state.vendorId,
+      appliedPromo: promo,
+      promoDiscount: discount,
+      isFreeDelivery: isFreeDelivery,
+    );
+  }
+
+  void removePromo() {
+    state = CartState(
+      items: state.items,
+      vendorId: state.vendorId,
+      appliedPromo: null,
+      promoDiscount: 0.0,
+      isFreeDelivery: false,
+    );
   }
 }
 
@@ -154,11 +192,15 @@ final popularProductsProvider = FutureProvider<List<Product>>((ref) async {
 
 // ── Products by Category ───────────────────────────────────────────────────────
 
-final productsByCategoryProvider = FutureProvider.family<List<Product>, String?>((ref, categoryId) async {
+final productsByCategoryProvider =
+    FutureProvider.family<List<Product>, String?>((ref, categoryId) async {
   final demoData = ref.watch(demoDataServiceProvider);
   try {
     final client = ref.watch(supabaseClientProvider);
-    var query = client.from('products').select('*, vendors(*)').eq('is_available', true);
+    var query = client
+        .from('products')
+        .select('*, vendors(*)')
+        .eq('is_available', true);
     if (categoryId != null) {
       query = query.eq('category_id', categoryId);
     }
@@ -196,15 +238,13 @@ final vendorsProvider = FutureProvider<List<Vendor>>((ref) async {
 
 // ── Vendor Detail ──────────────────────────────────────────────────────────────
 
-final vendorDetailProvider = FutureProvider.family<Vendor?, String>((ref, vendorId) async {
+final vendorDetailProvider =
+    FutureProvider.family<Vendor?, String>((ref, vendorId) async {
   final demoData = ref.watch(demoDataServiceProvider);
   try {
     final client = ref.watch(supabaseClientProvider);
-    final data = await client
-        .from('vendors')
-        .select()
-        .eq('id', vendorId)
-        .maybeSingle();
+    final data =
+        await client.from('vendors').select().eq('id', vendorId).maybeSingle();
 
     if (data != null) return VendorModel.fromJson(data as Map<String, dynamic>);
   } catch (_) {}
@@ -217,7 +257,8 @@ final vendorDetailProvider = FutureProvider.family<Vendor?, String>((ref, vendor
 
 // ── Vendor Products ────────────────────────────────────────────────────────────
 
-final vendorProductsProvider = FutureProvider.family<List<Product>, String>((ref, vendorId) async {
+final vendorProductsProvider =
+    FutureProvider.family<List<Product>, String>((ref, vendorId) async {
   final demoData = ref.watch(demoDataServiceProvider);
   try {
     final client = ref.watch(supabaseClientProvider);
@@ -234,7 +275,9 @@ final vendorProductsProvider = FutureProvider.family<List<Product>, String>((ref
     if (list.isNotEmpty) return list;
   } catch (_) {}
 
-  return demoData.products.where((p) => p.vendorId == vendorId || vendorId.isEmpty).toList();
+  return demoData.products
+      .where((p) => p.vendorId == vendorId || vendorId.isEmpty)
+      .toList();
 });
 
 // ── Search ────────────────────────────────────────────────────────────────────
@@ -287,7 +330,8 @@ final favoritesProvider = FutureProvider<List<Product>>((ref) async {
 
 // ── Toggle Favorite ────────────────────────────────────────────────────────────
 
-final isFavoriteProvider = FutureProvider.family<bool, String>((ref, productId) async {
+final isFavoriteProvider =
+    FutureProvider.family<bool, String>((ref, productId) async {
   final client = ref.watch(supabaseClientProvider);
   final userId = client.auth.currentUser?.id;
   if (userId == null) return false;
@@ -328,13 +372,15 @@ final customerOrdersProvider = FutureProvider<List<OrderModel>>((ref) async {
   return demoData.customerOrders;
 });
 
-final orderDetailProvider = FutureProvider.family<OrderModel?, String>((ref, orderId) async {
+final orderDetailProvider =
+    FutureProvider.family<OrderModel?, String>((ref, orderId) async {
   final demoData = ref.watch(demoDataServiceProvider);
   try {
     final client = ref.watch(supabaseClientProvider);
     final data = await client
         .from('orders')
-        .select('*, vendors(name, logo_url), order_items(*, products(name, image_url))')
+        .select(
+            '*, vendors(name, logo_url), order_items(*, products(name, image_url))')
         .eq('id', orderId)
         .maybeSingle();
 

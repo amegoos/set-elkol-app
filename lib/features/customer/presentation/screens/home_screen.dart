@@ -57,7 +57,8 @@ class HomeScreen extends ConsumerWidget {
             actions: [
               IconButton(
                 tooltip: 'لوحة تحكم ست الكل (Vendor)',
-                icon: const Icon(Icons.restaurant_menu_rounded, color: AppColors.vendorBadge),
+                icon: const Icon(Icons.restaurant_menu_rounded,
+                    color: AppColors.vendorBadge),
                 onPressed: () {
                   ref.read(authProvider.notifier).signInAsDemo(UserRole.vendor);
                   context.go(RouteNames.vendorDashboard);
@@ -65,7 +66,8 @@ class HomeScreen extends ConsumerWidget {
               ),
               IconButton(
                 tooltip: 'لوحة تحكم الإدارة (Admin)',
-                icon: const Icon(Icons.admin_panel_settings_outlined, color: Color(0xFF6A1B9A)),
+                icon: const Icon(Icons.admin_panel_settings_outlined,
+                    color: Color(0xFF6A1B9A)),
                 onPressed: () {
                   ref.read(authProvider.notifier).signInAsDemo(UserRole.admin);
                   context.go(RouteNames.adminDashboard);
@@ -101,7 +103,8 @@ class HomeScreen extends ConsumerWidget {
                   child: Row(
                     children: [
                       const SizedBox(width: 16),
-                      const Icon(Icons.search, color: AppColors.primary, size: 22),
+                      const Icon(Icons.search,
+                          color: AppColors.primary, size: 22),
                       const SizedBox(width: 10),
                       Text(
                         'ابحث عن أكل بيتي، طاجن، أو اسم المطبخ...',
@@ -122,8 +125,11 @@ class HomeScreen extends ConsumerWidget {
               margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFFFF8F0), Color(0xFFF7EBE1)],
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.primaryContainer,
+                    AppColors.accentContainer
+                  ],
                   begin: Alignment.topRight,
                   end: Alignment.bottomLeft,
                 ),
@@ -145,7 +151,8 @@ class HomeScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
                             color: AppColors.primary,
                             borderRadius: BorderRadius.circular(12),
@@ -181,14 +188,17 @@ class HomeScreen extends ConsumerWidget {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.textPrimary,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 10),
                             minimumSize: Size.zero,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20),
                             ),
                           ),
-                          icon: const Icon(Icons.arrow_back, size: 14),
-                          label: const Text('استكشف المنيو', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                          icon: const Icon(Icons.arrow_forward, size: 14),
+                          label: const Text('استكشف المنيو',
+                              style: TextStyle(
+                                  fontSize: 12, fontWeight: FontWeight.bold)),
                         ),
                       ],
                     ),
@@ -283,7 +293,8 @@ class HomeScreen extends ConsumerWidget {
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: products.length,
-                      itemBuilder: (_, i) => _FeaturedCard(product: products[i]),
+                      itemBuilder: (_, i) =>
+                          _FeaturedCard(product: products[i]),
                     ),
                   ),
                   loading: () => const SizedBox(
@@ -292,7 +303,8 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   error: (e, _) => Padding(
                     padding: const EdgeInsets.all(16),
-                    child: AppErrorWidget(message: 'تعذر تحميل المنتجات المميزة'),
+                    child:
+                        AppErrorWidget(message: 'تعذر تحميل المنتجات المميزة'),
                   ),
                 ),
               ],
@@ -423,7 +435,8 @@ class _FeaturedCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return GestureDetector(
-      onTap: () => context.push('/home/vendor/${product.vendorId}/product/${product.id}'),
+      onTap: () => context
+          .push('/home/vendor/${product.vendorId}/product/${product.id}'),
       child: Container(
         width: 180,
         margin: const EdgeInsets.only(right: 12),
@@ -436,7 +449,8 @@ class _FeaturedCard extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(12)),
               child: product.imageUrl != null
                   ? CachedNetworkImage(
                       imageUrl: product.imageUrl!,
@@ -450,13 +464,15 @@ class _FeaturedCard extends ConsumerWidget {
                       errorWidget: (_, __, ___) => Container(
                         height: 130,
                         color: AppColors.secondary,
-                        child: const Icon(Icons.restaurant, color: AppColors.primary, size: 40),
+                        child: const Icon(Icons.restaurant,
+                            color: AppColors.primary, size: 40),
                       ),
                     )
                   : Container(
                       height: 130,
                       color: AppColors.secondary,
-                      child: const Icon(Icons.restaurant, color: AppColors.primary, size: 40),
+                      child: const Icon(Icons.restaurant,
+                          color: AppColors.primary, size: 40),
                     ),
             ),
             Padding(
@@ -553,7 +569,8 @@ class _ProductCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return GestureDetector(
-      onTap: () => context.push('/home/vendor/${product.vendorId}/product/${product.id}'),
+      onTap: () => context
+          .push('/home/vendor/${product.vendorId}/product/${product.id}'),
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surface,
@@ -566,22 +583,26 @@ class _ProductCard extends ConsumerWidget {
             Expanded(
               flex: 3,
               child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(12)),
                 child: product.imageUrl != null
                     ? CachedNetworkImage(
                         imageUrl: product.imageUrl!,
                         width: double.infinity,
                         fit: BoxFit.cover,
-                        placeholder: (_, __) => Container(color: AppColors.shimmer),
+                        placeholder: (_, __) =>
+                            Container(color: AppColors.shimmer),
                         errorWidget: (_, __, ___) => Container(
                           color: AppColors.secondary,
-                          child: const Icon(Icons.restaurant, color: AppColors.primary),
+                          child: const Icon(Icons.restaurant,
+                              color: AppColors.primary),
                         ),
                       )
                     : Container(
                         color: AppColors.secondary,
                         child: const Center(
-                          child: Icon(Icons.restaurant, color: AppColors.primary, size: 36),
+                          child: Icon(Icons.restaurant,
+                              color: AppColors.primary, size: 36),
                         ),
                       ),
               ),
@@ -612,12 +633,15 @@ class _ProductCard extends ConsumerWidget {
                         ),
                         GestureDetector(
                           onTap: () {
-                            final conflict = ref.read(cartProvider.notifier).addItem(product);
+                            final conflict = ref
+                                .read(cartProvider.notifier)
+                                .addItem(product);
                             if (conflict) {
                               _showConflictDialog(context, ref);
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('تم الإضافة للسلة ✓')),
+                                const SnackBar(
+                                    content: Text('تم الإضافة للسلة ✓')),
                               );
                             }
                           },
@@ -627,7 +651,8 @@ class _ProductCard extends ConsumerWidget {
                               color: AppColors.primary,
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Icon(Icons.add, color: Colors.white, size: 16),
+                            child: const Icon(Icons.add,
+                                color: Colors.white, size: 16),
                           ),
                         ),
                       ],
@@ -647,7 +672,8 @@ class _ProductCard extends ConsumerWidget {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('السلة من بائع آخر'),
-        content: const Text('سلتك تحتوي على منتجات من بائع مختلف. هل تريد إفراغ السلة والبدء من جديد؟'),
+        content: const Text(
+            'سلتك تحتوي على منتجات من بائع مختلف. هل تريد إفراغ السلة والبدء من جديد؟'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),

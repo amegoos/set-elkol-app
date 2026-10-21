@@ -22,13 +22,16 @@ class OrderModel {
   factory OrderModel.fromJson(Map<String, dynamic> json) {
     return OrderModel(
       id: json['id'] as String? ?? '',
-      status: json['order_status'] as String? ?? json['status'] as String? ?? 'pending',
+      status: json['order_status'] as String? ??
+          json['status'] as String? ??
+          'pending',
       totalAmount: (json['total_amount'] as num?)?.toDouble() ?? 0.0,
       paymentMethod: json['payment_method'] as String? ?? 'cash',
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'] as String) ?? DateTime.now()
           : DateTime.now(),
-      vendorName: (json['vendors'] as Map<String, dynamic>?)?['name'] as String?,
+      vendorName:
+          (json['vendors'] as Map<String, dynamic>?)?['name'] as String?,
       deliveryAddress: json['delivery_address'] as String?,
       items: (json['order_items'] as List<dynamic>?)
               ?.map((e) => e as Map<String, dynamic>)

@@ -1,4 +1,4 @@
-﻿/// SharedPreferences / secure-storage key constants.
+/// SharedPreferences / secure-storage key constants.
 /// Centralising keys prevents typo-based runtime bugs.
 abstract final class StorageKeys {
   StorageKeys._();

@@ -65,7 +65,8 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
       ),
@@ -133,16 +134,20 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                     borderRadius: AppRadius.card,
                     border: Border.all(color: AppColors.inputBorder),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
                   child: Row(
                     children: [
                       // Country Code Selector (Egypt 🇪🇬 +20)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 8),
                         decoration: BoxDecoration(
                           color: AppColors.surface,
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppColors.inputBorder.withValues(alpha: 0.5)),
+                          border: Border.all(
+                              color:
+                                  AppColors.inputBorder.withValues(alpha: 0.5)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -157,7 +162,8 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                               ),
                             ),
                             const SizedBox(width: 4),
-                            const Icon(Icons.arrow_drop_down, color: AppColors.textSecondary, size: 20),
+                            const Icon(Icons.arrow_drop_down,
+                                color: AppColors.textSecondary, size: 20),
                           ],
                         ),
                       ),
@@ -178,7 +184,8 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                             border: InputBorder.none,
                             hintText: '01012345678',
                             hintStyle: AppTypography.bodyLarge.copyWith(
-                              color: AppColors.textSecondary.withValues(alpha: 0.5),
+                              color: AppColors.textSecondary
+                                  .withValues(alpha: 0.5),
                               letterSpacing: 0.5,
                             ),
                           ),
@@ -186,7 +193,8 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                             if (v == null || v.trim().isEmpty) {
                               return 'أدخل رقم الموبايل';
                             }
-                            if (!Validators.isValidEgyptianMobileNumber(v.trim())) {
+                            if (!Validators.isValidEgyptianMobileNumber(
+                                v.trim())) {
                               return 'رقم مصري غير صحيح (010, 011, 012, 015)';
                             }
                             return null;
@@ -204,11 +212,13 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: Row(
                     children: [
-                      const Icon(Icons.info_outline, size: 16, color: AppColors.textSecondary),
+                      const Icon(Icons.info_outline,
+                          size: 16, color: AppColors.textSecondary),
                       const SizedBox(width: 6),
                       Text(
                         'مثال: 01012345678 أو 01123456789',
-                        style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                        style: AppTypography.bodySmall
+                            .copyWith(color: AppColors.textSecondary),
                       ),
                     ],
                   ),

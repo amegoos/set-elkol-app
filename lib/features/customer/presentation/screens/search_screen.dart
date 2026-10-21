@@ -1,4 +1,4 @@
-﻿import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -86,16 +86,19 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           width: 60,
                           height: 60,
                           color: AppColors.secondary,
-                          child: const Icon(Icons.restaurant, color: AppColors.primary),
+                          child: const Icon(Icons.restaurant,
+                              color: AppColors.primary),
                         ),
                 ),
                 title: Text(product.name, style: AppTypography.titleSmall),
                 subtitle: Text(
                   '${product.price.toStringAsFixed(0)} ج.م',
-                  style: AppTypography.labelMedium.copyWith(color: AppColors.primary),
+                  style: AppTypography.labelMedium
+                      .copyWith(color: AppColors.primary),
                 ),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-                onTap: () => context.push('/home/vendor/${product.vendorId}/product/${product.id}'),
+                onTap: () => context.push(
+                    '/home/vendor/${product.vendorId}/product/${product.id}'),
               );
             },
           );
@@ -111,8 +114,14 @@ class _SearchSuggestions extends StatelessWidget {
   const _SearchSuggestions();
 
   static const suggestions = [
-    'ملوخية', 'فراخ مشوية', 'كشري', 'مسقعة',
-    'محشي', 'ورق عنب', 'فتة', 'بسبوسة',
+    'ملوخية',
+    'فراخ مشوية',
+    'كشري',
+    'مسقعة',
+    'محشي',
+    'ورق عنب',
+    'فتة',
+    'بسبوسة',
   ];
 
   @override
@@ -127,10 +136,12 @@ class _SearchSuggestions extends StatelessWidget {
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: suggestions.map((s) => ActionChip(
-              label: Text(s),
-              onPressed: () {},
-            )).toList(),
+            children: suggestions
+                .map((s) => ActionChip(
+                      label: Text(s),
+                      onPressed: () {},
+                    ))
+                .toList(),
           ),
         ],
       ),

@@ -38,7 +38,8 @@ class PaymentService {
     try {
       final user = _client.auth.currentUser;
       if (user == null) {
-        return PaymentResult(success: false, errorMessage: 'المستخدم غير مسجل الدخول');
+        return PaymentResult(
+            success: false, errorMessage: 'المستخدم غير مسجل الدخول');
       }
 
       final transactionId = 'TXN_${DateTime.now().millisecondsSinceEpoch}';
@@ -49,8 +50,10 @@ class PaymentService {
       } else if (gateway == PaymentGatewayType.card) {
         // Online Card payment sandbox integration
         status = 'paid';
-      } else if (gateway == PaymentGatewayType.instapay || gateway == PaymentGatewayType.vodafoneCash) {
-        status = 'pending'; // Pending verification of reference number
+      } else if (gateway == PaymentGatewayType.instapay ||
+          gateway == PaymentGatewayType.vodafoneCash) {
+        status =
+            'pending'; // Pending verification of reference number / receipt
       }
 
       // Store payment record in Supabase `payment_transactions` table
@@ -82,7 +85,7 @@ class PaymentService {
     } catch (e) {
       return PaymentResult(
         success: false,
-        errorMessage: 'فشل إتمام العملية المالية: $e',
+        errorMessage: 'فشل في تسجيل وتأكيد العملية: $e',
       );
     }
   }

@@ -1,4 +1,4 @@
-﻿import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -64,7 +64,8 @@ class CartScreen extends ConsumerWidget {
                                       width: 70,
                                       height: 70,
                                       color: AppColors.secondary,
-                                      child: const Icon(Icons.restaurant, color: AppColors.primary),
+                                      child: const Icon(Icons.restaurant,
+                                          color: AppColors.primary),
                                     ),
                             ),
                             const SizedBox(width: 12),
@@ -72,7 +73,8 @@ class CartScreen extends ConsumerWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(item.product.name, style: AppTypography.titleSmall),
+                                  Text(item.product.name,
+                                      style: AppTypography.titleSmall),
                                   const SizedBox(height: 4),
                                   Text(
                                     '${item.product.price.toStringAsFixed(0)} ج.م',
@@ -89,18 +91,23 @@ class CartScreen extends ConsumerWidget {
                                   icon: const Icon(Icons.remove, size: 18),
                                   onPressed: () => ref
                                       .read(cartProvider.notifier)
-                                      .updateQuantity(item.product.id, item.quantity - 1),
+                                      .updateQuantity(
+                                          item.product.id, item.quantity - 1),
                                   padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                  constraints: const BoxConstraints(
+                                      minWidth: 32, minHeight: 32),
                                 ),
-                                Text('${item.quantity}', style: AppTypography.titleSmall),
+                                Text('${item.quantity}',
+                                    style: AppTypography.titleSmall),
                                 IconButton(
                                   icon: const Icon(Icons.add, size: 18),
                                   onPressed: () => ref
                                       .read(cartProvider.notifier)
-                                      .updateQuantity(item.product.id, item.quantity + 1),
+                                      .updateQuantity(
+                                          item.product.id, item.quantity + 1),
                                   padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                  constraints: const BoxConstraints(
+                                      minWidth: 32, minHeight: 32),
                                 ),
                               ],
                             ),

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 /// Typography scale for ست الكل.
 /// Uses Cairo font family (loaded via pubspec.yaml) for Arabic-first text.

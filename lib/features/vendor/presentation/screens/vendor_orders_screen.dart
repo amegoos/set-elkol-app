@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/supabase_client.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -57,7 +57,12 @@ class _VendorOrderCard extends StatelessWidget {
   final Function(String) onStatusUpdate;
 
   static const _statusFlow = [
-    'pending', 'accepted', 'preparing', 'ready', 'out_for_delivery', 'delivered'
+    'pending',
+    'accepted',
+    'preparing',
+    'ready',
+    'out_for_delivery',
+    'delivered'
   ];
 
   static const _statusLabels = {
@@ -110,7 +115,8 @@ class _VendorOrderCard extends StatelessWidget {
                 style: AppTypography.titleSmall,
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: statusColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
@@ -125,12 +131,14 @@ class _VendorOrderCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'العميل: ${order.customerName ?? 'مجهول'}',
-            style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+            style: AppTypography.bodySmall
+                .copyWith(color: AppColors.textSecondary),
           ),
           if (order.deliveryAddress != null)
             Text(
               'التوصيل: ${order.deliveryAddress}',
-              style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+              style: AppTypography.bodySmall
+                  .copyWith(color: AppColors.textSecondary),
             ),
           const SizedBox(height: 4),
           Text(

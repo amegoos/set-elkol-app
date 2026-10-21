@@ -68,6 +68,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
 
   Future<void> _login() async {
     if (!_loginFormKey.currentState!.validate()) return;
+    // Prevent duplicate submissions
+    if (_isLoading) return;
+
     setState(() {
       _isLoading = true;
       _loginError = null;
@@ -84,17 +87,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
         context.showSnack(error, isError: true);
       } else {
         context.showSnack('تم تسجيل الدخول بنجاح');
-        // Explicit direct navigation fallback to guarantee immediate routing
-        final profile = ref.read(currentProfileProvider);
-        if (profile == null) {
-          context.go(RouteNames.roleSelect);
-        } else if (profile.isAdmin) {
-          context.go(RouteNames.adminDashboard);
-        } else if (profile.isVendor) {
-          context.go(RouteNames.vendorDashboard);
-        } else {
-          context.go(RouteNames.customerHome);
-        }
+        // Navigation handled by router redirect based on auth state
       }
     } catch (e) {
       if (mounted) {
@@ -111,6 +104,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
 
   Future<void> _signup() async {
     if (!_signupFormKey.currentState!.validate()) return;
+    // Prevent duplicate submissions
+    if (_isLoading) return;
+
     setState(() {
       _isLoading = true;
       _signupError = null;
@@ -120,7 +116,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
             email: _signupEmail.text.trim(),
             password: _signupPassword.text,
             name: _signupName.text.trim(),
-            phone: _signupPhone.text.trim().isEmpty ? null : _signupPhone.text.trim(),
+            phone: _signupPhone.text.trim().isEmpty
+                ? null
+                : _signupPhone.text.trim(),
           );
       if (!mounted) return;
       if (error == 'confirm_email') {
@@ -130,17 +128,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
         context.showSnack(error, isError: true);
       } else {
         context.showSnack('تم إنشاء الحساب بنجاح');
-        // Explicit direct navigation fallback
-        final profile = ref.read(currentProfileProvider);
-        if (profile == null) {
-          context.go(RouteNames.roleSelect);
-        } else if (profile.isAdmin) {
-          context.go(RouteNames.adminDashboard);
-        } else if (profile.isVendor) {
-          context.go(RouteNames.vendorDashboard);
-        } else {
-          context.go(RouteNames.customerHome);
-        }
+        // Navigation handled by router redirect based on auth state
       }
     } catch (e) {
       if (mounted) {
@@ -156,6 +144,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
   }
 
   Future<void> _googleSignIn() async {
+    // Prevent duplicate submissions
+    if (_isLoading) return;
+
     setState(() {
       _isLoading = true;
       _loginError = null;
@@ -168,6 +159,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
         setState(() => _loginError = error);
         context.showSnack(error, isError: true);
       }
+      // On success, navigation handled by router redirect
     } catch (e) {
       if (mounted) {
         final msg = 'حدث خطأ أثناء المتابعة مع Google: $e';
@@ -189,7 +181,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
         shape: RoundedRectangleBorder(borderRadius: AppRadius.card),
         title: const Row(
           children: [
-            Icon(Icons.mark_email_read_outlined, color: AppColors.primary, size: 26),
+            Icon(Icons.mark_email_read_outlined,
+                color: AppColors.primary, size: 26),
             SizedBox(width: 8),
             Text('تأكيد البريد الإلكتروني'),
           ],
@@ -203,7 +196,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
             onPressed: () {
               Navigator.of(context).pop();
               setState(() {
-                _loginInfoMessage = 'تم إرسال رابط تأكيد إلى بريدك الإلكتروني. يرجى تفعيل حسابك ثم تسجيل الدخول.';
+                _loginInfoMessage =
+                    'تم إرسال رابط تأكيد إلى بريدك الإلكتروني. يرجى تفعيل حسابك ثم تسجيل الدخول.';
               });
               _tabController.animateTo(0);
             },
@@ -263,7 +257,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 6),
                         decoration: BoxDecoration(
                           color: Colors.black.withOpacity(0.4),
                           borderRadius: BorderRadius.circular(20),
@@ -292,7 +287,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                   if (!SupabaseConfig.hasValidKey)
                     Container(
                       margin: const EdgeInsets.only(bottom: 16),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 10),
                       decoration: BoxDecoration(
                         color: Colors.amber.shade50,
                         border: Border.all(color: Colors.amber.shade400),
@@ -300,12 +296,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.warning_amber_rounded, color: Colors.amber.shade800, size: 22),
+                          Icon(Icons.warning_amber_rounded,
+                              color: Colors.amber.shade800, size: 22),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               'تنبيه: مفتاح Supabase Anon Key غير مهيأ في .env. يرجى إضافته لإتمام عمليات الحساب.',
-                              style: TextStyle(fontSize: 12, color: Colors.amber.shade900),
+                              style: TextStyle(
+                                  fontSize: 12, color: Colors.amber.shade900),
                             ),
                           ),
                         ],
@@ -349,7 +347,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                           onLogin: _login,
                           onGoogle: _googleSignIn,
                           onPhone: () => context.push(RouteNames.phoneLogin),
-                          onForgot: () => context.push(RouteNames.forgotPassword),
+                          onForgot: () =>
+                              context.push(RouteNames.forgotPassword),
                         ),
                         _SignupTab(
                           formKey: _signupFormKey,
@@ -440,7 +439,8 @@ class _LoginTab extends StatelessWidget {
             if (errorMessage != null) ...[
               Container(
                 margin: const EdgeInsets.only(bottom: 14),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
                   color: AppColors.error.withOpacity(0.08),
                   borderRadius: AppRadius.input,
@@ -448,7 +448,8 @@ class _LoginTab extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 22),
+                    const Icon(Icons.error_outline_rounded,
+                        color: AppColors.error, size: 22),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -467,7 +468,8 @@ class _LoginTab extends StatelessWidget {
             if (infoMessage != null) ...[
               Container(
                 margin: const EdgeInsets.only(bottom: 14),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
                   color: Colors.green.shade50,
                   borderRadius: AppRadius.input,
@@ -475,7 +477,8 @@ class _LoginTab extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.check_circle_outline_rounded, color: Colors.green.shade700, size: 22),
+                    Icon(Icons.check_circle_outline_rounded,
+                        color: Colors.green.shade700, size: 22),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -525,7 +528,8 @@ class _LoginTab extends StatelessWidget {
                 onPressed: onForgot,
                 child: Text(
                   'نسيت كلمة المرور؟',
-                  style: AppTypography.labelMedium.copyWith(color: AppColors.primary),
+                  style: AppTypography.labelMedium
+                      .copyWith(color: AppColors.primary),
                 ),
               ),
             ),
@@ -587,7 +591,8 @@ class _SignupTab extends StatelessWidget {
             if (errorMessage != null) ...[
               Container(
                 margin: const EdgeInsets.only(bottom: 14),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
                   color: AppColors.error.withOpacity(0.08),
                   borderRadius: AppRadius.input,
@@ -595,7 +600,8 @@ class _SignupTab extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 22),
+                    const Icon(Icons.error_outline_rounded,
+                        color: AppColors.error, size: 22),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -617,8 +623,7 @@ class _SignupTab extends StatelessWidget {
               hint: 'اسمك الكامل',
               textInputAction: TextInputAction.next,
               prefix: const Icon(Icons.person_outline, size: 20),
-              validator: (v) =>
-                  (v == null || v.isEmpty) ? 'أدخل اسمك' : null,
+              validator: (v) => (v == null || v.isEmpty) ? 'أدخل اسمك' : null,
             ),
             const SizedBox(height: 14),
             AppTextField(
@@ -654,7 +659,9 @@ class _SignupTab extends StatelessWidget {
               textInputAction: TextInputAction.done,
               validator: (v) {
                 if (v == null || v.isEmpty) return 'أدخل كلمة المرور';
-                if (v.length < 8) return 'كلمة المرور يجب أن تكون 8 أحرف على الأقل';
+                if (v.length < 8) {
+                  return 'كلمة المرور يجب أن تكون 8 أحرف على الأقل';
+                }
                 return null;
               },
             ),
@@ -689,7 +696,8 @@ class _OrDivider extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Text(
             'أو',
-            style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+            style: AppTypography.bodySmall
+                .copyWith(color: AppColors.textSecondary),
           ),
         ),
         const Expanded(child: Divider()),
@@ -727,7 +735,8 @@ class _GoogleButton extends StatelessWidget {
           const SizedBox(width: 10),
           Text(
             'المتابعة مع Google',
-            style: AppTypography.labelLarge.copyWith(color: AppColors.textPrimary),
+            style:
+                AppTypography.labelLarge.copyWith(color: AppColors.textPrimary),
           ),
         ],
       ),
@@ -761,11 +770,11 @@ class _PhoneButton extends StatelessWidget {
           const SizedBox(width: 10),
           Text(
             'المتابعة برقم الموبايل',
-            style: AppTypography.labelLarge.copyWith(color: AppColors.textPrimary),
+            style:
+                AppTypography.labelLarge.copyWith(color: AppColors.textPrimary),
           ),
         ],
       ),
     );
   }
 }
-

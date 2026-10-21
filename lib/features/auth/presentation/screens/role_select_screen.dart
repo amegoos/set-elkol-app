@@ -65,7 +65,8 @@ class _RoleSelectScreenState extends ConsumerState<RoleSelectScreen> {
               const SizedBox(height: 8),
               Text(
                 'اختر دورك للبدء',
-                style: AppTypography.bodyLarge.copyWith(color: AppColors.textSecondary),
+                style: AppTypography.bodyLarge
+                    .copyWith(color: AppColors.textSecondary),
               ),
               const SizedBox(height: 40),
               _RoleCard(
@@ -121,7 +122,9 @@ class _RoleCard extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withOpacity(0.08) : AppColors.surface,
+          color: isSelected
+              ? AppColors.primary.withOpacity(0.08)
+              : AppColors.surface,
           borderRadius: AppRadius.card,
           border: Border.all(
             color: isSelected ? AppColors.primary : AppColors.cardBorder,
@@ -153,7 +156,9 @@ class _RoleCard extends StatelessWidget {
                   Text(
                     title,
                     style: AppTypography.titleMedium.copyWith(
-                      color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 4),

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/supabase_client.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -6,7 +6,8 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/widgets/app_loading.dart';
 
-final notificationsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final notificationsProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final client = ref.watch(supabaseClientProvider);
   final userId = client.auth.currentUser?.id;
   if (userId == null) return [];
@@ -49,10 +50,14 @@ class NotificationsScreen extends ConsumerWidget {
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: isRead ? AppColors.surface : AppColors.primary.withOpacity(0.05),
+                  color: isRead
+                      ? AppColors.surface
+                      : AppColors.primary.withOpacity(0.05),
                   borderRadius: AppRadius.card,
                   border: Border.all(
-                    color: isRead ? AppColors.cardBorder : AppColors.primary.withOpacity(0.2),
+                    color: isRead
+                        ? AppColors.cardBorder
+                        : AppColors.primary.withOpacity(0.2),
                   ),
                 ),
                 child: Row(

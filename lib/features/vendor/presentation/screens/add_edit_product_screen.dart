@@ -21,7 +21,8 @@ class AddEditProductScreen extends ConsumerStatefulWidget {
   final String? productId;
 
   @override
-  ConsumerState<AddEditProductScreen> createState() => _AddEditProductScreenState();
+  ConsumerState<AddEditProductScreen> createState() =>
+      _AddEditProductScreenState();
 }
 
 class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
@@ -61,7 +62,8 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
   Future<void> _loadProduct() async {
     // Check local demo first, then supabase
     final demoProducts = DemoDataService.instance.rawProducts;
-    final match = demoProducts.where((p) => p['id'] == widget.productId).toList();
+    final match =
+        demoProducts.where((p) => p['id'] == widget.productId).toList();
     if (match.isNotEmpty) {
       _fillFromMap(match.first);
       return;
@@ -69,7 +71,11 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
 
     try {
       final client = ref.read(supabaseClientProvider);
-      final data = await client.from('products').select().eq('id', widget.productId!).maybeSingle();
+      final data = await client
+          .from('products')
+          .select()
+          .eq('id', widget.productId!)
+          .maybeSingle();
       if (data != null && mounted) {
         _fillFromMap(data as Map<String, dynamic>);
       }
@@ -82,7 +88,8 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
       _descCtrl.text = data['description'] as String? ?? '';
       _priceCtrl.text = (data['price'] as num?)?.toString() ?? '';
       _qtyCtrl.text = (data['available_quantity'] as int?)?.toString() ?? '';
-      _prepTimeCtrl.text = (data['preparation_time_minutes'] as int?)?.toString() ?? '45';
+      _prepTimeCtrl.text =
+          (data['preparation_time_minutes'] as int?)?.toString() ?? '45';
       _selectedCategoryId = data['category_id'] as String?;
       _selectedImageUrl = data['image_url'] as String?;
       if (_selectedImageUrl != null) {
@@ -120,8 +127,13 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
       _prepTimeCtrl.text = preset.suggestedPrepTime.toString();
 
       // Find matching category
-      final categories = ref.read(categoriesProvider).asData?.value ?? DemoDataService.instance.categories;
-      final matchedCat = categories.where((c) => c.name.contains(preset.categoryName) || preset.categoryName.contains(c.name)).toList();
+      final categories = ref.read(categoriesProvider).asData?.value ??
+          DemoDataService.instance.categories;
+      final matchedCat = categories
+          .where((c) =>
+              c.name.contains(preset.categoryName) ||
+              preset.categoryName.contains(c.name))
+          .toList();
       if (matchedCat.isNotEmpty) {
         _selectedCategoryId = matchedCat.first.id;
       }
@@ -157,22 +169,30 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
 
     try {
       final client = ref.read(supabaseClientProvider);
-      final userId = client.auth.currentUser?.id ?? '00000000-0000-0000-0000-000000000001';
-      final productId = widget.productId ?? 'prod-${DateTime.now().millisecondsSinceEpoch}';
+      final userId =
+          client.auth.currentUser?.id ?? '00000000-0000-0000-0000-000000000001';
+      final productId =
+          widget.productId ?? 'prod-${DateTime.now().millisecondsSinceEpoch}';
 
       final finalImageUrl = _selectedImageUrl ??
-          (_imageUrlCtrl.text.trim().isNotEmpty ? _imageUrlCtrl.text.trim() : DemoDataService.dishPresets.first.imageUrl);
+          (_imageUrlCtrl.text.trim().isNotEmpty
+              ? _imageUrlCtrl.text.trim()
+              : DemoDataService.dishPresets.first.imageUrl);
 
       final productData = {
         'id': productId,
         'vendor_id': userId,
         'category_id': _selectedCategoryId ?? 'cat-1',
         'name': _nameCtrl.text.trim(),
-        'description': _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
+        'description':
+            _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
         'price': double.parse(_priceCtrl.text.trim()),
         'image_url': finalImageUrl,
-        'available_quantity': _qtyCtrl.text.trim().isEmpty ? 10 : int.parse(_qtyCtrl.text.trim()),
-        'preparation_time_minutes': _prepTimeCtrl.text.trim().isEmpty ? 30 : int.parse(_prepTimeCtrl.text.trim()),
+        'available_quantity':
+            _qtyCtrl.text.trim().isEmpty ? 10 : int.parse(_qtyCtrl.text.trim()),
+        'preparation_time_minutes': _prepTimeCtrl.text.trim().isEmpty
+            ? 30
+            : int.parse(_prepTimeCtrl.text.trim()),
         'is_vegetarian': _isVegetarian,
         'is_spicy': _isSpicy,
         'is_available': _isAvailable,
@@ -192,11 +212,14 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
           await client.from('products').insert(productData);
         }
       } catch (err) {
-        debugPrint('[ProductSave] Supabase sync skipped or failed (local state updated): $err');
+        debugPrint(
+            '[ProductSave] Supabase sync skipped or failed (local state updated): $err');
       }
 
       if (!mounted) return;
-      context.showSnack(isEditing ? 'تم تحديث الأكلة بنجاح ✓' : 'تم إضافة الأكلة إلى المنيو بنجاح ✓');
+      context.showSnack(isEditing
+          ? 'تم تحديث الأكلة بنجاح ✓'
+          : 'تم إضافة الأكلة إلى المنيو بنجاح ✓');
 
       // Refresh all related providers
       ref.invalidate(myProductsProvider);
@@ -216,7 +239,8 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
   @override
   Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(categoriesProvider);
-    final categories = categoriesAsync.asData?.value ?? DemoDataService.instance.categories;
+    final categories =
+        categoriesAsync.asData?.value ?? DemoDataService.instance.categories;
 
     if (_selectedCategoryId == null && categories.isNotEmpty) {
       _selectedCategoryId = categories.first.id;
@@ -253,9 +277,12 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
                   AppTextField(
                     controller: _nameCtrl,
                     label: 'اسم الأكلة / الطبق *',
-                    hint: 'مثال: محشي مشكل، ملوخية بالفراخ، صينية مكرونة بشاميل',
+                    hint:
+                        'مثال: محشي مشكل، ملوخية بالفراخ، صينية مكرونة بشاميل',
                     prefix: const Icon(Icons.fastfood_outlined, size: 20),
-                    validator: (v) => (v == null || v.trim().isEmpty) ? 'أدخل اسم الأكلة' : null,
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? 'أدخل اسم الأكلة'
+                        : null,
                   ),
                   const SizedBox(height: 14),
 
@@ -278,12 +305,15 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
                             value: cat.id,
                             child: Text(
                               cat.name,
-                              style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                              style: AppTypography.bodyMedium
+                                  .copyWith(fontWeight: FontWeight.w600),
                             ),
                           );
                         }).toList(),
                         onChanged: (val) {
-                          if (val != null) setState(() => _selectedCategoryId = val);
+                          if (val != null) {
+                            setState(() => _selectedCategoryId = val);
+                          }
                         },
                       ),
                     ),
@@ -293,7 +323,8 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
                   AppTextField(
                     controller: _descCtrl,
                     label: 'وصف الأكلة وطريقة عملها',
-                    hint: 'اذكري مكوناتك وسرك في الطبخ، مثل: بالسمن البلدي، خلطة أرز خاصة...',
+                    hint:
+                        'اذكري مكوناتك وسرك في الطبخ، مثل: بالسمن البلدي، خلطة أرز خاصة...',
                     maxLines: 3,
                   ),
                 ],
@@ -316,12 +347,19 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
                           keyboardType: TextInputType.number,
                           prefix: const Padding(
                             padding: EdgeInsets.symmetric(horizontal: 8),
-                            child: Text('ج.م', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
+                            child: Text('ج.م',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.primary)),
                           ),
                           validator: (v) {
-                            if (v == null || v.trim().isEmpty) return 'أدخل السعر';
+                            if (v == null || v.trim().isEmpty) {
+                              return 'أدخل السعر';
+                            }
                             final parsed = double.tryParse(v.trim());
-                            if (parsed == null || parsed <= 0) return 'سعر غير صالح';
+                            if (parsed == null || parsed <= 0) {
+                              return 'سعر غير صالح';
+                            }
                             return null;
                           },
                         ),
@@ -333,11 +371,16 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
                           label: 'الكمية الجاهزة *',
                           hint: 'مثال: 10 وجبات',
                           keyboardType: TextInputType.number,
-                          prefix: const Icon(Icons.inventory_2_outlined, size: 20),
+                          prefix:
+                              const Icon(Icons.inventory_2_outlined, size: 20),
                           validator: (v) {
-                            if (v == null || v.trim().isEmpty) return 'أدخل الكمية';
+                            if (v == null || v.trim().isEmpty) {
+                              return 'أدخل الكمية';
+                            }
                             final parsed = int.tryParse(v.trim());
-                            if (parsed == null || parsed < 0) return 'كمية غير صالحة';
+                            if (parsed == null || parsed < 0) {
+                              return 'كمية غير صالحة';
+                            }
                             return null;
                           },
                         ),
@@ -364,7 +407,8 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
                 children: [
                   SwitchListTile(
                     title: const Text('متاح للطلب الآن'),
-                    subtitle: const Text('يظهر في المنيو ويمكن للعملاء طلبه مباشرة'),
+                    subtitle:
+                        const Text('يظهر في المنيو ويمكن للعملاء طلبه مباشرة'),
                     value: _isAvailable,
                     onChanged: (v) => setState(() => _isAvailable = v),
                     activeColor: AppColors.success,
@@ -373,7 +417,8 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
                   const Divider(height: 1),
                   SwitchListTile(
                     title: const Text('أكلة مميزة (في واجهة التطبيق)'),
-                    subtitle: const Text('عرض الأكلة في قسم "المميز ✨" على الصفحة الرئيسية'),
+                    subtitle: const Text(
+                        'عرض الأكلة في قسم "المميز ✨" على الصفحة الرئيسية'),
                     value: _isFeatured,
                     onChanged: (v) => setState(() => _isFeatured = v),
                     activeColor: AppColors.primary,
@@ -441,7 +486,9 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
             children: [
               Icon(icon, color: AppColors.primary, size: 20),
               const SizedBox(width: 8),
-              Text(title, style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
+              Text(title,
+                  style: AppTypography.titleMedium
+                      .copyWith(fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 16),
@@ -479,16 +526,23 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
               CachedNetworkImage(
                 imageUrl: _selectedImageUrl!,
                 fit: BoxFit.cover,
-                placeholder: (_, __) => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+                placeholder: (_, __) => const Center(
+                    child: CircularProgressIndicator(color: AppColors.primary)),
                 errorWidget: (_, __, ___) => Container(
                   color: AppColors.secondary,
-                  child: const Center(child: Icon(Icons.restaurant_rounded, size: 48, color: AppColors.primary)),
+                  child: const Center(
+                      child: Icon(Icons.restaurant_rounded,
+                          size: 48, color: AppColors.primary)),
                 ),
               ),
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.black.withOpacity(0.65), Colors.transparent, Colors.black.withOpacity(0.4)],
+                  colors: [
+                    Colors.black.withValues(alpha: 0.65),
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.4)
+                  ],
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                 ),
@@ -500,9 +554,13 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
               child: const Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.add_a_photo_outlined, size: 48, color: AppColors.primary),
+                  Icon(Icons.add_a_photo_outlined,
+                      size: 48, color: AppColors.primary),
                   SizedBox(height: 8),
-                  Text('أضيفي صورة شهية للأكلة البيتي', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                  Text('أضيفي صورة شهية للأكلة البيتي',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary)),
                 ],
               ),
             ),
@@ -519,14 +577,18 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
                   child: ElevatedButton.icon(
                     onPressed: () => _pickImage(ImageSource.gallery),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white.withOpacity(0.9),
+                      backgroundColor: Colors.white.withValues(alpha: 0.9),
                       foregroundColor: AppColors.textPrimary,
                       elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                       padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
-                    icon: const Icon(Icons.photo_library_outlined, size: 18, color: AppColors.primary),
-                    label: const Text('من المعرض', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    icon: const Icon(Icons.photo_library_outlined,
+                        size: 18, color: AppColors.primary),
+                    label: const Text('من المعرض',
+                        style: TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -534,14 +596,18 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
                   child: ElevatedButton.icon(
                     onPressed: () => _pickImage(ImageSource.camera),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white.withOpacity(0.9),
+                      backgroundColor: Colors.white.withValues(alpha: 0.9),
                       foregroundColor: AppColors.textPrimary,
                       elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                       padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
-                    icon: const Icon(Icons.camera_alt_outlined, size: 18, color: AppColors.primary),
-                    label: const Text('التقاط بالكاميرا', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    icon: const Icon(Icons.camera_alt_outlined,
+                        size: 18, color: AppColors.primary),
+                    label: const Text('التقاط بالكاميرا',
+                        style: TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
@@ -553,17 +619,23 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
               top: 12,
               right: 12,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.6),
+                  color: Colors.black.withValues(alpha: 0.6),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.check_circle, color: AppColors.success, size: 14),
+                    Icon(Icons.check_circle,
+                        color: AppColors.success, size: 14),
                     SizedBox(width: 4),
-                    Text('صورة حقيقية محددة', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                    Text('صورة حقيقية محددة',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
@@ -583,7 +655,8 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
             const SizedBox(width: 6),
             Text(
               'أو اختاري من أكلات ست الكل الجاهزة (صور وأسعار حقيقية):',
-              style: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              style: AppTypography.labelLarge.copyWith(
+                  fontWeight: FontWeight.bold, color: AppColors.textPrimary),
             ),
           ],
         ),
@@ -606,12 +679,15 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
                     color: AppColors.surface,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: isSelected ? AppColors.primary : AppColors.cardBorder,
+                      color:
+                          isSelected ? AppColors.primary : AppColors.cardBorder,
                       width: isSelected ? 2.5 : 1,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: isSelected ? AppColors.primary.withOpacity(0.15) : Colors.black.withOpacity(0.04),
+                        color: isSelected
+                            ? AppColors.primary.withOpacity(0.15)
+                            : Colors.black.withOpacity(0.04),
                         blurRadius: 8,
                         offset: const Offset(0, 3),
                       ),
@@ -633,7 +709,8 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
                               Container(
                                 color: AppColors.primary.withOpacity(0.25),
                                 child: const Center(
-                                  child: Icon(Icons.check_circle, color: Colors.white, size: 28),
+                                  child: Icon(Icons.check_circle,
+                                      color: Colors.white, size: 28),
                                 ),
                               ),
                           ],
@@ -646,19 +723,26 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
                           children: [
                             Text(
                               preset.categoryName,
-                              style: const TextStyle(fontSize: 9, color: AppColors.primary, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                  fontSize: 9,
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.bold),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                             Text(
                               preset.title,
-                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+                              style: const TextStyle(
+                                  fontSize: 10, fontWeight: FontWeight.w600),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                             Text(
                               '${preset.suggestedPrice.toStringAsFixed(0)} ج.م',
-                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                              style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textPrimary),
                             ),
                           ],
                         ),

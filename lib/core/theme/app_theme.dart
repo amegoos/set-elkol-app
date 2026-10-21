@@ -130,7 +130,8 @@ abstract final class AppTheme {
       // ── Chip ──────────────────────────────────────────────────────────────
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.tagBackground,
-        labelStyle: AppTypography.labelMedium.copyWith(color: AppColors.tagText),
+        labelStyle:
+            AppTypography.labelMedium.copyWith(color: AppColors.tagText),
         side: BorderSide.none,
         shape: RoundedRectangleBorder(
           borderRadius: AppRadius.chip,

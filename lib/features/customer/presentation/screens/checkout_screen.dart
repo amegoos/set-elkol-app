@@ -16,6 +16,7 @@ import '../../../vendor/presentation/providers/vendor_providers.dart';
 import '../providers/customer_providers.dart';
 
 enum PaymentMethod { card, cash, instapay, vodafoneCash }
+
 enum DeliveryType { delivery, pickup }
 
 class CheckoutScreen extends ConsumerStatefulWidget {
@@ -43,7 +44,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   }
 
   Future<void> _placeOrder() async {
-    if (_delivery == DeliveryType.delivery && _addressController.text.trim().isEmpty) {
+    if (_delivery == DeliveryType.delivery &&
+        _addressController.text.trim().isEmpty) {
       context.showSnack('أدخل عنوان التوصيل بالتفصيل', isError: true);
       return;
     }
@@ -60,13 +62,16 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       final client = ref.read(supabaseClientProvider);
       final profile = ref.read(currentProfileProvider);
       final currentAuthUser = client.auth.currentUser;
-      final userId = currentAuthUser?.id ?? profile?.id ?? '00000000-0000-0000-0000-000000000002';
+      final userId = currentAuthUser?.id ??
+          profile?.id ??
+          '00000000-0000-0000-0000-000000000002';
 
       final orderId = const Uuid().v4();
       final vendorId = cart.vendorId ?? '00000000-0000-0000-0000-000000000001';
 
       double deliveryFee = 0;
-      if (_delivery == DeliveryType.delivery && cart.vendor?.deliveryFee != null) {
+      if (_delivery == DeliveryType.delivery &&
+          cart.vendor?.deliveryFee != null) {
         deliveryFee = cart.vendor!.deliveryFee!;
       }
 
@@ -133,10 +138,14 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             'subtotal': cart.subtotal,
             'total_amount': totalAmount,
             'delivery_fee': deliveryFee,
-            'fulfillment_type': _delivery == DeliveryType.delivery ? 'delivery' : 'pickup',
+            'fulfillment_type':
+                _delivery == DeliveryType.delivery ? 'delivery' : 'pickup',
             'payment_method': paymentDbValue,
-            'payment_status': _payment == PaymentMethod.card ? 'verified' : 'pending',
-            'customer_note': _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
+            'payment_status':
+                _payment == PaymentMethod.card ? 'verified' : 'pending',
+            'customer_note': _noteController.text.trim().isEmpty
+                ? null
+                : _noteController.text.trim(),
             'created_at': DateTime.now().toIso8601String(),
             'updated_at': DateTime.now().toIso8601String(),
           });
@@ -153,7 +162,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           }
         }
       } catch (supabaseError) {
-        debugPrint('[Checkout] Supabase sync skipped or failed (local order safe): $supabaseError');
+        debugPrint(
+            '[Checkout] Supabase sync skipped or failed (local order safe): $supabaseError');
       }
 
       // 3. Process payment service log safely
@@ -232,7 +242,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   label: 'توصيل للمنزل',
                   icon: Icons.delivery_dining,
                   isSelected: _delivery == DeliveryType.delivery,
-                  onTap: () => setState(() => _delivery = DeliveryType.delivery),
+                  onTap: () =>
+                      setState(() => _delivery = DeliveryType.delivery),
                 ),
                 const SizedBox(width: 12),
                 _TypeChip(
@@ -302,10 +313,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               icon: Icons.phone_android,
               subtitle: 'تحويل عبر رقم المحفظة',
               isSelected: _payment == PaymentMethod.vodafoneCash,
-              onTap: () => setState(() => _payment = PaymentMethod.vodafoneCash),
+              onTap: () =>
+                  setState(() => _payment = PaymentMethod.vodafoneCash),
             ),
 
-            if (_payment == PaymentMethod.instapay || _payment == PaymentMethod.vodafoneCash) ...[
+            if (_payment == PaymentMethod.instapay ||
+                _payment == PaymentMethod.vodafoneCash) ...[
               const SizedBox(height: 14),
               AppTextField(
                 controller: _walletReferenceController,
@@ -326,17 +339,21 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               ),
               child: Column(
                 children: [
-                  _SummaryRow(label: 'المجموع الفرعي', value: '${cart.subtotal.toStringAsFixed(0)} ج.م'),
+                  _SummaryRow(
+                      label: 'المجموع الفرعي',
+                      value: '${cart.subtotal.toStringAsFixed(0)} ج.م'),
                   const SizedBox(height: 8),
                   if (_delivery == DeliveryType.delivery)
                     _SummaryRow(
                       label: 'رسوم التوصيل',
-                      value: '${(cart.vendor?.deliveryFee ?? 20.0).toStringAsFixed(0)} ج.م',
+                      value:
+                          '${(cart.vendor?.deliveryFee ?? 20.0).toStringAsFixed(0)} ج.م',
                     ),
                   const Divider(height: 20),
                   _SummaryRow(
                     label: 'الإجمالي النهائي',
-                    value: '${(cart.subtotal + (_delivery == DeliveryType.delivery ? (cart.vendor?.deliveryFee ?? 20.0) : 0)).toStringAsFixed(0)} ج.م',
+                    value:
+                        '${(cart.subtotal + (_delivery == DeliveryType.delivery ? (cart.vendor?.deliveryFee ?? 20.0) : 0)).toStringAsFixed(0)} ج.م',
                     isBold: true,
                   ),
                 ],
@@ -376,7 +393,9 @@ class _TypeChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : AppColors.surface,
+          color: isSelected
+              ? AppColors.primary.withValues(alpha: 0.1)
+              : AppColors.surface,
           borderRadius: AppRadius.medium,
           border: Border.all(
             color: isSelected ? AppColors.primary : AppColors.cardBorder,
@@ -386,7 +405,10 @@ class _TypeChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 18, color: isSelected ? AppColors.primary : AppColors.textSecondary),
+            Icon(icon,
+                size: 18,
+                color:
+                    isSelected ? AppColors.primary : AppColors.textSecondary),
             const SizedBox(width: 8),
             Text(
               label,
@@ -423,7 +445,9 @@ class _PaymentOption extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withValues(alpha: 0.06) : AppColors.surface,
+          color: isSelected
+              ? AppColors.primary.withValues(alpha: 0.06)
+              : AppColors.surface,
           borderRadius: AppRadius.card,
           border: Border.all(
             color: isSelected ? AppColors.primary : AppColors.cardBorder,
@@ -432,18 +456,23 @@ class _PaymentOption extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, color: isSelected ? AppColors.primary : AppColors.textSecondary),
+            Icon(icon,
+                color:
+                    isSelected ? AppColors.primary : AppColors.textSecondary),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+                  Text(label,
+                      style: AppTypography.bodyMedium
+                          .copyWith(fontWeight: FontWeight.w600)),
                   if (subtitle != null) ...[
                     const SizedBox(height: 2),
                     Text(
                       subtitle!,
-                      style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary, fontSize: 12),
+                      style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textSecondary, fontSize: 12),
                     ),
                   ],
                 ],
@@ -453,7 +482,8 @@ class _PaymentOption extends StatelessWidget {
             if (isSelected)
               const Icon(Icons.radio_button_checked, color: AppColors.primary)
             else
-              const Icon(Icons.radio_button_unchecked, color: AppColors.textHint),
+              const Icon(Icons.radio_button_unchecked,
+                  color: AppColors.textHint),
           ],
         ),
       ),
@@ -462,7 +492,8 @@ class _PaymentOption extends StatelessWidget {
 }
 
 class _SummaryRow extends StatelessWidget {
-  const _SummaryRow({required this.label, required this.value, this.isBold = false});
+  const _SummaryRow(
+      {required this.label, required this.value, this.isBold = false});
   final String label;
   final String value;
   final bool isBold;

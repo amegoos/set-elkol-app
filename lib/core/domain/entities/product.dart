@@ -1,4 +1,4 @@
-﻿import 'package:equatable/equatable.dart';
+import 'package:equatable/equatable.dart';
 import 'vendor.dart';
 import 'category.dart';
 
@@ -46,12 +46,24 @@ class Product extends Equatable {
   bool get inStock => availableQuantity == null || (availableQuantity ?? 0) > 0;
 
   Product copyWith({
-    String? id, String? vendorId, String? categoryId, String? name,
-    String? description, double? price, String? imageUrl,
-    List<String>? additionalImages, int? availableQuantity,
-    int? preparationTimeMinutes, bool? isAvailable, bool? isFeatured,
-    bool? isVegetarian, bool? isSpicy, DateTime? createdAt,
-    DateTime? updatedAt, Vendor? vendor, Category? category,
+    String? id,
+    String? vendorId,
+    String? categoryId,
+    String? name,
+    String? description,
+    double? price,
+    String? imageUrl,
+    List<String>? additionalImages,
+    int? availableQuantity,
+    int? preparationTimeMinutes,
+    bool? isAvailable,
+    bool? isFeatured,
+    bool? isVegetarian,
+    bool? isSpicy,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Vendor? vendor,
+    Category? category,
   }) {
     return Product(
       id: id ?? this.id,
@@ -63,7 +75,8 @@ class Product extends Equatable {
       imageUrl: imageUrl ?? this.imageUrl,
       additionalImages: additionalImages ?? this.additionalImages,
       availableQuantity: availableQuantity ?? this.availableQuantity,
-      preparationTimeMinutes: preparationTimeMinutes ?? this.preparationTimeMinutes,
+      preparationTimeMinutes:
+          preparationTimeMinutes ?? this.preparationTimeMinutes,
       isAvailable: isAvailable ?? this.isAvailable,
       isFeatured: isFeatured ?? this.isFeatured,
       isVegetarian: isVegetarian ?? this.isVegetarian,
@@ -77,9 +90,23 @@ class Product extends Equatable {
 
   @override
   List<Object?> get props => [
-        id, vendorId, categoryId, name, description, price, imageUrl,
-        additionalImages, availableQuantity, preparationTimeMinutes,
-        isAvailable, isFeatured, isVegetarian, isSpicy,
-        createdAt, updatedAt, vendor, category,
+        id,
+        vendorId,
+        categoryId,
+        name,
+        description,
+        price,
+        imageUrl,
+        additionalImages,
+        availableQuantity,
+        preparationTimeMinutes,
+        isAvailable,
+        isFeatured,
+        isVegetarian,
+        isSpicy,
+        createdAt,
+        updatedAt,
+        vendor,
+        category,
       ];
 }

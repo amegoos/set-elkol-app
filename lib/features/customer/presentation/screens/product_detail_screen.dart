@@ -1,4 +1,4 @@
-﻿import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -22,7 +22,8 @@ class ProductDetailScreen extends ConsumerStatefulWidget {
   final String vendorId;
 
   @override
-  ConsumerState<ProductDetailScreen> createState() => _ProductDetailScreenState();
+  ConsumerState<ProductDetailScreen> createState() =>
+      _ProductDetailScreenState();
 }
 
 class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
@@ -36,12 +37,16 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       data: (products) {
         final idx = products.indexWhere((p) => p.id == widget.productId);
         if (idx == -1) {
-          return Scaffold(appBar: AppBar(), body: const Center(child: Text('المنتج غير موجود')));
+          return Scaffold(
+              appBar: AppBar(),
+              body: const Center(child: Text('المنتج غير موجود')));
         }
         return _buildContent(context, products[idx]);
       },
-      loading: () => Scaffold(appBar: AppBar(), body: const AppLoadingSpinner()),
-      error: (e, _) => Scaffold(appBar: AppBar(), body: AppErrorWidget(message: e.toString())),
+      loading: () =>
+          Scaffold(appBar: AppBar(), body: const AppLoadingSpinner()),
+      error: (e, _) => Scaffold(
+          appBar: AppBar(), body: AppErrorWidget(message: e.toString())),
     );
   }
 
@@ -73,12 +78,14 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                       fit: BoxFit.cover,
                       errorWidget: (_, __, ___) => Container(
                         color: AppColors.secondary,
-                        child: const Icon(Icons.restaurant, size: 80, color: AppColors.primary),
+                        child: const Icon(Icons.restaurant,
+                            size: 80, color: AppColors.primary),
                       ),
                     )
                   : Container(
                       color: AppColors.secondary,
-                      child: const Icon(Icons.restaurant, size: 80, color: AppColors.primary),
+                      child: const Icon(Icons.restaurant,
+                          size: 80, color: AppColors.primary),
                     ),
             ),
           ),
@@ -91,10 +98,13 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(child: Text(product.name, style: AppTypography.headlineSmall)),
+                      Expanded(
+                          child: Text(product.name,
+                              style: AppTypography.headlineSmall)),
                       Text(
                         '${product.price.toStringAsFixed(0)} ج.م',
-                        style: AppTypography.headlineSmall.copyWith(color: AppColors.primary),
+                        style: AppTypography.headlineSmall
+                            .copyWith(color: AppColors.primary),
                       ),
                     ],
                   ),
@@ -102,10 +112,14 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                   Wrap(
                     spacing: 6,
                     children: [
-                      if (product.isVegetarian) _Tag(label: '🥗 نباتي', color: AppColors.success),
-                      if (product.isSpicy) _Tag(label: '🌶 حار', color: AppColors.warning),
+                      if (product.isVegetarian)
+                        _Tag(label: '🥗 نباتي', color: AppColors.success),
+                      if (product.isSpicy)
+                        _Tag(label: '🌶 حار', color: AppColors.warning),
                       if (product.preparationTimeMinutes != null)
-                        _Tag(label: '⏱ ${product.preparationTimeMinutes} دقيقة', color: AppColors.textSecondary),
+                        _Tag(
+                            label: '⏱ ${product.preparationTimeMinutes} دقيقة',
+                            color: AppColors.textSecondary),
                     ],
                   ),
                   if (product.description != null) ...[
@@ -125,7 +139,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                       const Spacer(),
                       _QuantitySelector(
                         quantity: _quantity,
-                        onDecrement: () { if (_quantity > 1) setState(() => _quantity--); },
+                        onDecrement: () {
+                          if (_quantity > 1) setState(() => _quantity--);
+                        },
                         onIncrement: () => setState(() => _quantity++),
                       ),
                     ],
@@ -141,7 +157,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: AppButton(
-            label: 'أضف للسلة — ${(product.price * _quantity).toStringAsFixed(0)} ج.م',
+            label:
+                'أضف للسلة — ${(product.price * _quantity).toStringAsFixed(0)} ج.م',
             onPressed: () {
               for (var i = 0; i < _quantity; i++) {
                 ref.read(cartProvider.notifier).addItem(product);
@@ -161,10 +178,15 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     if (userId == null) return;
 
     if (isFav) {
-      await client.from('favorites').delete()
-          .eq('user_id', userId).eq('product_id', productId);
+      await client
+          .from('favorites')
+          .delete()
+          .eq('user_id', userId)
+          .eq('product_id', productId);
     } else {
-      await client.from('favorites').insert({'user_id': userId, 'product_id': productId});
+      await client
+          .from('favorites')
+          .insert({'user_id': userId, 'product_id': productId});
     }
     ref.invalidate(isFavoriteProvider(productId));
     ref.invalidate(favoritesProvider);
@@ -185,7 +207,8 @@ class _Tag extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color.withOpacity(0.3)),
       ),
-      child: Text(label, style: AppTypography.labelSmall.copyWith(color: color)),
+      child:
+          Text(label, style: AppTypography.labelSmall.copyWith(color: color)),
     );
   }
 }
@@ -211,7 +234,8 @@ class _QuantitySelector extends StatelessWidget {
         ),
         SizedBox(
           width: 36,
-          child: Text('$quantity', textAlign: TextAlign.center, style: AppTypography.titleMedium),
+          child: Text('$quantity',
+              textAlign: TextAlign.center, style: AppTypography.titleMedium),
         ),
         IconButton(
           onPressed: onIncrement,

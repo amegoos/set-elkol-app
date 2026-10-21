@@ -15,10 +15,12 @@ class VendorBizProfileScreen extends ConsumerStatefulWidget {
   const VendorBizProfileScreen({super.key});
 
   @override
-  ConsumerState<VendorBizProfileScreen> createState() => _VendorBizProfileScreenState();
+  ConsumerState<VendorBizProfileScreen> createState() =>
+      _VendorBizProfileScreenState();
 }
 
-class _VendorBizProfileScreenState extends ConsumerState<VendorBizProfileScreen> {
+class _VendorBizProfileScreenState
+    extends ConsumerState<VendorBizProfileScreen> {
   final _nameCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
   final _areaCtrl = TextEditingController();
@@ -62,29 +64,56 @@ class _VendorBizProfileScreenState extends ConsumerState<VendorBizProfileScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AppTextField(controller: _nameCtrl, label: 'اسم المتجر', prefix: const Icon(Icons.store_outlined, size: 20)),
+                AppTextField(
+                    controller: _nameCtrl,
+                    label: 'اسم المتجر',
+                    prefix: const Icon(Icons.store_outlined, size: 20)),
                 const SizedBox(height: 14),
-                AppTextField(controller: _descCtrl, label: 'وصف المتجر', maxLines: 3),
+                AppTextField(
+                    controller: _descCtrl, label: 'وصف المتجر', maxLines: 3),
                 const SizedBox(height: 14),
                 DropdownButtonFormField<String>(
                   value: _selectedGov,
-                  decoration: const InputDecoration(labelText: 'المحافظة', prefixIcon: Icon(Icons.map_outlined, size: 20)),
-                  items: AppConstants.egyptGovernorates.map((g) => DropdownMenuItem(value: g, child: Text(g))).toList(),
+                  decoration: const InputDecoration(
+                      labelText: 'المحافظة',
+                      prefixIcon: Icon(Icons.map_outlined, size: 20)),
+                  items: AppConstants.egyptGovernorates
+                      .map((g) => DropdownMenuItem(value: g, child: Text(g)))
+                      .toList(),
                   onChanged: (v) => setState(() => _selectedGov = v),
                 ),
                 const SizedBox(height: 14),
-                AppTextField(controller: _areaCtrl, label: 'المنطقة / الحي', prefix: const Icon(Icons.location_on_outlined, size: 20)),
+                AppTextField(
+                    controller: _areaCtrl,
+                    label: 'المنطقة / الحي',
+                    prefix: const Icon(Icons.location_on_outlined, size: 20)),
                 const SizedBox(height: 20),
                 Text('خيارات التوصيل', style: AppTypography.titleMedium),
                 const SizedBox(height: 8),
-                SwitchListTile(title: const Text('توصيل للعميل'), value: _offersDelivery, onChanged: (v) => setState(() => _offersDelivery = v), activeColor: AppColors.primary),
-                SwitchListTile(title: const Text('استلام ذاتي'), value: _offersPickup, onChanged: (v) => setState(() => _offersPickup = v), activeColor: AppColors.primary),
+                SwitchListTile(
+                    title: const Text('توصيل للعميل'),
+                    value: _offersDelivery,
+                    onChanged: (v) => setState(() => _offersDelivery = v),
+                    activeColor: AppColors.primary),
+                SwitchListTile(
+                    title: const Text('استلام ذاتي'),
+                    value: _offersPickup,
+                    onChanged: (v) => setState(() => _offersPickup = v),
+                    activeColor: AppColors.primary),
                 if (_offersDelivery) ...[
                   const SizedBox(height: 8),
-                  AppTextField(controller: _feeCtrl, label: 'رسوم التوصيل (ج.م)', keyboardType: TextInputType.number, prefix: const Icon(Icons.delivery_dining_outlined, size: 20)),
+                  AppTextField(
+                      controller: _feeCtrl,
+                      label: 'رسوم التوصيل (ج.م)',
+                      keyboardType: TextInputType.number,
+                      prefix:
+                          const Icon(Icons.delivery_dining_outlined, size: 20)),
                 ],
                 const SizedBox(height: 28),
-                AppButton(label: 'حفظ التغييرات', onPressed: _save, isLoading: _isLoading),
+                AppButton(
+                    label: 'حفظ التغييرات',
+                    onPressed: _save,
+                    isLoading: _isLoading),
                 const SizedBox(height: 20),
               ],
             ),
@@ -100,17 +129,22 @@ class _VendorBizProfileScreenState extends ConsumerState<VendorBizProfileScreen>
     setState(() => _isLoading = true);
     try {
       final client = ref.read(supabaseClientProvider);
-      final userId = client.auth.currentUser?.id ?? ref.read(currentProfileProvider)?.id ?? '00000000-0000-0000-0000-000000000001';
+      final userId = client.auth.currentUser?.id ??
+          ref.read(currentProfileProvider)?.id ??
+          '00000000-0000-0000-0000-000000000001';
 
       await client.from('vendors').upsert({
         'id': userId,
         'name': _nameCtrl.text.trim(),
-        'description': _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
+        'description':
+            _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
         'governorate': _selectedGov,
         'area': _areaCtrl.text.trim().isEmpty ? null : _areaCtrl.text.trim(),
         'offers_delivery': _offersDelivery,
         'offers_pickup': _offersPickup,
-        'delivery_fee': _feeCtrl.text.trim().isEmpty ? null : double.tryParse(_feeCtrl.text),
+        'delivery_fee': _feeCtrl.text.trim().isEmpty
+            ? null
+            : double.tryParse(_feeCtrl.text),
         'is_active': true,
         'updated_at': DateTime.now().toIso8601String(),
       });

@@ -47,8 +47,11 @@ class ProfileScreen extends ConsumerWidget {
                     radius: 44,
                     backgroundColor: AppColors.secondary,
                     child: Text(
-                      profile.name.isNotEmpty ? profile.name[0].toUpperCase() : 'U',
-                      style: AppTypography.headlineLarge.copyWith(color: AppColors.primary),
+                      profile.name.isNotEmpty
+                          ? profile.name[0].toUpperCase()
+                          : 'U',
+                      style: AppTypography.headlineLarge
+                          .copyWith(color: AppColors.primary),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -56,11 +59,13 @@ class ProfileScreen extends ConsumerWidget {
                   if (profile.email != null)
                     Text(
                       profile.email!,
-                      style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                      style: AppTypography.bodySmall
+                          .copyWith(color: AppColors.textSecondary),
                     ),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
                     decoration: BoxDecoration(
                       color: profile.isVendor
                           ? AppColors.vendorBadge.withOpacity(0.12)
@@ -70,7 +75,9 @@ class ProfileScreen extends ConsumerWidget {
                     child: Text(
                       profile.isVendor ? 'بائع' : 'عميل',
                       style: AppTypography.labelMedium.copyWith(
-                        color: profile.isVendor ? AppColors.vendorBadge : AppColors.primary,
+                        color: profile.isVendor
+                            ? AppColors.vendorBadge
+                            : AppColors.primary,
                       ),
                     ),
                   ),
@@ -87,12 +94,14 @@ class ProfileScreen extends ConsumerWidget {
                 _MenuItem(
                   icon: Icons.favorite_border,
                   label: 'المفضلة',
-                  onTap: () => context.push('${RouteNames.customerProfile}/favorites'),
+                  onTap: () =>
+                      context.push('${RouteNames.customerProfile}/favorites'),
                 ),
                 _MenuItem(
                   icon: Icons.location_on_outlined,
                   label: 'عناوين التوصيل',
-                  onTap: () => context.push('${RouteNames.customerProfile}/addresses'),
+                  onTap: () =>
+                      context.push('${RouteNames.customerProfile}/addresses'),
                 ),
                 _MenuItem(
                   icon: Icons.receipt_long_outlined,
@@ -140,9 +149,11 @@ class ProfileScreen extends ConsumerWidget {
                 _MenuItem(
                   icon: Icons.admin_panel_settings_outlined,
                   label: 'لوحة تحكم الإدارة (Admin Dashboard)',
-                  color: const Color(0xFF6A1B9A),
+                  color: AppColors.pickupBadge,
                   onTap: () {
-                    ref.read(authProvider.notifier).signInAsDemo(UserRole.admin);
+                    ref
+                        .read(authProvider.notifier)
+                        .signInAsDemo(UserRole.admin);
                     context.go(RouteNames.adminDashboard);
                   },
                 ),
@@ -151,7 +162,9 @@ class ProfileScreen extends ConsumerWidget {
                   label: 'التحويل لحساب ست الكل (Vendor)',
                   color: AppColors.vendorBadge,
                   onTap: () {
-                    ref.read(authProvider.notifier).signInAsDemo(UserRole.vendor);
+                    ref
+                        .read(authProvider.notifier)
+                        .signInAsDemo(UserRole.vendor);
                     context.go(RouteNames.vendorDashboard);
                   },
                 ),
@@ -212,7 +225,9 @@ class ProfileScreen extends ConsumerWidget {
         title: const Text('تسجيل الخروج'),
         content: const Text('هل تريد تسجيل الخروج؟'),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('لا')),
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('لا')),
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
@@ -240,7 +255,8 @@ class _MenuSection extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: Text(
             title,
-            style: AppTypography.labelMedium.copyWith(color: AppColors.textSecondary),
+            style: AppTypography.labelMedium
+                .copyWith(color: AppColors.textSecondary),
           ),
         ),
         Container(
@@ -255,14 +271,16 @@ class _MenuSection extends StatelessWidget {
 
   Widget _buildTile(_MenuItem item) {
     return ListTile(
-      leading: Icon(item.icon, color: item.color ?? AppColors.primary, size: 22),
+      leading:
+          Icon(item.icon, color: item.color ?? AppColors.primary, size: 22),
       title: Text(
         item.label,
         style: AppTypography.bodyMedium.copyWith(
           color: item.color ?? AppColors.textPrimary,
         ),
       ),
-      trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textHint),
+      trailing: const Icon(Icons.arrow_forward_ios,
+          size: 14, color: AppColors.textHint),
       onTap: item.onTap,
     );
   }

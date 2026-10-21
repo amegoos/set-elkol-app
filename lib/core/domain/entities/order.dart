@@ -1,4 +1,4 @@
-﻿import 'package:equatable/equatable.dart';
+import 'package:equatable/equatable.dart';
 import 'order_item.dart';
 import 'vendor.dart';
 import 'user_profile.dart';
@@ -61,10 +61,13 @@ class Order extends Equatable {
 
   /// Populated when the query joins order_items.
   final List<OrderItem>? items;
+
   /// Populated when the query joins vendors.
   final Vendor? vendor;
+
   /// Populated when the query joins profiles.
   final UserProfile? customer;
+
   /// Populated when the query joins addresses.
   final Address? deliveryAddress;
 
@@ -76,14 +79,25 @@ class Order extends Equatable {
       orderStatus != OrderStatus.cancelled;
 
   Order copyWith({
-    String? id, String? customerId, String? vendorId,
-    double? subtotal, double? deliveryFee, double? totalAmount,
-    FulfillmentType? fulfillmentType, PaymentMethod? paymentMethod,
-    PaymentStatus? paymentStatus, OrderStatus? orderStatus,
-    String? deliveryAddressId, String? customerNote,
-    String? cancellationReason, DateTime? createdAt, DateTime? updatedAt,
-    List<OrderItem>? items, Vendor? vendor,
-    UserProfile? customer, Address? deliveryAddress,
+    String? id,
+    String? customerId,
+    String? vendorId,
+    double? subtotal,
+    double? deliveryFee,
+    double? totalAmount,
+    FulfillmentType? fulfillmentType,
+    PaymentMethod? paymentMethod,
+    PaymentStatus? paymentStatus,
+    OrderStatus? orderStatus,
+    String? deliveryAddressId,
+    String? customerNote,
+    String? cancellationReason,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    List<OrderItem>? items,
+    Vendor? vendor,
+    UserProfile? customer,
+    Address? deliveryAddress,
   }) {
     return Order(
       id: id ?? this.id,
@@ -110,9 +124,24 @@ class Order extends Equatable {
 
   @override
   List<Object?> get props => [
-        id, customerId, vendorId, subtotal, deliveryFee, totalAmount,
-        fulfillmentType, paymentMethod, paymentStatus, orderStatus,
-        deliveryAddressId, customerNote, cancellationReason,
-        createdAt, updatedAt, items, vendor, customer, deliveryAddress,
+        id,
+        customerId,
+        vendorId,
+        subtotal,
+        deliveryFee,
+        totalAmount,
+        fulfillmentType,
+        paymentMethod,
+        paymentStatus,
+        orderStatus,
+        deliveryAddressId,
+        customerNote,
+        cancellationReason,
+        createdAt,
+        updatedAt,
+        items,
+        vendor,
+        customer,
+        deliveryAddress,
       ];
 }

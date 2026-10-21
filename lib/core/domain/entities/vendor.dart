@@ -1,4 +1,4 @@
-﻿import 'package:equatable/equatable.dart';
+import 'package:equatable/equatable.dart';
 
 /// Domain entity for a vendor/seller.
 class Vendor extends Equatable {
@@ -94,9 +94,25 @@ class Vendor extends Equatable {
 
   @override
   List<Object?> get props => [
-        id, name, logoUrl, description, governorate, area,
-        rating, totalReviews, isActive, offersDelivery, offersPickup,
-        deliveryFee, minOrder, deliveryRadiusKm, avgPrepTimeMinutes,
-        latitude, longitude, isVerified, createdAt, updatedAt,
+        id,
+        name,
+        logoUrl,
+        description,
+        governorate,
+        area,
+        rating,
+        totalReviews,
+        isActive,
+        offersDelivery,
+        offersPickup,
+        deliveryFee,
+        minOrder,
+        deliveryRadiusKm,
+        avgPrepTimeMinutes,
+        latitude,
+        longitude,
+        isVerified,
+        createdAt,
+        updatedAt,
       ];
 }

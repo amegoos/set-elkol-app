@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -11,7 +11,8 @@ class OrderTrackingScreen extends ConsumerStatefulWidget {
   final String orderId;
 
   @override
-  ConsumerState<OrderTrackingScreen> createState() => _OrderTrackingScreenState();
+  ConsumerState<OrderTrackingScreen> createState() =>
+      _OrderTrackingScreenState();
 }
 
 class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
@@ -36,7 +37,8 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                   decoration: BoxDecoration(
                     color: AppColors.success.withOpacity(0.1),
                     borderRadius: AppRadius.card,
-                    border: Border.all(color: AppColors.success.withOpacity(0.3)),
+                    border:
+                        Border.all(color: AppColors.success.withOpacity(0.3)),
                   ),
                   child: Row(
                     children: [
@@ -46,7 +48,8 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('تم تأكيد طلبك! 🎉', style: AppTypography.titleMedium),
+                            Text('تم تأكيد طلبك! 🎉',
+                                style: AppTypography.titleMedium),
                             Text(
                               'رقم الطلب: ${widget.orderId.substring(0, 8).toUpperCase()}',
                               style: AppTypography.bodySmall.copyWith(
@@ -79,9 +82,12 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                   ),
                   child: Column(
                     children: [
-                      _DetailRow(label: 'البائع', value: order.vendorName ?? '-'),
+                      _DetailRow(
+                          label: 'البائع', value: order.vendorName ?? '-'),
                       const Divider(height: 16),
-                      _DetailRow(label: 'طريقة الدفع', value: _paymentLabel(order.paymentMethod)),
+                      _DetailRow(
+                          label: 'طريقة الدفع',
+                          value: _paymentLabel(order.paymentMethod)),
                       const Divider(height: 16),
                       _DetailRow(
                         label: 'الإجمالي',
@@ -103,10 +109,14 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
 
   String _paymentLabel(String method) {
     switch (method) {
-      case 'cash': return 'كاش عند الاستلام';
-      case 'instapay': return 'InstaPay';
-      case 'vodafoneCash': return 'فودافون كاش';
-      default: return method;
+      case 'cash':
+        return 'كاش عند الاستلام';
+      case 'instapay':
+        return 'InstaPay';
+      case 'vodafoneCash':
+        return 'فودافون كاش';
+      default:
+        return method;
     }
   }
 }
@@ -188,7 +198,8 @@ class _OrderStatusTracker extends StatelessWidget {
 }
 
 class _DetailRow extends StatelessWidget {
-  const _DetailRow({required this.label, required this.value, this.isBold = false});
+  const _DetailRow(
+      {required this.label, required this.value, this.isBold = false});
   final String label;
   final String value;
   final bool isBold;
@@ -198,7 +209,9 @@ class _DetailRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary)),
+        Text(label,
+            style: AppTypography.bodyMedium
+                .copyWith(color: AppColors.textSecondary)),
         Text(
           value,
           style: AppTypography.bodyMedium.copyWith(

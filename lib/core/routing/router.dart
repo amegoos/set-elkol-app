@@ -41,10 +41,11 @@ import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
 class RouterRefreshNotifier extends ChangeNotifier {
   RouterRefreshNotifier(this._ref) {
     _ref.listen<AuthState>(authProvider, (previous, next) {
-      final authStatusChanged = previous?.isAuthenticated != next.isAuthenticated;
+      final authStatusChanged =
+          previous?.isAuthenticated != next.isAuthenticated;
       final userChanged = previous?.user?.id != next.user?.id;
-      final roleChanged = next.isAuthenticated &&
-          previous?.profile?.role != next.profile?.role;
+      final roleChanged =
+          next.isAuthenticated && previous?.profile?.role != next.profile?.role;
 
       if (authStatusChanged || userChanged || roleChanged) {
         debugPrint(
@@ -82,7 +83,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isOnRoleSelect = state.matchedLocation == RouteNames.roleSelect;
       final isOnForgot = state.matchedLocation == RouteNames.forgotPassword;
       final isOnVendorSetup = state.matchedLocation == RouteNames.vendorSetup;
-      final isOnLoginCallback = state.matchedLocation == RouteNames.loginCallback;
+      final isOnLoginCallback =
+          state.matchedLocation == RouteNames.loginCallback;
 
       // Do not interrupt while initial session check is running or an operation is in flight
       if (authState.status == AuthStatus.initial) return null;
@@ -107,7 +109,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Authenticated but no profile/role set yet → navigate to role selection
       if (isAuth && profile == null) {
         if (isOnRoleSelect) return null;
-        debugPrint('[Router] Redirecting authenticated user without role to ${RouteNames.roleSelect}');
+        debugPrint(
+            '[Router] Redirecting authenticated user without role to ${RouteNames.roleSelect}');
         return RouteNames.roleSelect;
       }
 
@@ -120,8 +123,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             isOnPhoneOtp ||
             isOnLoginCallback) {
           if (profile.isAdmin) return RouteNames.adminDashboard;
-          final target = profile.isVendor ? RouteNames.vendorDashboard : RouteNames.customerHome;
-          debugPrint('[Router] Redirecting authenticated user (${profile.role.name}) to $target');
+          final target = profile.isVendor
+              ? RouteNames.vendorDashboard
+              : RouteNames.customerHome;
+          debugPrint(
+              '[Router] Redirecting authenticated user (${profile.role.name}) to $target');
           return target;
         }
         // Vendor setup flow is permitted for vendors

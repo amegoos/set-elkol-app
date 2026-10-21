@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 /// Border-radius constants for ست الكل.
 /// Use these instead of inline BorderRadius.circular() calls.

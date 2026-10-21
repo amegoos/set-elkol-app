@@ -26,7 +26,8 @@ class VendorDashboardScreen extends ConsumerWidget {
         actions: [
           IconButton(
             tooltip: 'معاينة كـ عميل',
-            icon: const Icon(Icons.shopping_bag_outlined, color: AppColors.primary),
+            icon: const Icon(Icons.shopping_bag_outlined,
+                color: AppColors.primary),
             onPressed: () {
               ref.read(authProvider.notifier).signInAsDemo(UserRole.customer);
               context.go(RouteNames.customerHome);
@@ -34,7 +35,8 @@ class VendorDashboardScreen extends ConsumerWidget {
           ),
           IconButton(
             tooltip: 'لوحة تحكم الإدارة (Admin)',
-            icon: const Icon(Icons.admin_panel_settings_outlined, color: Color(0xFF6A1B9A)),
+            icon: const Icon(Icons.admin_panel_settings_outlined,
+                color: AppColors.pickupBadge),
             onPressed: () {
               ref.read(authProvider.notifier).signInAsDemo(UserRole.admin);
               context.go(RouteNames.adminDashboard);
@@ -55,8 +57,8 @@ class VendorDashboardScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.accent, Color(0xFF2D5021)],
+                gradient: LinearGradient(
+                  colors: [AppColors.accent, AppColors.accentDark],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -68,7 +70,8 @@ class VendorDashboardScreen extends ConsumerWidget {
                     backgroundColor: Colors.white.withOpacity(0.2),
                     child: Text(
                       profile?.name.isNotEmpty == true ? profile!.name[0] : 'V',
-                      style: AppTypography.titleLarge.copyWith(color: Colors.white),
+                      style: AppTypography.titleLarge
+                          .copyWith(color: Colors.white),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -77,7 +80,8 @@ class VendorDashboardScreen extends ConsumerWidget {
                     children: [
                       Text(
                         'أهلاً، ${profile?.name.split(' ').first ?? 'بائع'}',
-                        style: AppTypography.titleMedium.copyWith(color: Colors.white),
+                        style: AppTypography.titleMedium
+                            .copyWith(color: Colors.white),
                       ),
                       Text(
                         'متجرك شغال! 🌟',
@@ -100,23 +104,44 @@ class VendorDashboardScreen extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
-                      Expanded(child: _StatCard(label: 'اليوم', value: '${e.todayTotal.toStringAsFixed(0)} ج.م', icon: Icons.today, color: AppColors.primary)),
+                      Expanded(
+                          child: _StatCard(
+                              label: 'اليوم',
+                              value: '${e.todayTotal.toStringAsFixed(0)} ج.م',
+                              icon: Icons.today,
+                              color: AppColors.primary)),
                       const SizedBox(width: 12),
-                      Expanded(child: _StatCard(label: 'الأسبوع', value: '${e.weekTotal.toStringAsFixed(0)} ج.م', icon: Icons.date_range, color: AppColors.accent)),
+                      Expanded(
+                          child: _StatCard(
+                              label: 'الأسبوع',
+                              value: '${e.weekTotal.toStringAsFixed(0)} ج.م',
+                              icon: Icons.date_range,
+                              color: AppColors.accent)),
                     ],
                   ),
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      Expanded(child: _StatCard(label: 'الشهر', value: '${e.monthTotal.toStringAsFixed(0)} ج.م', icon: Icons.calendar_month, color: AppColors.warning)),
+                      Expanded(
+                          child: _StatCard(
+                              label: 'الشهر',
+                              value: '${e.monthTotal.toStringAsFixed(0)} ج.م',
+                              icon: Icons.calendar_month,
+                              color: AppColors.warning)),
                       const SizedBox(width: 12),
-                      Expanded(child: _StatCard(label: 'إجمالي الطلبات', value: '${e.totalOrders}', icon: Icons.shopping_bag_outlined, color: AppColors.acceptedStatus)),
+                      Expanded(
+                          child: _StatCard(
+                              label: 'إجمالي الطلبات',
+                              value: '${e.totalOrders}',
+                              icon: Icons.shopping_bag_outlined,
+                              color: AppColors.acceptedStatus)),
                     ],
                   ),
                 ],
               ),
               loading: () => const AppLoadingSpinner(),
-              error: (e, _) => const AppErrorWidget(message: 'تعذر تحميل الأرباح'),
+              error: (e, _) =>
+                  const AppErrorWidget(message: 'تعذر تحميل الأرباح'),
             ),
 
             const SizedBox(height: 24),
@@ -133,11 +158,13 @@ class VendorDashboardScreen extends ConsumerWidget {
                   );
                 }
                 return Column(
-                  children: recent.map((o) => _OrderSummaryTile(order: o)).toList(),
+                  children:
+                      recent.map((o) => _OrderSummaryTile(order: o)).toList(),
                 );
               },
               loading: () => const AppLoadingSpinner(),
-              error: (e, _) => const AppErrorWidget(message: 'تعذر تحميل الطلبات'),
+              error: (e, _) =>
+                  const AppErrorWidget(message: 'تعذر تحميل الطلبات'),
             ),
 
             const SizedBox(height: 24),
@@ -147,7 +174,8 @@ class VendorDashboardScreen extends ConsumerWidget {
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.add),
                     label: const Text('إضافة منتج'),
-                    onPressed: () => context.push('${RouteNames.vendorProducts}/add'),
+                    onPressed: () =>
+                        context.push('${RouteNames.vendorProducts}/add'),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -168,7 +196,11 @@ class VendorDashboardScreen extends ConsumerWidget {
 }
 
 class _StatCard extends StatelessWidget {
-  const _StatCard({required this.label, required this.value, required this.icon, required this.color});
+  const _StatCard(
+      {required this.label,
+      required this.value,
+      required this.icon,
+      required this.color});
   final String label, value;
   final IconData icon;
   final Color color;
@@ -188,7 +220,9 @@ class _StatCard extends StatelessWidget {
           Icon(icon, color: color, size: 24),
           const SizedBox(height: 8),
           Text(value, style: AppTypography.titleLarge.copyWith(color: color)),
-          Text(label, style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
+          Text(label,
+              style: AppTypography.bodySmall
+                  .copyWith(color: AppColors.textSecondary)),
         ],
       ),
     );
@@ -201,25 +235,39 @@ class _OrderSummaryTile extends StatelessWidget {
 
   Color get _statusColor {
     switch (order.status) {
-      case 'pending': return AppColors.pendingStatus;
-      case 'accepted': return AppColors.acceptedStatus;
-      case 'preparing': return AppColors.preparingStatus;
-      case 'ready': return AppColors.readyStatus;
-      case 'delivered': return AppColors.completedStatus;
-      case 'cancelled': return AppColors.cancelledStatus;
-      default: return AppColors.textSecondary;
+      case 'pending':
+        return AppColors.pendingStatus;
+      case 'accepted':
+        return AppColors.acceptedStatus;
+      case 'preparing':
+        return AppColors.preparingStatus;
+      case 'ready':
+        return AppColors.readyStatus;
+      case 'delivered':
+        return AppColors.completedStatus;
+      case 'cancelled':
+        return AppColors.cancelledStatus;
+      default:
+        return AppColors.textSecondary;
     }
   }
 
   String get _statusLabel {
     switch (order.status) {
-      case 'pending': return 'في الانتظار';
-      case 'accepted': return 'مقبول';
-      case 'preparing': return 'قيد التحضير';
-      case 'ready': return 'جاهز';
-      case 'delivered': return 'تم التسليم';
-      case 'cancelled': return 'ملغي';
-      default: return order.status;
+      case 'pending':
+        return 'في الانتظار';
+      case 'accepted':
+        return 'مقبول';
+      case 'preparing':
+        return 'قيد التحضير';
+      case 'ready':
+        return 'جاهز';
+      case 'delivered':
+        return 'تم التسليم';
+      case 'cancelled':
+        return 'ملغي';
+      default:
+        return order.status;
     }
   }
 
@@ -245,7 +293,8 @@ class _OrderSummaryTile extends StatelessWidget {
                 ),
                 Text(
                   '${order.totalAmount.toStringAsFixed(0)} ج.م',
-                  style: AppTypography.bodySmall.copyWith(color: AppColors.primary),
+                  style: AppTypography.bodySmall
+                      .copyWith(color: AppColors.primary),
                 ),
               ],
             ),
