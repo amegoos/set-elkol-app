@@ -23,6 +23,19 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Create .env file
+        run: |
+          cat > .env << 'EOF'
+          FIREBASE_PROJECT_ID=set-elkol
+          FIREBASE_DB_URL=https://set-elkol-default-rtdb.firebaseio.com
+          ADMIN_EMAIL=setelkol.support@gmail.com
+          GOOGLE_MAPS_API_KEY=AIzaSyBSQU9laolanFJ20jWOkm1geVkwz2vsAsU
+          INSTAPAY_ENABLED=true
+          VODAFONE_CASH_ENABLED=true
+          PAYMOB_API_KEY=placeholder
+          PAYMOB_INTEGRATION_ID=placeholder
+          EOF
+
       - name: Install Dependencies
         run: flutter pub get
 
