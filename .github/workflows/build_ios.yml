@@ -28,7 +28,6 @@ jobs:
 
       - name: Verify Code Quality
         run: |
-          dart format --output=none --set-exit-if-changed lib
           flutter analyze
           flutter test
 

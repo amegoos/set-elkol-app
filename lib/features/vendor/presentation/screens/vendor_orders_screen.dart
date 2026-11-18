@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/network/supabase_client.dart';
+import '../../../../core/network/firebase_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_radius.dart';
@@ -31,11 +31,12 @@ class VendorOrdersScreen extends ConsumerWidget {
             itemBuilder: (_, i) => _VendorOrderCard(
               order: orders[i],
               onStatusUpdate: (newStatus) async {
-                final client = ref.read(supabaseClientProvider);
-                await client.from('orders').update({
+                final db = ref.read(firebaseDatabaseProvider);
+                await db.ref('orders/${orders[i].id}').update({
                   'status': newStatus,
+                  'order_status': newStatus,
                   'updated_at': DateTime.now().toIso8601String(),
-                }).eq('id', orders[i].id);
+                });
                 ref.invalidate(vendorOrdersListProvider);
               },
             ),
@@ -111,7 +112,7 @@ class _VendorOrderCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'طلب #${order.id.substring(0, 8).toUpperCase()}',
+                'طلب #${order.id.length > 8 ? order.id.substring(0, 8).toUpperCase() : order.id.toUpperCase()}',
                 style: AppTypography.titleSmall,
               ),
               Container(

@@ -238,14 +238,16 @@ class _ProductListItem extends ConsumerWidget {
                       ),
                       GestureDetector(
                         onTap: () {
-                          final conflict =
-                              ref.read(cartProvider.notifier).addItem(product);
-                          if (!conflict) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('تم الإضافة للسلة ✓')),
-                            );
-                          }
+                          ref.read(cartProvider.notifier).addItem(product);
+                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content:
+                                  Text('تمت إضافة ${product.name} للسلة 🛒'),
+                              duration: const Duration(seconds: 2),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
                         },
                         child: Container(
                           padding: const EdgeInsets.all(6),

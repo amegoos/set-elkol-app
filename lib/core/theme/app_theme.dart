@@ -164,8 +164,10 @@ abstract final class AppTheme {
       dialogTheme: DialogThemeData(
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: AppRadius.dialog),
-        titleTextStyle: AppTypography.titleLarge,
-        contentTextStyle: AppTypography.bodyMedium,
+        titleTextStyle:
+            AppTypography.titleLarge.copyWith(color: AppColors.textPrimary),
+        contentTextStyle:
+            AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
       ),
 
       // ── Bottom Sheet ──────────────────────────────────────────────────────

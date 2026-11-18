@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/domain/entities/product.dart';
-import '../../../../core/network/supabase_client.dart';
+import '../../../../core/network/firebase_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_radius.dart';
@@ -38,8 +38,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         final idx = products.indexWhere((p) => p.id == widget.productId);
         if (idx == -1) {
           return Scaffold(
-              appBar: AppBar(),
-              body: const Center(child: Text('المنتج غير موجود')));
+            appBar: AppBar(),
+            body: const Center(child: Text('المنتج غير موجود')),
+          );
         }
         return _buildContent(context, products[idx]);
       },
@@ -47,6 +48,34 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           Scaffold(appBar: AppBar(), body: const AppLoadingSpinner()),
       error: (e, _) => Scaffold(
           appBar: AppBar(), body: AppErrorWidget(message: e.toString())),
+    );
+  }
+
+  Widget _buildProductImage(String? imageUrl) {
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return Container(
+        color: AppColors.secondary,
+        child: const Icon(Icons.restaurant, size: 80, color: AppColors.primary),
+      );
+    }
+    if (imageUrl.startsWith('assets/')) {
+      return Image.asset(
+        imageUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => Container(
+          color: AppColors.secondary,
+          child:
+              const Icon(Icons.restaurant, size: 80, color: AppColors.primary),
+        ),
+      );
+    }
+    return CachedNetworkImage(
+      imageUrl: imageUrl,
+      fit: BoxFit.cover,
+      errorWidget: (_, __, ___) => Container(
+        color: AppColors.secondary,
+        child: const Icon(Icons.restaurant, size: 80, color: AppColors.primary),
+      ),
     );
   }
 
@@ -72,21 +101,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
               ),
             ],
             flexibleSpace: FlexibleSpaceBar(
-              background: product.imageUrl != null
-                  ? CachedNetworkImage(
-                      imageUrl: product.imageUrl!,
-                      fit: BoxFit.cover,
-                      errorWidget: (_, __, ___) => Container(
-                        color: AppColors.secondary,
-                        child: const Icon(Icons.restaurant,
-                            size: 80, color: AppColors.primary),
-                      ),
-                    )
-                  : Container(
-                      color: AppColors.secondary,
-                      child: const Icon(Icons.restaurant,
-                          size: 80, color: AppColors.primary),
-                    ),
+              background: _buildProductImage(product.imageUrl),
             ),
           ),
           SliverToBoxAdapter(
@@ -99,8 +114,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
-                          child: Text(product.name,
-                              style: AppTypography.headlineSmall)),
+                        child: Text(product.name,
+                            style: AppTypography.headlineSmall),
+                      ),
                       Text(
                         '${product.price.toStringAsFixed(0)} ج.م',
                         style: AppTypography.headlineSmall
@@ -113,13 +129,14 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     spacing: 6,
                     children: [
                       if (product.isVegetarian)
-                        _Tag(label: '🥗 نباتي', color: AppColors.success),
+                        const _Tag(label: '🥗 نباتي', color: AppColors.success),
                       if (product.isSpicy)
-                        _Tag(label: '🌶 حار', color: AppColors.warning),
+                        const _Tag(label: '🌶️ حار', color: AppColors.warning),
                       if (product.preparationTimeMinutes != null)
                         _Tag(
-                            label: '⏱ ${product.preparationTimeMinutes} دقيقة',
-                            color: AppColors.textSecondary),
+                          label: '⏱️ ${product.preparationTimeMinutes} دقيقة',
+                          color: AppColors.textSecondary,
+                        ),
                     ],
                   ),
                   if (product.description != null) ...[
@@ -163,7 +180,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
               for (var i = 0; i < _quantity; i++) {
                 ref.read(cartProvider.notifier).addItem(product);
               }
-              context.showSnack('تم الإضافة للسلة ✓');
+              context.showSnack('تمت الإضافة للسلة ✓');
               context.pop();
             },
           ),
@@ -173,20 +190,15 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   }
 
   Future<void> _toggleFavorite(String productId, bool isFav) async {
-    final client = ref.read(supabaseClientProvider);
-    final userId = client.auth.currentUser?.id;
+    final auth = ref.read(firebaseAuthProvider);
+    final db = ref.read(firebaseDatabaseProvider);
+    final userId = auth.currentUser?.uid;
     if (userId == null) return;
 
     if (isFav) {
-      await client
-          .from('favorites')
-          .delete()
-          .eq('user_id', userId)
-          .eq('product_id', productId);
+      await db.ref('favorites/$userId/$productId').remove();
     } else {
-      await client
-          .from('favorites')
-          .insert({'user_id': userId, 'product_id': productId});
+      await db.ref('favorites/$userId/$productId').set(true);
     }
     ref.invalidate(isFavoriteProvider(productId));
     ref.invalidate(favoritesProvider);

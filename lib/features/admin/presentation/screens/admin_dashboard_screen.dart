@@ -73,9 +73,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
           IconButton(
             tooltip: 'تسجيل الخروج',
             icon: const Icon(Icons.logout, color: AppColors.error),
-            onPressed: () {
-              ref.read(authProvider.notifier).signOut();
-              context.go(RouteNames.login);
+            onPressed: () async {
+              await ref.read(authProvider.notifier).signOut();
+              if (context.mounted) {
+                context.go(RouteNames.login);
+              }
             },
           ),
         ],

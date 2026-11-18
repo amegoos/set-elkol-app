@@ -2,7 +2,7 @@
 abstract final class AppValidators {
   AppValidators._();
 
-  // ── Name ──────────────────────────────────────────────────────────────────
+  // ── Name ─────────────────────────────────────────────────────────────────
 
   static String? validateName(String? value) {
     if (value == null || value.trim().isEmpty) {
@@ -14,7 +14,7 @@ abstract final class AppValidators {
     return null;
   }
 
-  // ── Email ─────────────────────────────────────────────────────────────────
+  // ── Email ────────────────────────────────────────────────────────────────
 
   static String? validateEmail(String? value) {
     if (value == null || value.trim().isEmpty) {
@@ -22,12 +22,12 @@ abstract final class AppValidators {
     }
     final emailRegex = RegExp(r'^[\w.+\-]+@([a-zA-Z0-9\-]+\.)+[a-zA-Z]{2,}$');
     if (!emailRegex.hasMatch(value.trim())) {
-      return 'البريد الإلكتروني غلط';
+      return 'البريد الإلكتروني غير صحيح';
     }
     return null;
   }
 
-  // ── Phone ─────────────────────────────────────────────────────────────────
+  // ── Phone ────────────────────────────────────────────────────────────────
 
   /// Validates Egyptian mobile phone numbers (01x format, 11 digits).
   static String? validatePhone(String? value) {
@@ -35,12 +35,12 @@ abstract final class AppValidators {
       return 'رقم الموبايل مطلوب';
     }
     if (!isValidEgyptianPhone(value.trim())) {
-      return 'رقم الموبايل غلط — لازم يبدأ بـ 01 ويكون 11 رقم';
+      return 'رقم الموبايل غير صحيح — لازم يبدأ بـ 01 ويكون 11 رقم';
     }
     return null;
   }
 
-  // ── Password ──────────────────────────────────────────────────────────────
+  // ── Password ─────────────────────────────────────────────────────────────
 
   static String? validatePassword(String? value) {
     if (value == null || value.isEmpty) {
@@ -52,19 +52,19 @@ abstract final class AppValidators {
     return null;
   }
 
-  // ── Confirm Password ──────────────────────────────────────────────────────
+  // ── Confirm Password ─────────────────────────────────────────────────────
 
   static String? validateConfirmPassword(String? value, String password) {
     if (value == null || value.isEmpty) {
       return 'تأكيد كلمة السر مطلوب';
     }
     if (value != password) {
-      return 'كلمتا السر مش متطابقتين';
+      return 'كلمتا السر غير متطابقتين';
     }
     return null;
   }
 
-  // ── Price ─────────────────────────────────────────────────────────────────
+  // ── Price ────────────────────────────────────────────────────────────────
 
   static String? validatePrice(String? value) {
     if (value == null || value.trim().isEmpty) {
@@ -80,7 +80,7 @@ abstract final class AppValidators {
     return null;
   }
 
-  // ── Quantity ──────────────────────────────────────────────────────────────
+  // ── Quantity ─────────────────────────────────────────────────────────────
 
   static String? validateQuantity(String? value) {
     if (value == null || value.trim().isEmpty) {
@@ -91,12 +91,12 @@ abstract final class AppValidators {
       return 'الكمية لازم تكون عدد صحيح';
     }
     if (parsed < 0) {
-      return 'الكمية لازم تكون صفر أو أكتر';
+      return 'الكمية لازم تكون صفر أو أكثر';
     }
     return null;
   }
 
-  // ── Generic not-empty ─────────────────────────────────────────────────────
+  // ── Generic not-empty ────────────────────────────────────────────────────
 
   static String? validateNotEmpty(String? value, String fieldName) {
     if (value == null || value.trim().isEmpty) {
@@ -105,7 +105,7 @@ abstract final class AppValidators {
     return null;
   }
 
-  // ── Helper predicates ─────────────────────────────────────────────────────
+  // ── Helper predicates ────────────────────────────────────────────────────
 
   /// Returns true if valid email format.
   static bool isValidEmail(String? value) {
@@ -141,22 +141,18 @@ abstract final class AppValidators {
     return false;
   }
 
-  /// Formats Egyptian mobile phone input into E.164 (+201xxxxxxxxx) for Supabase Auth.
-  static String formatEgyptianPhoneForSupabase(String input) {
+  /// Formats Egyptian mobile phone input into E.164 (+201xxxxxxxxx).
+  static String formatEgyptianPhone(String input) {
     String cleaned = input.replaceAll(RegExp(r'[\s\-\(\)]'), '');
-    if (cleaned.startsWith('+20')) {
-      return cleaned;
-    }
-    if (cleaned.startsWith('20')) {
-      return '+$cleaned';
-    }
-    if (cleaned.startsWith('0020')) {
-      return '+${cleaned.substring(2)}';
-    }
-    if (cleaned.startsWith('0')) {
-      cleaned = cleaned.substring(1);
-    }
+    if (cleaned.startsWith('+20')) return cleaned;
+    if (cleaned.startsWith('20')) return '+$cleaned';
+    if (cleaned.startsWith('0020')) return '+${cleaned.substring(2)}';
+    if (cleaned.startsWith('0')) cleaned = cleaned.substring(1);
     return '+20$cleaned';
+  }
+
+  static String formatEgyptianPhoneForSupabase(String input) {
+    return formatEgyptianPhone(input);
   }
 
   /// Returns true if the file extension is an allowed image format.

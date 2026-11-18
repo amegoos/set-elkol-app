@@ -12,10 +12,13 @@ abstract final class StorageKeys {
   /// Role chosen at registration: 'customer' | 'vendor'.
   static const String selectedRole = 'selected_role';
 
-  /// Supabase user UUID cached for quick local checks.
+  /// Firebase user UID cached for quick local checks.
   static const String cachedUserId = 'cached_user_id';
 
   /// The vendor UUID whose items are currently in the cart.
   /// Used to enforce single-vendor cart constraint.
   static const String cartVendorId = 'cart_vendor_id';
+
+  /// Tracks if the user intentionally logged out so the app does not auto-login.
+  static const String explicitlyLoggedOut = 'explicitly_logged_out';
 }

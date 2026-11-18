@@ -32,6 +32,7 @@ abstract final class RouteNames {
   static const String editProfile = '/profile/edit';
   static const String addresses = '/profile/addresses';
   static const String addAddress = '/profile/addresses/add';
+  static const String support = '/support';
   static const String rateReview = '/rate/:orderId';
 
   // ── Vendor Shell ──────────────────────────────────────────────────────────

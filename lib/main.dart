@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -5,9 +6,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'core/config/supabase_config.dart';
+import 'core/config/firebase_options.dart';
 import 'core/constants/app_constants.dart';
 import 'core/localization/app_localizations.dart';
 import 'core/providers/shared_preferences_provider.dart';
@@ -30,24 +30,23 @@ void main() async {
     ),
   );
 
-  // Load .env
-  await dotenv.load(fileName: '.env');
+  // Load .env if present
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (_) {}
 
   // Initialize local storage
   await Hive.initFlutter();
 
-  // Initialize Supabase via centralized SupabaseConfig
-  debugPrint('[Supabase] Initializing: url=${SupabaseConfig.url}');
-  debugPrint(
-      '[Supabase] Valid API key configured: ${SupabaseConfig.hasValidKey}');
-
-  await Supabase.initialize(
-    url: SupabaseConfig.url,
-    anonKey: SupabaseConfig.activeAnonKey,
-    authOptions: const FlutterAuthClientOptions(
-      authFlowType: AuthFlowType.pkce,
-    ),
-  );
+  // Initialize Firebase
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    debugPrint('[Firebase] Initialized successfully with project: set-elkol');
+  } catch (e) {
+    debugPrint('[Firebase] Initialization error: $e');
+  }
 
   final prefs = await SharedPreferences.getInstance();
 
@@ -79,13 +78,45 @@ class SetElKolApp extends ConsumerWidget {
       localizationsDelegates: AppLocalizationConfig.delegates,
       builder: (context, child) {
         final mediaQuery = MediaQuery.of(context);
+        final isDesktopOrWeb = kIsWeb || mediaQuery.size.width > 600;
+
+        Widget content = child ?? const SizedBox.shrink();
+
+        // Responsive Phone Simulator wrapper for Web and Desktop
+        if (isDesktopOrWeb) {
+          content = Scaffold(
+            backgroundColor:
+                const Color(0xFF0F172A), // Dark backdrop for preview
+            body: Center(
+              child: Container(
+                width: 430,
+                height: 890,
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(32),
+                  border: Border.all(color: const Color(0xFF334155), width: 6),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black54,
+                      blurRadius: 35,
+                      offset: Offset(0, 15),
+                    ),
+                  ],
+                ),
+                child: child,
+              ),
+            ),
+          );
+        }
+
         return MediaQuery(
           data: mediaQuery.copyWith(
             textScaler: TextScaler.linear(
               mediaQuery.textScaler.scale(1.0).clamp(0.85, 1.3),
             ),
           ),
-          child: child!,
+          child: content,
         );
       },
     );

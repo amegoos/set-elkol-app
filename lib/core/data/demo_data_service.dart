@@ -39,8 +39,7 @@ class DemoDataService extends ChangeNotifier {
   static const List<DishPhotoPreset> dishPresets = [
     DishPhotoPreset(
       title: 'محشي مشكل مصري (كرنب وورق عنب وكوسة)',
-      imageUrl:
-          'https://images.unsplash.com/photo-1541518763669-27fef04b14ea?auto=format&fit=crop&w=800&q=80',
+      imageUrl: 'assets/images/mahshi.jpg',
       categoryName: 'محاشي',
       suggestedPrice: 110.0,
       suggestedPrepTime: 45,
@@ -50,14 +49,63 @@ class DemoDataService extends ChangeNotifier {
     ),
     DishPhotoPreset(
       title: 'ملوخية خضراء بالطشة والفراخ البلدي',
-      imageUrl:
-          'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=800&q=80',
+      imageUrl: 'assets/images/molokhia_hero.jpg',
       categoryName: 'أكل مصري',
       suggestedPrice: 135.0,
       suggestedPrepTime: 35,
       suggestedQuantity: 12,
       suggestedDescription:
           'ملوخية خضراء مفرومة طازة مطبوخة بشوربة الفراخ البلدي الدسمة مع طشة الثوم والكزبرة المقرمشة، تقدم مع طبق أرز وشوربة.',
+    ),
+    DishPhotoPreset(
+      title: 'كشري مصري بيتي بالدقة والصلصة الحارة',
+      imageUrl: 'assets/images/koshary.jpg',
+      categoryName: 'أكل مصري',
+      suggestedPrice: 65.0,
+      suggestedPrepTime: 25,
+      suggestedQuantity: 20,
+      suggestedDescription:
+          'كشري مصري أصيل بالعدس البني والمكرونة والحمص مع تقلية بصل مقرمشة وصلصة طماطم بلدي ودقة بالخل والثوم.',
+    ),
+    DishPhotoPreset(
+      title: 'حواوشي بلدي مقرمش باللحمة المفرومة',
+      imageUrl: 'assets/images/hawawshi.jpg',
+      categoryName: 'لحوم',
+      suggestedPrice: 75.0,
+      suggestedPrepTime: 30,
+      suggestedQuantity: 16,
+      suggestedDescription:
+          'رغيف حواوشي بلدي طازة محشو بلحم بلدي متبل بالبصل والفلفل الأخضر وبهارات الحواوشي ومشوي في الفرن بالسمن البلدي.',
+    ),
+    DishPhotoPreset(
+      title: 'فطير مشلتت فلاحي مورق بالسمن البلدي',
+      imageUrl: 'assets/images/feteer.jpg',
+      categoryName: 'مخبوزات',
+      suggestedPrice: 120.0,
+      suggestedPrepTime: 40,
+      suggestedQuantity: 8,
+      suggestedDescription:
+          'فطير مشلتت فلاحي على أصوله مورق بالسمنة البلدي الصافية، يقدم مع عسل أسود وجبنة قديمة وقشطة.',
+    ),
+    DishPhotoPreset(
+      title: 'ممبار بلدي محشي ومحمر مقرمش',
+      imageUrl: 'assets/images/mombar.jpg',
+      categoryName: 'أكل مصري',
+      suggestedPrice: 145.0,
+      suggestedPrepTime: 50,
+      suggestedQuantity: 10,
+      suggestedDescription:
+          'كيلو ممبار بلدي طازة محشو بخلطة الأرز بالخضرة والبهارات ومسلوق ثم محمر في السمن البلدي حتى القرمشة.',
+    ),
+    DishPhotoPreset(
+      title: 'أرز باللبن وقشطة بلدي في الفرن',
+      imageUrl: 'assets/images/roz_bel_laban.jpg',
+      categoryName: 'حلويات',
+      suggestedPrice: 45.0,
+      suggestedPrepTime: 20,
+      suggestedQuantity: 25,
+      suggestedDescription:
+          'طاجن أرز بلبن كريمي غني بالحليب الطبيعي والقشطة الفلاحي ومحمر الوجه في الفرن ومزين بالمكسرات.',
     ),
     DishPhotoPreset(
       title: 'صينية مكرونة بشاميل باللحمة المفرومة',
@@ -209,8 +257,7 @@ class DemoDataService extends ChangeNotifier {
         name: 'مطبخ ست الكل (أم أحمد)',
         description:
             'أكل بيتي مصري أصيل بالسمنة البلدي والنَفَس الطيب ❤️ — خبرة ٢٠ سنة في العزومات والأكلات الشعبية.',
-        logoUrl:
-            'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80',
+        logoUrl: 'assets/images/vendor_om_ahmed.jpg',
         governorate: 'القاهرة',
         area: 'مدينة نصر والتجمع',
         rating: 4.9,
@@ -233,8 +280,7 @@ class DemoDataService extends ChangeNotifier {
         name: 'طبيخ زمان (الحاجة فاطمة)',
         description:
             'طواجن فخار ومحاشي بلدي على الكانون، سمن فلاحي ومكونات طازة يومياً.',
-        logoUrl:
-            'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80',
+        logoUrl: 'assets/images/vendor_om_mohamed.jpg',
         governorate: 'الجيزة',
         area: 'الدقي والمهندسين',
         rating: 4.8,
@@ -288,8 +334,7 @@ class DemoDataService extends ChangeNotifier {
         'description':
             'تشكيلة محاشي مشكلة (كرنب دايت بالسمنة الفلاحي، ورق عنب بدبس الرمان، وكوسة وبتنجان) بخلطة الأرز المصرية بالكزبرة والشبت.',
         'price': 110.0,
-        'image_url':
-            'https://images.unsplash.com/photo-1541518763669-27fef04b14ea?auto=format&fit=crop&w=800&q=80',
+        'image_url': 'assets/images/mahshi.jpg',
         'available_quantity': 15,
         'preparation_time_minutes': 45,
         'is_available': true,
@@ -307,8 +352,7 @@ class DemoDataService extends ChangeNotifier {
         'description':
             'ملوخية خضراء مفرومة طازة مطبوخة بشوربة الفراخ البلدي الدسمة مع طشة الثوم والكزبرة المقرمشة، تقدم مع طبق أرز وشوربة.',
         'price': 135.0,
-        'image_url':
-            'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=800&q=80',
+        'image_url': 'assets/images/molokhia_hero.jpg',
         'available_quantity': 12,
         'preparation_time_minutes': 35,
         'is_available': true,
@@ -321,18 +365,17 @@ class DemoDataService extends ChangeNotifier {
       {
         'id': 'prod-3',
         'vendor_id': '00000000-0000-0000-0000-000000000001',
-        'category_id': 'cat-6',
-        'name': 'صينية مكرونة بشاميل باللحمة المفرومة',
+        'category_id': 'cat-1',
+        'name': 'كشري مصري أصيل بالدقة والتقلية',
         'description':
-            'مكرونة قلم بصوص البشاميل الكريمي الغني مع لحمة مفرومة بلدي معصجة بالبهارات والجبنة الموتزاريلا الذهبية.',
-        'price': 125.0,
-        'image_url':
-            'https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=800&q=80',
-        'available_quantity': 10,
-        'preparation_time_minutes': 50,
+            'كشري مصري بيتي بالعدس البني والمكرونة والحمص مع تقلية بصل مقرمشة وصلصة طماطم بلدي ودقة بالخل والثوم.',
+        'price': 65.0,
+        'image_url': 'assets/images/koshary.jpg',
+        'available_quantity': 20,
+        'preparation_time_minutes': 25,
         'is_available': true,
         'is_featured': true,
-        'is_vegetarian': false,
+        'is_vegetarian': true,
         'is_spicy': false,
         'created_at': now.subtract(const Duration(days: 3)).toIso8601String(),
         'updated_at': now.subtract(const Duration(days: 3)).toIso8601String(),
@@ -340,34 +383,32 @@ class DemoDataService extends ChangeNotifier {
       {
         'id': 'prod-4',
         'vendor_id': '00000000-0000-0000-0000-000000000001',
-        'category_id': 'cat-4',
-        'name': 'وجبة نصف فرخة بلدي محمرة مع أرز وخضار',
+        'category_id': 'cat-5',
+        'name': 'حواوشي بلدي مقرمش باللحمة المفرومة',
         'description':
-            'نصف فرخة بلدي محمرة في السمنة البلدي حتى القرمشة، مع أرز بالشعرية وطاجن خضار مشكل وشوربة لسان عصفور.',
-        'price': 140.0,
-        'image_url':
-            'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=800&q=80',
+            'رغيف حواوشي بلدي طازة محشو بلحم بلدي متبل بالبصل والفلفل الأخضر وبهارات الحواوشي ومشوي في الفرن بالسمن البلدي.',
+        'price': 75.0,
+        'image_url': 'assets/images/hawawshi.jpg',
         'available_quantity': 18,
-        'preparation_time_minutes': 40,
+        'preparation_time_minutes': 30,
         'is_available': true,
         'is_featured': true,
         'is_vegetarian': false,
-        'is_spicy': false,
+        'is_spicy': true,
         'created_at': now.subtract(const Duration(days: 2)).toIso8601String(),
         'updated_at': now.subtract(const Duration(days: 2)).toIso8601String(),
       },
       {
         'id': 'prod-5',
         'vendor_id': '00000000-0000-0000-0000-000000000001',
-        'category_id': 'cat-4',
-        'name': 'فرخة بلدي كاملة مشوية بتتبيلة ست الكل',
+        'category_id': 'cat-8',
+        'name': 'فطير مشلتت فلاحي مورق بالسمن البلدي',
         'description':
-            'دجاجة كاملة بلدي متبلة بالزبادي والليمون والبهارات الشرقية ومشوية في الفرن حتى اللون الذهبي، تكفي 4 أفراد.',
-        'price': 240.0,
-        'image_url':
-            'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=800&q=80',
+            'فطير مشلتت فلاحي على أصوله مورق بالسمنة البلدي الصافية، يقدم مع عسل أسود وجبنة قديمة وقشطة.',
+        'price': 120.0,
+        'image_url': 'assets/images/feteer.jpg',
         'available_quantity': 8,
-        'preparation_time_minutes': 60,
+        'preparation_time_minutes': 40,
         'is_available': true,
         'is_featured': true,
         'is_vegetarian': false,
@@ -378,15 +419,14 @@ class DemoDataService extends ChangeNotifier {
       {
         'id': 'prod-6',
         'vendor_id': '00000000-0000-0000-0000-000000000001',
-        'category_id': 'cat-3',
-        'name': 'طاجن بامية باللحمة الضاني البلدي',
+        'category_id': 'cat-1',
+        'name': 'ممبار بلدي محشي ومحمر مقرمش',
         'description':
-            'بامية صغيرة بلدي مطهية في صلصة الطماطم بالثوم والليمون مع قطع لحم ضاني دايبة من الفرن مباشرة.',
-        'price': 185.0,
-        'image_url':
-            'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
-        'available_quantity': 7,
-        'preparation_time_minutes': 55,
+            'كيلو ممبار بلدي طازة محشو بخلطة الأرز بالخضرة والبهارات ومسلوق ثم محمر في السمن البلدي حتى القرمشة.',
+        'price': 145.0,
+        'image_url': 'assets/images/mombar.jpg',
+        'available_quantity': 10,
+        'preparation_time_minutes': 50,
         'is_available': true,
         'is_featured': false,
         'is_vegetarian': false,
@@ -397,18 +437,17 @@ class DemoDataService extends ChangeNotifier {
       {
         'id': 'prod-7',
         'vendor_id': '00000000-0000-0000-0000-000000000001',
-        'category_id': 'cat-1',
-        'name': 'صينية رقاق فلاحي مقرمش باللحمة المفرومة',
+        'category_id': 'cat-7',
+        'name': 'أرز باللبن وقشطة بلدي في الفرن',
         'description':
-            'رقاق مصري مورق ومسقي بالشوربة الدسمة والسمن الفلاحي ومحشو باللحم المفروم المتبل.',
-        'price': 115.0,
-        'image_url':
-            'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=800&q=80',
-        'available_quantity': 9,
-        'preparation_time_minutes': 40,
+            'طاجن أرز بلبن كريمي غني بالحليب الطبيعي والقشطة الفلاحي ومحمر الوجه في الفرن ومزين بالمكسرات.',
+        'price': 45.0,
+        'image_url': 'assets/images/roz_bel_laban.jpg',
+        'available_quantity': 25,
+        'preparation_time_minutes': 20,
         'is_available': true,
         'is_featured': false,
-        'is_vegetarian': false,
+        'is_vegetarian': true,
         'is_spicy': false,
         'created_at': now.subtract(const Duration(hours: 18)).toIso8601String(),
         'updated_at': now.subtract(const Duration(hours: 18)).toIso8601String(),

@@ -1,6 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../network/supabase_client.dart';
+
+import '../network/firebase_providers.dart';
 
 enum PaymentGatewayType {
   card,
@@ -24,9 +26,10 @@ class PaymentResult {
 }
 
 class PaymentService {
-  final SupabaseClient _client;
+  final FirebaseDatabase _db;
+  final fb_auth.FirebaseAuth _auth;
 
-  PaymentService(this._client);
+  PaymentService(this._db, this._auth);
 
   /// Process payment for order via gateway or local mobile wallet confirmation
   Future<PaymentResult> processOrderPayment({
@@ -36,7 +39,7 @@ class PaymentService {
     Map<String, dynamic>? paymentDetails,
   }) async {
     try {
-      final user = _client.auth.currentUser;
+      final user = _auth.currentUser;
       if (user == null) {
         return PaymentResult(
             success: false, errorMessage: 'المستخدم غير مسجل الدخول');
@@ -48,7 +51,6 @@ class PaymentService {
       if (gateway == PaymentGatewayType.cash) {
         status = 'pending'; // Paid upon delivery
       } else if (gateway == PaymentGatewayType.card) {
-        // Online Card payment sandbox integration
         status = 'paid';
       } else if (gateway == PaymentGatewayType.instapay ||
           gateway == PaymentGatewayType.vodafoneCash) {
@@ -56,10 +58,10 @@ class PaymentService {
             'pending'; // Pending verification of reference number / receipt
       }
 
-      // Store payment record in Supabase `payment_transactions` table
-      await _client.from('payment_transactions').insert({
+      // Store payment record in Firebase RTDB `/payment_transactions/{transactionId}`
+      await _db.ref('payment_transactions/$transactionId').set({
         'order_id': orderId,
-        'user_id': user.id,
+        'user_id': user.uid,
         'amount': amount,
         'gateway': gateway.name,
         'transaction_id': transactionId,
@@ -71,11 +73,11 @@ class PaymentService {
         },
       });
 
-      // Update payment_status on the order table
-      await _client.from('orders').update({
+      // Update payment_status on the order
+      await _db.ref('orders/$orderId').update({
         'payment_status': status,
         'updated_at': DateTime.now().toIso8601String(),
-      }).eq('id', orderId);
+      });
 
       return PaymentResult(
         success: true,
@@ -92,6 +94,7 @@ class PaymentService {
 }
 
 final paymentServiceProvider = Provider<PaymentService>((ref) {
-  final client = ref.watch(supabaseClientProvider);
-  return PaymentService(client);
+  final db = ref.watch(firebaseDatabaseProvider);
+  final auth = ref.watch(firebaseAuthProvider);
+  return PaymentService(db, auth);
 });

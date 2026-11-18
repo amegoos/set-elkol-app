@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/route_names.dart';
-import '../../../../core/network/supabase_client.dart';
+import '../../../../core/network/firebase_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -50,11 +50,12 @@ class _VendorSetupScreenState extends ConsumerState<VendorSetupScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final client = ref.read(supabaseClientProvider);
-      final userId = client.auth.currentUser?.id;
+      final auth = ref.read(firebaseAuthProvider);
+      final db = ref.read(firebaseDatabaseProvider);
+      final userId = auth.currentUser?.uid;
       if (userId == null) throw Exception('Not authenticated');
 
-      await client.from('vendors').upsert({
+      await db.ref('vendors/$userId').update({
         'id': userId,
         'business_name': _nameCtrl.text.trim(),
         'bio': _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
@@ -109,7 +110,7 @@ class _VendorSetupScreenState extends ConsumerState<VendorSetupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('أهلاً بك كبائع! 🏪', style: AppTypography.headlineMedium),
+              Text('أهلاً بك كبائع! 🍲', style: AppTypography.headlineMedium),
               const SizedBox(height: 4),
               Text(
                 'أخبرنا عن متجرك لنساعد العملاء في العثور عليك.',

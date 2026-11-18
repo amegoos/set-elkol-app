@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../../core/network/supabase_client.dart';
+import '../../../../core/network/firebase_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_radius.dart';
@@ -48,7 +48,7 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
   @override
   void initState() {
     super.initState();
-    // Default to first preset image (محشي) if adding new product
+    // Default to first preset image if adding new product
     if (!isEditing && DemoDataService.dishPresets.isNotEmpty) {
       _selectedImageUrl = DemoDataService.dishPresets.first.imageUrl;
       _imageUrlCtrl.text = _selectedImageUrl!;
@@ -60,7 +60,6 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
   }
 
   Future<void> _loadProduct() async {
-    // Check local demo first, then supabase
     final demoProducts = DemoDataService.instance.rawProducts;
     final match =
         demoProducts.where((p) => p['id'] == widget.productId).toList();
@@ -70,14 +69,12 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
     }
 
     try {
-      final client = ref.read(supabaseClientProvider);
-      final data = await client
-          .from('products')
-          .select()
-          .eq('id', widget.productId!)
-          .maybeSingle();
-      if (data != null && mounted) {
-        _fillFromMap(data as Map<String, dynamic>);
+      final db = ref.read(firebaseDatabaseProvider);
+      final snapshot = await db.ref('products/${widget.productId!}').get();
+      if (snapshot.exists && snapshot.value is Map && mounted) {
+        final map = Map<String, dynamic>.from(snapshot.value as Map);
+        map['id'] ??= widget.productId;
+        _fillFromMap(map);
       }
     } catch (_) {}
   }
@@ -119,14 +116,12 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
       _imageUrlCtrl.text = preset.imageUrl;
       _pickedImageFile = null;
 
-      // Also assist the vendor by setting realistic defaults if empty or changing preset
       _nameCtrl.text = preset.title;
       _descCtrl.text = preset.suggestedDescription;
       _priceCtrl.text = preset.suggestedPrice.toStringAsFixed(0);
       _qtyCtrl.text = preset.suggestedQuantity.toString();
       _prepTimeCtrl.text = preset.suggestedPrepTime.toString();
 
-      // Find matching category
       final categories = ref.read(categoriesProvider).asData?.value ??
           DemoDataService.instance.categories;
       final matchedCat = categories
@@ -168,9 +163,9 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final client = ref.read(supabaseClientProvider);
-      final userId =
-          client.auth.currentUser?.id ?? '00000000-0000-0000-0000-000000000001';
+      final auth = ref.read(firebaseAuthProvider);
+      final db = ref.read(firebaseDatabaseProvider);
+      final userId = auth.currentUser?.uid ?? 'demo-vendor-omahmed-002';
       final productId =
           widget.productId ?? 'prod-${DateTime.now().millisecondsSinceEpoch}';
 
@@ -200,20 +195,15 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
         'updated_at': DateTime.now().toIso8601String(),
       };
 
-      // 1. Save directly into DemoDataService for instant offline & demo access
       DemoDataService.instance.addOrUpdateProduct(productData);
 
-      // 2. Also attempt Supabase upsert if connected
       try {
-        if (isEditing) {
-          await client.from('products').update(productData).eq('id', productId);
-        } else {
+        if (!isEditing) {
           productData['created_at'] = DateTime.now().toIso8601String();
-          await client.from('products').insert(productData);
         }
+        await db.ref('products/$productId').update(productData);
       } catch (err) {
-        debugPrint(
-            '[ProductSave] Supabase sync skipped or failed (local state updated): $err');
+        debugPrint('[ProductSave] Firebase sync error: $err');
       }
 
       if (!mounted) return;
@@ -221,7 +211,6 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
           ? 'تم تحديث الأكلة بنجاح ✓'
           : 'تم إضافة الأكلة إلى المنيو بنجاح ✓');
 
-      // Refresh all related providers
       ref.invalidate(myProductsProvider);
       ref.invalidate(featuredProductsProvider);
       ref.invalidate(popularProductsProvider);
@@ -259,17 +248,10 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // ── Top Image Preview & Selector ──────────────────────────────
               _buildImageHeader(),
-
               const SizedBox(height: 16),
-
-              // ── Authentic Egyptian Dish Presets ────────────────────────────
               _buildDishPresetsSelector(),
-
               const SizedBox(height: 20),
-
-              // ── Basic Info Section ─────────────────────────────────────────
               _buildSectionCard(
                 title: 'تفاصيل الأكلة',
                 icon: Icons.restaurant_menu_rounded,
@@ -285,8 +267,6 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
                         : null,
                   ),
                   const SizedBox(height: 14),
-
-                  // Category Selector
                   InputDecorator(
                     decoration: InputDecoration(
                       labelText: 'التصنيف *',
@@ -318,7 +298,6 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 14),
                   AppTextField(
                     controller: _descCtrl,
@@ -329,10 +308,7 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 16),
-
-              // ── Price, Quantity & Prep Time ─────────────────────────────────
               _buildSectionCard(
                 title: 'السعر والكمية المتاحة',
                 icon: Icons.payments_outlined,
@@ -397,10 +373,7 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 16),
-
-              // ── Options & Toggles ──────────────────────────────────────────
               _buildSectionCard(
                 title: 'خيارات التوفر والمميزات',
                 icon: Icons.tune_rounded,
@@ -442,16 +415,12 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 24),
-
-              // ── Save Button ────────────────────────────────────────────────
               AppButton(
                 label: isEditing ? 'حفظ التعديلات' : 'نشر الأكلة في المنيو 🚀',
                 onPressed: _save,
                 isLoading: _isLoading,
               ),
-
               const SizedBox(height: 24),
             ],
           ),
@@ -522,6 +491,8 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
           if (hasImage) ...[
             if (_pickedImageFile != null && !kIsWeb)
               Image.file(File(_pickedImageFile!.path), fit: BoxFit.cover)
+            else if (_selectedImageUrl!.startsWith('assets/'))
+              Image.asset(_selectedImageUrl!, fit: BoxFit.cover)
             else
               CachedNetworkImage(
                 imageUrl: _selectedImageUrl!,
@@ -565,8 +536,6 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
               ),
             ),
           ],
-
-          // Action buttons on top of image
           Positioned(
             bottom: 12,
             right: 12,
@@ -613,7 +582,6 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
               ],
             ),
           ),
-
           if (hasImage)
             Positioned(
               top: 12,
@@ -701,10 +669,13 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
-                            CachedNetworkImage(
-                              imageUrl: preset.imageUrl,
-                              fit: BoxFit.cover,
-                            ),
+                            preset.imageUrl.startsWith('assets/')
+                                ? Image.asset(preset.imageUrl,
+                                    fit: BoxFit.cover)
+                                : CachedNetworkImage(
+                                    imageUrl: preset.imageUrl,
+                                    fit: BoxFit.cover,
+                                  ),
                             if (isSelected)
                               Container(
                                 color: AppColors.primary.withOpacity(0.25),

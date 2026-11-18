@@ -44,6 +44,7 @@ class Product extends Equatable {
   final Category? category;
 
   bool get inStock => availableQuantity == null || (availableQuantity ?? 0) > 0;
+  String get vendorName => vendor?.name ?? 'مطبخ ست الكل';
 
   Product copyWith({
     String? id,

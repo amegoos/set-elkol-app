@@ -1,8 +1,11 @@
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/route_names.dart';
+import '../../../../core/constants/storage_keys.dart';
+import '../../../../core/providers/shared_preferences_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_radius.dart';
@@ -108,9 +111,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   Future<void> _runSequence() async {
     _heroController.forward();
 
-    // Check auth state
+    // Check if user previously logged out
+    final prefs = ref.read(sharedPreferencesProvider);
+    final wasLoggedOut =
+        prefs.getBool(StorageKeys.explicitlyLoggedOut) ?? false;
+
+    // Check auth state only if NOT explicitly logged out
     final authState = ref.read(authProvider);
-    if (authState.status == AuthStatus.authenticated) {
+    if (!wasLoggedOut && authState.status == AuthStatus.authenticated) {
       await Future.delayed(const Duration(milliseconds: 1500));
       if (!mounted) return;
       _navigateBasedOnAuth(authState);
@@ -122,8 +130,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     if (!mounted) return;
     _textController.forward();
 
-    // Phase 3: Show auth options after ~2.8s
-    await Future.delayed(const Duration(milliseconds: 2400));
+    // Phase 3: Show auth options (fast if returning from logout, else natural intro)
+    final delayMs = wasLoggedOut ? 400 : 2200;
+    await Future.delayed(Duration(milliseconds: delayMs));
     if (!mounted) return;
     setState(() => _showButtons = true);
     _buttonsController.forward();
@@ -136,6 +145,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     if (state.status == AuthStatus.authenticated) {
       if (state.profile == null) {
         context.go(RouteNames.roleSelect);
+      } else if (state.profile!.isAdmin) {
+        context.go(RouteNames.adminDashboard);
       } else if (state.profile!.isVendor) {
         context.go(RouteNames.vendorDashboard);
       } else {
@@ -156,7 +167,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   @override
   Widget build(BuildContext context) {
     ref.listen<AuthState>(authProvider, (prev, next) {
-      if (next.status == AuthStatus.authenticated) {
+      final prefs = ref.read(sharedPreferencesProvider);
+      final wasLoggedOut =
+          prefs.getBool(StorageKeys.explicitlyLoggedOut) ?? false;
+      if (!wasLoggedOut && next.status == AuthStatus.authenticated) {
         _navigateBasedOnAuth(next);
       }
     });
@@ -407,9 +421,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                               width: double.infinity,
                               height: 52,
                               child: OutlinedButton(
-                                onPressed: () {
-                                  context.go(RouteNames.login);
-                                },
+                                onPressed: () => context.go(RouteNames.login),
                                 style: OutlinedButton.styleFrom(
                                   backgroundColor:
                                       Colors.white.withValues(alpha: 0.12),

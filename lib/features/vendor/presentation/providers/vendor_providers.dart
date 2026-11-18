@@ -1,8 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/network/supabase_client.dart';
-import '../../../../core/domain/entities/vendor.dart';
+
 import '../../../../core/data/demo_data_service.dart';
+import '../../../../core/domain/entities/vendor.dart';
+import '../../../../core/network/firebase_providers.dart';
 import '../../data/models/vendor_data_model.dart';
 
 // ── Vendor Profile ─────────────────────────────────────────────────────────────
@@ -10,13 +12,15 @@ import '../../data/models/vendor_data_model.dart';
 final myVendorProfileProvider = FutureProvider<Vendor?>((ref) async {
   final demoData = ref.watch(demoDataServiceProvider);
   try {
-    final client = ref.watch(supabaseClientProvider);
-    final userId = client.auth.currentUser?.id;
+    final auth = ref.watch(firebaseAuthProvider);
+    final userId = auth.currentUser?.uid;
     if (userId != null) {
-      final data =
-          await client.from('vendors').select().eq('id', userId).maybeSingle();
-      if (data != null) {
-        return VendorDataModel.fromJson(data as Map<String, dynamic>);
+      final db = ref.watch(firebaseDatabaseProvider);
+      final snapshot = await db.ref('vendors/$userId').get();
+      if (snapshot.exists && snapshot.value is Map) {
+        final map = Map<String, dynamic>.from(snapshot.value as Map);
+        map['id'] ??= userId;
+        return VendorDataModel.fromJson(map);
       }
     }
   } catch (_) {}
@@ -48,16 +52,19 @@ class VendorOrder {
 
   factory VendorOrder.fromJson(Map<String, dynamic> json) {
     return VendorOrder(
-      id: json['id'] as String,
+      id: json['id'] as String? ?? '',
       status: json['status'] as String? ?? 'pending',
-      totalAmount: (json['total_amount'] as num).toDouble(),
+      totalAmount: (json['total_amount'] as num?)?.toDouble() ?? 0.0,
       paymentMethod: json['payment_method'] as String? ?? 'cash',
-      createdAt: DateTime.parse(json['created_at'] as String),
-      customerName:
-          (json['profiles'] as Map<String, dynamic>?)?['full_name'] as String?,
+      createdAt: json['created_at'] != null
+          ? (DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now())
+          : DateTime.now(),
+      customerName: (json['profiles'] as Map<String, dynamic>?)?['full_name']
+              as String? ??
+          json['customer_name'] as String?,
       deliveryAddress: json['delivery_address'] as String?,
       items: (json['order_items'] as List<dynamic>?)
-              ?.map((e) => e as Map<String, dynamic>)
+              ?.map((e) => Map<String, dynamic>.from(e as Map))
               .toList() ??
           [],
     );
@@ -67,20 +74,35 @@ class VendorOrder {
 final vendorOrdersListProvider = FutureProvider<List<VendorOrder>>((ref) async {
   final demoData = ref.watch(demoDataServiceProvider);
   try {
-    final client = ref.watch(supabaseClientProvider);
-    final userId = client.auth.currentUser?.id;
+    final auth = ref.watch(firebaseAuthProvider);
+    final userId = auth.currentUser?.uid;
     if (userId != null) {
-      final data = await client
-          .from('orders')
-          .select('*, profiles(full_name), order_items(*, products(name))')
-          .eq('vendor_id', userId)
-          .order('created_at', ascending: false)
-          .limit(50);
+      final db = ref.watch(firebaseDatabaseProvider);
+      // Realtime listener: any new order pops up immediately on vendor device
+      final sub = db
+          .ref('orders')
+          .orderByChild('vendor_id')
+          .equalTo(userId)
+          .onValue
+          .listen((_) {
+        ref.invalidateSelf();
+      });
+      ref.onDispose(() => sub.cancel());
 
-      final list = (data as List)
-          .map((e) => VendorOrder.fromJson(e as Map<String, dynamic>))
-          .toList();
-      if (list.isNotEmpty) return list;
+      final snapshot = await db
+          .ref('orders')
+          .orderByChild('vendor_id')
+          .equalTo(userId)
+          .get();
+      if (snapshot.exists && snapshot.value is Map) {
+        final data = snapshot.value as Map;
+        final list = data.entries.map((e) {
+          final map = Map<String, dynamic>.from(e.value as Map);
+          map['id'] ??= e.key;
+          return VendorOrder.fromJson(map);
+        }).toList();
+        if (list.isNotEmpty) return list;
+      }
     }
   } catch (_) {}
   return demoData.vendorOrders;
@@ -92,17 +114,35 @@ final myProductsProvider =
     FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final demoData = ref.watch(demoDataServiceProvider);
   try {
-    final client = ref.watch(supabaseClientProvider);
-    final userId = client.auth.currentUser?.id;
+    final auth = ref.watch(firebaseAuthProvider);
+    final userId = auth.currentUser?.uid;
     if (userId != null) {
-      final data = await client
-          .from('products')
-          .select()
-          .eq('vendor_id', userId)
-          .order('created_at', ascending: false);
+      final db = ref.watch(firebaseDatabaseProvider);
+      // Realtime listener: any product update pushes immediately
+      final sub = db
+          .ref('products')
+          .orderByChild('vendor_id')
+          .equalTo(userId)
+          .onValue
+          .listen((_) {
+        ref.invalidateSelf();
+      });
+      ref.onDispose(() => sub.cancel());
 
-      final list = (data as List).cast<Map<String, dynamic>>();
-      if (list.isNotEmpty) return list;
+      final snapshot = await db
+          .ref('products')
+          .orderByChild('vendor_id')
+          .equalTo(userId)
+          .get();
+      if (snapshot.exists && snapshot.value is Map) {
+        final data = snapshot.value as Map;
+        final list = data.entries.map((e) {
+          final map = Map<String, dynamic>.from(e.value as Map);
+          map['id'] ??= e.key;
+          return map;
+        }).toList();
+        if (list.isNotEmpty) return list;
+      }
     }
   } catch (_) {}
   return demoData.rawProducts;
@@ -126,26 +166,32 @@ class VendorEarnings {
 final vendorEarningsProvider = FutureProvider<VendorEarnings>((ref) async {
   final demoData = ref.watch(demoDataServiceProvider);
   try {
-    final client = ref.watch(supabaseClientProvider);
-    final userId = client.auth.currentUser?.id;
+    final auth = ref.watch(firebaseAuthProvider);
+    final userId = auth.currentUser?.uid;
     if (userId != null) {
-      final now = DateTime.now();
-      final todayStart = DateTime(now.year, now.month, now.day);
-      final weekStart = now.subtract(const Duration(days: 7));
-      final monthStart = DateTime(now.year, now.month, 1);
+      final db = ref.watch(firebaseDatabaseProvider);
+      final snapshot = await db
+          .ref('orders')
+          .orderByChild('vendor_id')
+          .equalTo(userId)
+          .get();
+      if (snapshot.exists && snapshot.value is Map) {
+        final data = snapshot.value as Map;
+        final now = DateTime.now();
+        final todayStart = DateTime(now.year, now.month, now.day);
+        final weekStart = now.subtract(const Duration(days: 7));
+        final monthStart = DateTime(now.year, now.month, 1);
 
-      final data = await client
-          .from('orders')
-          .select('total_amount, created_at, status')
-          .eq('vendor_id', userId)
-          .neq('status', 'cancelled');
-
-      final orders = (data as List).cast<Map<String, dynamic>>();
-      if (orders.isNotEmpty) {
         double todayTotal = 0, weekTotal = 0, monthTotal = 0;
-        for (final o in orders) {
-          final amount = (o['total_amount'] as num).toDouble();
-          final dt = DateTime.parse(o['created_at'] as String);
+        int count = 0;
+
+        for (final entry in data.entries) {
+          final o = Map<String, dynamic>.from(entry.value as Map);
+          if (o['status'] == 'cancelled') continue;
+          count++;
+          final amount = (o['total_amount'] as num?)?.toDouble() ?? 0.0;
+          final dt =
+              DateTime.tryParse(o['created_at']?.toString() ?? '') ?? now;
           if (dt.isAfter(todayStart)) todayTotal += amount;
           if (dt.isAfter(weekStart)) weekTotal += amount;
           if (dt.isAfter(monthStart)) monthTotal += amount;
@@ -155,7 +201,7 @@ final vendorEarningsProvider = FutureProvider<VendorEarnings>((ref) async {
           todayTotal: todayTotal,
           weekTotal: weekTotal,
           monthTotal: monthTotal,
-          totalOrders: orders.length,
+          totalOrders: count,
         );
       }
     }

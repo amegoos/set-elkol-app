@@ -7,7 +7,7 @@ abstract final class AppConstants {
   static const String appNameEn = 'Set El Kol';
   static const String tagline = 'أكل بيتي من إيد ستات مصر';
 
-  // ── Supabase Storage Buckets ───────────────────────────────────────────────
+  // ── Storage Paths ───────────────────────────────────────────────
   static const String bucketAvatars = 'avatars';
   static const String bucketFoodImages = 'food-images';
   static const String bucketPaymentProofs = 'payment-proofs';

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/config/supabase_config.dart';
 import '../../../../core/constants/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -284,32 +283,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
                 children: [
-                  if (!SupabaseConfig.hasValidKey)
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.shade50,
-                        border: Border.all(color: Colors.amber.shade400),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.warning_amber_rounded,
-                              color: Colors.amber.shade800, size: 22),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'تنبيه: مفتاح Supabase Anon Key غير مهيأ في .env. يرجى إضافته لإتمام عمليات الحساب.',
-                              style: TextStyle(
-                                  fontSize: 12, color: Colors.amber.shade900),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
                   // Tab Switcher (Sign In | Sign Up matching Image 1)
                   TabBar(
                     controller: _tabController,

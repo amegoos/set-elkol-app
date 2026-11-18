@@ -22,6 +22,7 @@ import '../../features/customer/presentation/screens/checkout_screen.dart';
 import '../../features/customer/presentation/screens/order_tracking_screen.dart';
 import '../../features/customer/presentation/screens/favorites_screen.dart';
 import '../../features/customer/presentation/screens/addresses_screen.dart';
+import '../../features/customer/presentation/screens/support_screen.dart';
 import '../../features/vendor/presentation/screens/vendor_shell.dart';
 import '../../features/vendor/presentation/screens/vendor_dashboard_screen.dart';
 import '../../features/vendor/presentation/screens/vendor_products_screen.dart';
@@ -41,16 +42,23 @@ import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
 class RouterRefreshNotifier extends ChangeNotifier {
   RouterRefreshNotifier(this._ref) {
     _ref.listen<AuthState>(authProvider, (previous, next) {
+      final statusChanged = previous?.status != next.status;
       final authStatusChanged =
           previous?.isAuthenticated != next.isAuthenticated;
-      final userChanged = previous?.user?.id != next.user?.id;
+      final userChanged = previous?.user?.uid != next?.user?.uid;
+      final profileChanged = previous?.profile != next.profile;
       final roleChanged =
           next.isAuthenticated && previous?.profile?.role != next.profile?.role;
 
-      if (authStatusChanged || userChanged || roleChanged) {
+      if (statusChanged ||
+          authStatusChanged ||
+          userChanged ||
+          profileChanged ||
+          roleChanged) {
         debugPrint(
-          '[Router] Refreshing routes: authStatusChanged=$authStatusChanged, '
-          'userChanged=$userChanged, roleChanged=$roleChanged '
+          '[Router] Refreshing routes: statusChanged=$statusChanged, '
+          'authStatusChanged=$authStatusChanged, userChanged=$userChanged, '
+          'profileChanged=$profileChanged, roleChanged=$roleChanged '
           '(isAuth=${next.isAuthenticated}, role=${next.profile?.role.name})',
         );
         notifyListeners();
@@ -71,7 +79,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: RouteNames.splash,
     refreshListenable: refreshNotifier,
-    debugLogDiagnostics: false,
+    debugLogDiagnostics: true,
     redirect: (context, state) {
       final authState = ref.read(authProvider);
 
@@ -94,7 +102,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       final profile = authState.profile;
 
       if (!isAuth) {
-        // Not authenticated → allow splash, auth, phone, forgot, or login callback
+        // Not authenticated – allow splash, auth, phone, forgot, or login callback
         if (isOnSplash ||
             isOnAuth ||
             isOnForgot ||
@@ -106,7 +114,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         return RouteNames.login;
       }
 
-      // Authenticated but no profile/role set yet → navigate to role selection
+      // Authenticated but no profile/role set yet â†’ navigate to role selection
       if (isAuth && profile == null) {
         if (isOnRoleSelect) return null;
         debugPrint(
@@ -114,7 +122,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         return RouteNames.roleSelect;
       }
 
-      // Authenticated with role → navigate to corresponding dashboard
+      // Authenticated with role â†’ navigate to corresponding dashboard
       if (isAuth && profile != null) {
         if (isOnSplash ||
             isOnAuth ||
@@ -177,7 +185,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const VendorSetupScreen(),
       ),
 
-      // ── Customer Shell ──────────────────────────────────────────────────────
+      // â”€â”€ Customer Shell â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => CustomerShell(shell: shell),
         branches: [
@@ -261,7 +269,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
 
-      // ── Vendor Shell ────────────────────────────────────────────────────────
+      // â”€â”€ Vendor Shell â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => VendorShell(shell: shell),
         branches: [
@@ -311,8 +319,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
 
       GoRoute(
+        path: RouteNames.orderTracking,
+        builder: (_, state) => OrderTrackingScreen(
+          orderId: state.pathParameters['orderId']!,
+        ),
+      ),
+      GoRoute(
         path: RouteNames.notifications,
         builder: (_, __) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.support,
+        builder: (_, __) => const SupportScreen(),
       ),
       GoRoute(
         path: RouteNames.adminDashboard,

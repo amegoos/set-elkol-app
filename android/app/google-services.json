@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "387458633968",
+    "project_id": "set-elkol",
+    "storage_bucket": "set-elkol.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:387458633968:android:a3784a32a8f17f89763235",
+        "android_client_info": {
+          "package_name": "com.setelkol.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "387458633968-4eg8jru8i13m19rnl8hr0o2v5ugivhjl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.setelkol.app",
+            "certificate_hash": "2c94193020a9d363e1fdbf403bec6616afdfe1c0"
+          }
+        },
+        {
+          "client_id": "387458633968-b2ajsdgq78829nckr9pgj1p8anp2dnta.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_pKBvs9sX9furNmoK9AbRUBPue3udZXI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "387458633968-b2ajsdgq78829nckr9pgj1p8anp2dnta.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

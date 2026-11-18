@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/route_names.dart';
-import '../../../../core/network/supabase_client.dart';
+import '../../../../core/network/firebase_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_radius.dart';
@@ -54,11 +54,11 @@ class VendorProductsScreen extends ConsumerWidget {
                   DemoDataService.instance.toggleProductAvailability(
                       p['id'] as String, newAvailable);
                   try {
-                    final client = ref.read(supabaseClientProvider);
-                    await client.from('products').update({
+                    final db = ref.read(firebaseDatabaseProvider);
+                    await db.ref('products/${p['id']}').update({
                       'is_available': newAvailable,
                       'updated_at': DateTime.now().toIso8601String(),
-                    }).eq('id', p['id'] as String);
+                    });
                   } catch (_) {}
                   ref.invalidate(myProductsProvider);
                   ref.invalidate(featuredProductsProvider);
@@ -85,9 +85,48 @@ class _ProductTile extends StatelessWidget {
   final VoidCallback onEdit;
   final VoidCallback onToggle;
 
+  Widget _buildImage(String? url) {
+    if (url == null || url.isEmpty) {
+      return Container(
+        width: 70,
+        height: 70,
+        color: AppColors.secondary,
+        child: const Icon(Icons.restaurant, color: AppColors.primary),
+      );
+    }
+    if (url.startsWith('assets/')) {
+      return Image.asset(
+        url,
+        width: 70,
+        height: 70,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => Container(
+          width: 70,
+          height: 70,
+          color: AppColors.secondary,
+          child: const Icon(Icons.restaurant, color: AppColors.primary),
+        ),
+      );
+    }
+    return CachedNetworkImage(
+      imageUrl: url,
+      width: 70,
+      height: 70,
+      fit: BoxFit.cover,
+      errorWidget: (_, __, ___) => Container(
+        width: 70,
+        height: 70,
+        color: AppColors.secondary,
+        child: const Icon(Icons.restaurant, color: AppColors.primary),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isAvailable = product['is_available'] as bool? ?? true;
+    final imageUrl = product['image_url'] as String?;
+
     return Opacity(
       opacity: isAvailable ? 1.0 : 0.6,
       child: Container(
@@ -102,20 +141,7 @@ class _ProductTile extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: product['image_url'] != null
-                  ? CachedNetworkImage(
-                      imageUrl: product['image_url'] as String,
-                      width: 70,
-                      height: 70,
-                      fit: BoxFit.cover,
-                    )
-                  : Container(
-                      width: 70,
-                      height: 70,
-                      color: AppColors.secondary,
-                      child: const Icon(Icons.restaurant,
-                          color: AppColors.primary),
-                    ),
+              child: _buildImage(imageUrl),
             ),
             const SizedBox(width: 12),
             Expanded(

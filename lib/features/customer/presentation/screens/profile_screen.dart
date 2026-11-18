@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../core/constants/route_names.dart';
 import '../../../../core/domain/entities/user_profile.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../core/theme/app_radius.dart';
-import '../../../../core/widgets/app_loading.dart';
 import '../../../../core/extensions/build_context_ext.dart';
+import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radius.dart';
+import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_loading.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -17,15 +20,27 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
     final profile = authState.profile;
+    final currentLocale = ref.watch(localeProvider);
+    final isAr = currentLocale.languageCode == 'ar';
 
     if (profile == null) {
-      return const Scaffold(body: AppLoadingSpinner());
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          context.go(RouteNames.login);
+        }
+      });
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      );
     }
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('حسابي'),
+        title: Text(isAr ? 'حسابي' : 'My Account'),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
@@ -73,7 +88,9 @@ class ProfileScreen extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      profile.isVendor ? 'بائع' : 'عميل',
+                      profile.isVendor
+                          ? (isAr ? 'طاهية / بائعة' : 'Cook / Vendor')
+                          : (isAr ? 'عميل' : 'Customer'),
                       style: AppTypography.labelMedium.copyWith(
                         color: profile.isVendor
                             ? AppColors.vendorBadge
@@ -89,23 +106,23 @@ class ProfileScreen extends ConsumerWidget {
 
             // Menu items
             _MenuSection(
-              title: 'حسابي',
+              title: isAr ? 'حسابي' : 'Account',
               items: [
                 _MenuItem(
                   icon: Icons.favorite_border,
-                  label: 'المفضلة',
+                  label: isAr ? 'المفضلة' : 'Favorites',
                   onTap: () =>
                       context.push('${RouteNames.customerProfile}/favorites'),
                 ),
                 _MenuItem(
                   icon: Icons.location_on_outlined,
-                  label: 'عناوين التوصيل',
+                  label: isAr ? 'العناوين المحفوظة' : 'Saved Addresses',
                   onTap: () =>
                       context.push('${RouteNames.customerProfile}/addresses'),
                 ),
                 _MenuItem(
                   icon: Icons.receipt_long_outlined,
-                  label: 'طلباتي',
+                  label: isAr ? 'سجل الطلبات' : 'Order History',
                   onTap: () => context.go(RouteNames.customerOrders),
                 ),
               ],
@@ -113,11 +130,13 @@ class ProfileScreen extends ConsumerWidget {
 
             if (!profile.isVendor)
               _MenuSection(
-                title: 'البيع',
+                title: isAr ? 'البيع في ست الكل' : 'Selling on Set El Kol',
                 items: [
                   _MenuItem(
                     icon: Icons.storefront_outlined,
-                    label: 'أصبح بائعاً',
+                    label: isAr
+                        ? 'أصبح بائعاً (انضمي كطاهية منزلية)'
+                        : 'Become a Vendor',
                     onTap: () => _switchRole(context, ref),
                     color: AppColors.accent,
                   ),
@@ -126,67 +145,60 @@ class ProfileScreen extends ConsumerWidget {
 
             if (profile.isVendor)
               _MenuSection(
-                title: 'متجري',
+                title: isAr ? 'متجري' : 'My Kitchen',
                 items: [
                   _MenuItem(
                     icon: Icons.dashboard_outlined,
-                    label: 'لوحة التحكم',
+                    label: isAr ? 'لوحة التحكم' : 'Vendor Dashboard',
                     onTap: () => context.go(RouteNames.vendorDashboard),
                     color: AppColors.accent,
                   ),
                   _MenuItem(
                     icon: Icons.person_outline,
-                    label: 'العودة لعميل',
+                    label: isAr ? 'العودة لوضع العميل' : 'Switch to Customer',
                     onTap: () => _switchRole(context, ref),
                     color: AppColors.primary,
                   ),
                 ],
               ),
 
-            _MenuSection(
-              title: 'الوضع التجريبي والإدارة 🛡️',
-              items: [
-                _MenuItem(
-                  icon: Icons.admin_panel_settings_outlined,
-                  label: 'لوحة تحكم الإدارة (Admin Dashboard)',
-                  color: AppColors.pickupBadge,
-                  onTap: () {
-                    ref
-                        .read(authProvider.notifier)
-                        .signInAsDemo(UserRole.admin);
-                    context.go(RouteNames.adminDashboard);
-                  },
-                ),
-                _MenuItem(
-                  icon: Icons.restaurant_menu_rounded,
-                  label: 'التحويل لحساب ست الكل (Vendor)',
-                  color: AppColors.vendorBadge,
-                  onTap: () {
-                    ref
-                        .read(authProvider.notifier)
-                        .signInAsDemo(UserRole.vendor);
-                    context.go(RouteNames.vendorDashboard);
-                  },
-                ),
-              ],
-            ),
+            if (profile.isAdmin)
+              _MenuSection(
+                title: isAr ? 'إدارة النظام 🛡️' : 'Admin Management 🛡️',
+                items: [
+                  _MenuItem(
+                    icon: Icons.admin_panel_settings_outlined,
+                    label:
+                        isAr ? 'لوحة تحكم الإدارة (Admin)' : 'Admin Dashboard',
+                    color: AppColors.pickupBadge,
+                    onTap: () => context.go(RouteNames.adminDashboard),
+                  ),
+                ],
+              ),
 
             _MenuSection(
-              title: 'الإعدادات',
+              title: isAr ? 'الإعدادات والدعم' : 'Settings & Support',
               items: [
                 _MenuItem(
                   icon: Icons.language_outlined,
-                  label: 'اللغة',
-                  onTap: () {},
+                  label:
+                      isAr ? 'اللغة (العربية 🇪🇬)' : 'Language (English 🇬🇧)',
+                  onTap: () => _showLanguageModal(context, ref),
                 ),
                 _MenuItem(
-                  icon: Icons.help_outline,
-                  label: 'المساعدة والدعم',
-                  onTap: () {},
+                  icon: Icons.support_agent_outlined,
+                  label: isAr
+                      ? 'المساعدة والدعم (Gmail & اتصالات)'
+                      : 'Help & Support (Gmail & Calls)',
+                  onTap: () {
+                    debugPrint(
+                        '>>> [ProfileScreen] Help & Support tapped! <<<');
+                    context.push(RouteNames.support);
+                  },
                 ),
                 _MenuItem(
                   icon: Icons.logout,
-                  label: 'تسجيل الخروج',
+                  label: isAr ? 'تسجيل الخروج' : 'Logout',
                   color: AppColors.error,
                   onTap: () => _confirmLogout(context, ref),
                 ),
@@ -200,6 +212,92 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
+  void _showLanguageModal(BuildContext context, WidgetRef ref) {
+    final currentLocale = ref.read(localeProvider);
+    final isAr = currentLocale.languageCode == 'ar';
+
+    showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'اختيار لغة التطبيق / Choose Language',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                ListTile(
+                  leading: const Text('🇪🇬', style: TextStyle(fontSize: 24)),
+                  title: const Text('العربية (Egyptian Arabic)',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  trailing: isAr
+                      ? const Icon(Icons.check_circle, color: AppColors.primary)
+                      : null,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(
+                        color: isAr ? AppColors.primary : Colors.grey.shade200),
+                  ),
+                  tileColor: isAr ? AppColors.primary.withOpacity(0.05) : null,
+                  onTap: () {
+                    ref
+                        .read(localeProvider.notifier)
+                        .setLocale(const Locale('ar'));
+                    Navigator.pop(ctx);
+                  },
+                ),
+                const SizedBox(height: 10),
+                ListTile(
+                  leading: const Text('🇬🇧', style: TextStyle(fontSize: 24)),
+                  title: const Text('English (الإنجليزية)',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  trailing: !isAr
+                      ? const Icon(Icons.check_circle, color: AppColors.primary)
+                      : null,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(
+                        color:
+                            !isAr ? AppColors.primary : Colors.grey.shade200),
+                  ),
+                  tileColor: !isAr ? AppColors.primary.withOpacity(0.05) : null,
+                  onTap: () {
+                    ref
+                        .read(localeProvider.notifier)
+                        .setLocale(const Locale('en'));
+                    Navigator.pop(ctx);
+                  },
+                ),
+                const SizedBox(height: 12),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _switchRole(BuildContext context, WidgetRef ref) async {
     final notifier = ref.read(authProvider.notifier);
     final error = await notifier.switchRole();
@@ -210,7 +308,7 @@ class ProfileScreen extends ConsumerWidget {
       final newProfile = ref.read(authProvider).profile;
       if (newProfile?.isVendor == true) {
         context.showSnack('تم التبديل إلى وضع البائع ✓');
-        context.go(RouteNames.vendorSetup);
+        context.go(RouteNames.vendorDashboard);
       } else {
         context.showSnack('تم التبديل إلى وضع العميل ✓');
         context.go(RouteNames.customerHome);
@@ -221,19 +319,43 @@ class ProfileScreen extends ConsumerWidget {
   void _confirmLogout(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('تسجيل الخروج'),
-        content: const Text('هل تريد تسجيل الخروج؟'),
+      useRootNavigator: true,
+      builder: (dialogCtx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'تسجيل الخروج',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+            fontSize: 18,
+          ),
+        ),
+        content: const Text(
+          'هل تريد تأكيد تسجيل الخروج والعودة للشاشة الرئيسية؟',
+          style: TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 14,
+          ),
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('لا')),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              ref.read(authProvider.notifier).signOut();
+            onPressed: () => Navigator.of(dialogCtx).pop(),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(dialogCtx).pop();
+              await ref.read(authProvider.notifier).signOut();
+              if (context.mounted) {
+                context.go(RouteNames.login);
+              }
             },
-            child: const Text('نعم', style: TextStyle(color: AppColors.error)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('تسجيل الخروج'),
           ),
         ],
       ),
@@ -259,7 +381,7 @@ class _MenuSection extends StatelessWidget {
                 .copyWith(color: AppColors.textSecondary),
           ),
         ),
-        Container(
+        Material(
           color: AppColors.surface,
           child: Column(
             children: items.map((item) => _buildTile(item)).toList(),

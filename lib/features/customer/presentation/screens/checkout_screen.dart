@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
-import '../../../../core/network/supabase_client.dart';
+import '../../../../core/network/firebase_providers.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -59,10 +59,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final client = ref.read(supabaseClientProvider);
+      final auth = ref.read(firebaseAuthProvider);
+      final db = ref.read(firebaseDatabaseProvider);
       final profile = ref.read(currentProfileProvider);
-      final currentAuthUser = client.auth.currentUser;
-      final userId = currentAuthUser?.id ??
+      final currentAuthUser = auth.currentUser;
+      final userId = currentAuthUser?.uid ??
           profile?.id ??
           '00000000-0000-0000-0000-000000000002';
 
@@ -70,14 +71,24 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       final vendorId = cart.vendorId ?? '00000000-0000-0000-0000-000000000001';
 
       double deliveryFee = 0;
-      if (_delivery == DeliveryType.delivery &&
-          cart.vendor?.deliveryFee != null) {
-        deliveryFee = cart.vendor!.deliveryFee!;
+      if (_delivery == DeliveryType.delivery) {
+        deliveryFee = cart.estimatedDeliveryFee;
       }
 
-      final totalAmount = cart.subtotal + deliveryFee;
+      final totalAmount = cart.totalAfterDiscount + deliveryFee;
 
-      // Map to PostgreSQL payment_method constraint ('cash', 'instapay', 'vodafone_cash')
+      final String vendorName;
+      if (cart.isMultiVendor) {
+        final names = cart.itemsByVendor.values
+            .map(
+                (items) => items.firstOrNull?.product.vendorName ?? 'مطبخ بيتي')
+            .toSet()
+            .toList();
+        vendorName = names.join(' + ');
+      } else {
+        vendorName = cart.vendor?.name ?? 'مطبخ ست الكل (أم أحمد)';
+      }
+
       String paymentDbValue;
       switch (_payment) {
         case PaymentMethod.card:
@@ -100,6 +111,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         return {
           'product_id': item.product.id,
           'product_name_snapshot': item.product.name,
+          'vendor_id': item.product.vendorId,
+          'vendor_name': item.product.vendorName,
           'quantity': item.quantity,
           'unit_price': item.product.price,
           'subtotal': item.product.price * item.quantity,
@@ -110,14 +123,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         };
       }).toList();
 
-      // 1. Always create and persist local OrderModel into DemoDataService immediately
       final newOrder = OrderModel(
         id: orderId,
         status: 'pending',
         totalAmount: totalAmount,
         paymentMethod: paymentDbValue,
         createdAt: DateTime.now(),
-        vendorName: cart.vendor?.name ?? 'مطبخ ست الكل (أم أحمد)',
+        vendorName: vendorName,
         deliveryAddress: deliveryAddr,
         items: orderItemsList,
       );
@@ -127,46 +139,37 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         customerName: profile?.name ?? 'سارة محمود',
       );
 
-      // 2. Safe attempt to sync order into Supabase backend
       try {
-        if (currentAuthUser != null) {
-          await client.from('orders').insert({
-            'id': orderId,
-            'customer_id': userId,
-            'vendor_id': vendorId,
-            'order_status': 'pending',
-            'subtotal': cart.subtotal,
-            'total_amount': totalAmount,
-            'delivery_fee': deliveryFee,
-            'fulfillment_type':
-                _delivery == DeliveryType.delivery ? 'delivery' : 'pickup',
-            'payment_method': paymentDbValue,
-            'payment_status':
-                _payment == PaymentMethod.card ? 'verified' : 'pending',
-            'customer_note': _noteController.text.trim().isEmpty
-                ? null
-                : _noteController.text.trim(),
-            'created_at': DateTime.now().toIso8601String(),
-            'updated_at': DateTime.now().toIso8601String(),
-          });
-
-          for (final item in cart.items.values) {
-            await client.from('order_items').insert({
-              'order_id': orderId,
-              'product_id': item.product.id,
-              'product_name_snapshot': item.product.name,
-              'quantity': item.quantity,
-              'unit_price': item.product.price,
-              'subtotal': item.product.price * item.quantity,
-            });
-          }
-        }
-      } catch (supabaseError) {
-        debugPrint(
-            '[Checkout] Supabase sync skipped or failed (local order safe): $supabaseError');
+        await db.ref('orders/$orderId').set({
+          'id': orderId,
+          'customer_id': userId,
+          'customer_name': profile?.name ?? 'عميل ست الكل',
+          'vendor_id': vendorId,
+          'vendor_ids': cart.vendorIds.toList(),
+          'is_multi_vendor': cart.isMultiVendor,
+          'vendor_name': vendorName,
+          'order_status': 'pending',
+          'status': 'pending',
+          'subtotal': cart.subtotal,
+          'total_amount': totalAmount,
+          'delivery_fee': deliveryFee,
+          'fulfillment_type':
+              _delivery == DeliveryType.delivery ? 'delivery' : 'pickup',
+          'payment_method': paymentDbValue,
+          'payment_status':
+              _payment == PaymentMethod.card ? 'verified' : 'pending',
+          'customer_note': _noteController.text.trim().isEmpty
+              ? null
+              : _noteController.text.trim(),
+          'delivery_address': deliveryAddr,
+          'order_items': orderItemsList,
+          'created_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+      } catch (fbErr) {
+        debugPrint('[Checkout] Firebase order sync error: $fbErr');
       }
 
-      // 3. Process payment service log safely
       try {
         final paymentService = ref.read(paymentServiceProvider);
         PaymentGatewayType gatewayType;
@@ -198,13 +201,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         debugPrint('[Checkout] Payment log note: $paymentError');
       }
 
-      // 4. Invalidate provider caches so views update instantly
       ref.invalidate(customerOrdersProvider);
       ref.invalidate(orderDetailProvider(orderId));
       ref.invalidate(vendorOrdersListProvider);
       ref.invalidate(vendorEarningsProvider);
 
-      // 5. Clear Cart
       ref.read(cartProvider.notifier).clear();
 
       if (!mounted) return;
@@ -233,7 +234,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Delivery Type Selection
             Text('طريقة الاستلام', style: AppTypography.titleMedium),
             const SizedBox(height: 12),
             Row(
@@ -254,7 +254,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 ),
               ],
             ),
-
             if (_delivery == DeliveryType.delivery) ...[
               const SizedBox(height: 20),
               Text('عنوان التوصيل', style: AppTypography.titleMedium),
@@ -272,12 +271,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 prefix: const Icon(Icons.note_outlined, size: 20),
               ),
             ],
-
             const SizedBox(height: 24),
             Text('طريقة الدفع', style: AppTypography.titleMedium),
             const SizedBox(height: 12),
-
-            // Online Card Payment
             _PaymentOption(
               label: 'بطاقة ائتمان / فيزا (دفع إلكتروني آمن)',
               icon: Icons.credit_card,
@@ -286,8 +282,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               onTap: () => setState(() => _payment = PaymentMethod.card),
             ),
             const SizedBox(height: 10),
-
-            // Cash on delivery
             _PaymentOption(
               label: 'كاش عند الاستلام',
               icon: Icons.payments_outlined,
@@ -296,8 +290,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               onTap: () => setState(() => _payment = PaymentMethod.cash),
             ),
             const SizedBox(height: 10),
-
-            // InstaPay
             _PaymentOption(
               label: 'InstaPay - انستا باي',
               icon: Icons.account_balance_wallet_outlined,
@@ -306,8 +298,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               onTap: () => setState(() => _payment = PaymentMethod.instapay),
             ),
             const SizedBox(height: 10),
-
-            // Vodafone Cash
             _PaymentOption(
               label: 'فودافون كاش - المحفظة الإلكترونية',
               icon: Icons.phone_android,
@@ -316,7 +306,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               onTap: () =>
                   setState(() => _payment = PaymentMethod.vodafoneCash),
             ),
-
             if (_payment == PaymentMethod.instapay ||
                 _payment == PaymentMethod.vodafoneCash) ...[
               const SizedBox(height: 14),
@@ -326,10 +315,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 prefix: const Icon(Icons.numbers, size: 20),
               ),
             ],
-
             const SizedBox(height: 28),
-
-            // Order Summary Card
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
@@ -345,21 +331,22 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   const SizedBox(height: 8),
                   if (_delivery == DeliveryType.delivery)
                     _SummaryRow(
-                      label: 'رسوم التوصيل',
+                      label: cart.isMultiVendor
+                          ? 'رسوم التوصيل (موحد لجميع المطابخ)'
+                          : 'رسوم التوصيل',
                       value:
-                          '${(cart.vendor?.deliveryFee ?? 20.0).toStringAsFixed(0)} ج.م',
+                          '${cart.estimatedDeliveryFee.toStringAsFixed(0)} ج.م',
                     ),
                   const Divider(height: 20),
                   _SummaryRow(
                     label: 'الإجمالي النهائي',
                     value:
-                        '${(cart.subtotal + (_delivery == DeliveryType.delivery ? (cart.vendor?.deliveryFee ?? 20.0) : 0)).toStringAsFixed(0)} ج.م',
+                        '${(cart.totalAfterDiscount + (_delivery == DeliveryType.delivery ? cart.estimatedDeliveryFee : 0)).toStringAsFixed(0)} ج.م',
                     isBold: true,
                   ),
                 ],
               ),
             ),
-
             const SizedBox(height: 32),
             AppButton(
               label: 'تأكيد ودفع الطلب',

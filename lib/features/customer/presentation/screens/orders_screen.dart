@@ -141,10 +141,13 @@ class _OrderCard extends StatelessWidget {
             const Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Text('تفاصيل', style: TextStyle(color: AppColors.primary)),
+                Icon(Icons.map_outlined, size: 14, color: AppColors.primary),
                 SizedBox(width: 4),
-                Icon(Icons.arrow_forward_ios,
-                    size: 12, color: AppColors.primary),
+                Text('تتبع الطلب بالخريطة ❯',
+                    style: TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12)),
               ],
             ),
           ],

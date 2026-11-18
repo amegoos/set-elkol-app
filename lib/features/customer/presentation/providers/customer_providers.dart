@@ -1,16 +1,18 @@
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/network/supabase_client.dart';
-import '../../../../core/domain/entities/product.dart';
-import '../../../../core/domain/entities/vendor.dart';
+
+import '../../../../core/data/demo_data_service.dart';
 import '../../../../core/domain/entities/category.dart';
 import '../../../../core/domain/entities/order_model.dart';
+import '../../../../core/domain/entities/product.dart';
 import '../../../../core/domain/entities/promo_code.dart';
+import '../../../../core/domain/entities/vendor.dart';
+import '../../../../core/network/firebase_providers.dart';
+import '../../data/models/category_model.dart';
 import '../../data/models/product_model.dart';
 import '../../data/models/vendor_model.dart';
-import '../../data/models/category_model.dart';
-import '../../../../core/data/demo_data_service.dart';
 
 export '../../../../core/domain/entities/order_model.dart';
 
@@ -25,14 +27,12 @@ class CartItem {
 class CartState {
   CartState({
     this.items = const {},
-    this.vendorId,
     this.appliedPromo,
     this.promoDiscount = 0.0,
     this.isFreeDelivery = false,
   });
 
   final Map<String, CartItem> items; // productId -> CartItem
-  final String? vendorId; // only one vendor per cart
   final PromoCode? appliedPromo;
   final double promoDiscount;
   final bool isFreeDelivery;
@@ -48,24 +48,61 @@ class CartState {
 
   bool get isEmpty => items.isEmpty;
 
+  /// Returns the set of distinct vendor IDs in the cart.
+  Set<String> get vendorIds => items.values
+      .map((i) => i.product.vendorId)
+      .where((id) => id.isNotEmpty)
+      .toSet();
+
+  /// Primary vendor ID or first vendor ID in cart
+  String? get vendorId => items.values.firstOrNull?.product.vendorId;
+
+  /// Primary vendor or first vendor entity in cart
   Vendor? get vendor => items.values.firstOrNull?.product.vendor;
+
+  /// Group items by vendorId: Map<vendorId, List<CartItem>>
+  Map<String, List<CartItem>> get itemsByVendor {
+    final map = <String, List<CartItem>>{};
+    for (final item in items.values) {
+      final vId = item.product.vendorId;
+      map.putIfAbsent(vId, () => []).add(item);
+    }
+    return map;
+  }
+
+  /// Whether the cart contains items from multiple vendors.
+  bool get isMultiVendor => vendorIds.length > 1;
+
+  /// Combined delivery fee calculation:
+  /// Standard delivery base 20 EGP + 10 EGP for each additional kitchen if multi-vendor.
+  double get estimatedDeliveryFee {
+    if (isFreeDelivery) return 0.0;
+    if (isEmpty) return 0.0;
+    if (isMultiVendor) {
+      return 20.0 + (vendorIds.length - 1) * 10.0;
+    }
+    return vendor?.deliveryFee ?? 20.0;
+  }
 }
 
 class CartNotifier extends StateNotifier<CartState> {
   CartNotifier() : super(CartState());
 
-  /// Returns true if conflict (different vendor), false if added successfully.
+  /// Multi-vendor cart supported! Any product from any vendor can be added.
+  /// Always returns false (no conflict).
   bool addItem(Product product) {
-    if (state.vendorId != null && state.vendorId != product.vendorId) {
-      return true; // conflict
-    }
     final newItems = Map<String, CartItem>.from(state.items);
     if (newItems.containsKey(product.id)) {
       newItems[product.id]!.quantity++;
     } else {
       newItems[product.id] = CartItem(product: product, quantity: 1);
     }
-    state = CartState(items: newItems, vendorId: product.vendorId);
+    state = CartState(
+      items: newItems,
+      appliedPromo: state.appliedPromo,
+      promoDiscount: state.promoDiscount,
+      isFreeDelivery: state.isFreeDelivery,
+    );
     return false;
   }
 
@@ -74,7 +111,9 @@ class CartNotifier extends StateNotifier<CartState> {
     newItems.remove(productId);
     state = CartState(
       items: newItems,
-      vendorId: newItems.isEmpty ? null : state.vendorId,
+      appliedPromo: state.appliedPromo,
+      promoDiscount: state.promoDiscount,
+      isFreeDelivery: state.isFreeDelivery,
     );
   }
 
@@ -86,7 +125,12 @@ class CartNotifier extends StateNotifier<CartState> {
     final newItems = Map<String, CartItem>.from(state.items);
     if (newItems.containsKey(productId)) {
       newItems[productId]!.quantity = qty;
-      state = CartState(items: newItems, vendorId: state.vendorId);
+      state = CartState(
+        items: newItems,
+        appliedPromo: state.appliedPromo,
+        promoDiscount: state.promoDiscount,
+        isFreeDelivery: state.isFreeDelivery,
+      );
     }
   }
 
@@ -101,7 +145,6 @@ class CartNotifier extends StateNotifier<CartState> {
   }) {
     state = CartState(
       items: state.items,
-      vendorId: state.vendorId,
       appliedPromo: promo,
       promoDiscount: discount,
       isFreeDelivery: isFreeDelivery,
@@ -111,7 +154,6 @@ class CartNotifier extends StateNotifier<CartState> {
   void removePromo() {
     state = CartState(
       items: state.items,
-      vendorId: state.vendorId,
       appliedPromo: null,
       promoDiscount: 0.0,
       isFreeDelivery: false,
@@ -128,18 +170,22 @@ final cartProvider = StateNotifierProvider<CartNotifier, CartState>((ref) {
 final categoriesProvider = FutureProvider<List<Category>>((ref) async {
   final demoData = ref.watch(demoDataServiceProvider);
   try {
-    final client = ref.watch(supabaseClientProvider);
-    final data = await client
-        .from('categories')
-        .select()
-        .eq('is_active', true)
-        .order('sort_order');
-
-    final list = (data as List)
-        .map((e) => CategoryModel.fromJson(e as Map<String, dynamic>))
-        .toList();
-    if (list.isNotEmpty) return list;
-  } catch (_) {}
+    final db = ref.watch(firebaseDatabaseProvider);
+    final snapshot = await db.ref('categories').get();
+    if (snapshot.exists && snapshot.value != null) {
+      final data = snapshot.value;
+      if (data is Map) {
+        final list = data.entries.map((e) {
+          final map = Map<String, dynamic>.from(e.value as Map);
+          map['id'] ??= e.key;
+          return CategoryModel.fromJson(map);
+        }).toList();
+        if (list.isNotEmpty) return list;
+      }
+    }
+  } catch (e) {
+    debugPrint('[CategoriesProvider] Firebase fetch error: $e');
+  }
   return demoData.categories;
 });
 
@@ -151,21 +197,33 @@ final selectedCategoryProvider = StateProvider<String?>((ref) => null);
 
 final featuredProductsProvider = FutureProvider<List<Product>>((ref) async {
   final demoData = ref.watch(demoDataServiceProvider);
-  try {
-    final client = ref.watch(supabaseClientProvider);
-    final data = await client
-        .from('products')
-        .select('*, vendors(*)')
-        .eq('is_featured', true)
-        .eq('is_available', true)
-        .order('created_at', ascending: false)
-        .limit(10);
+  final db = ref.watch(firebaseDatabaseProvider);
 
-    final list = (data as List)
-        .map((e) => ProductModel.fromJson(e as Map<String, dynamic>))
-        .toList();
-    if (list.isNotEmpty) return list;
-  } catch (_) {}
+  // Real-time sync: automatically updates across all Android and iOS phones
+  final sub = db.ref('products').onValue.listen((_) {
+    ref.invalidateSelf();
+  });
+  ref.onDispose(() => sub.cancel());
+
+  try {
+    final snapshot = await db.ref('products').get();
+    if (snapshot.exists && snapshot.value != null) {
+      final data = snapshot.value;
+      if (data is Map) {
+        final list = data.entries
+            .map((e) {
+              final map = Map<String, dynamic>.from(e.value as Map);
+              map['id'] ??= e.key;
+              return ProductModel.fromJson(map);
+            })
+            .where((p) => p.isFeatured && p.isAvailable)
+            .toList();
+        if (list.isNotEmpty) return list;
+      }
+    }
+  } catch (e) {
+    debugPrint('[FeaturedProductsProvider] Firebase fetch error: $e');
+  }
   return demoData.products.where((p) => p.isFeatured && p.isAvailable).toList();
 });
 
@@ -173,20 +231,33 @@ final featuredProductsProvider = FutureProvider<List<Product>>((ref) async {
 
 final popularProductsProvider = FutureProvider<List<Product>>((ref) async {
   final demoData = ref.watch(demoDataServiceProvider);
-  try {
-    final client = ref.watch(supabaseClientProvider);
-    final data = await client
-        .from('products')
-        .select('*, vendors(*)')
-        .eq('is_available', true)
-        .order('created_at', ascending: false)
-        .limit(20);
+  final db = ref.watch(firebaseDatabaseProvider);
 
-    final list = (data as List)
-        .map((e) => ProductModel.fromJson(e as Map<String, dynamic>))
-        .toList();
-    if (list.isNotEmpty) return list;
-  } catch (_) {}
+  // Real-time sync: automatically updates across all Android and iOS phones
+  final sub = db.ref('products').onValue.listen((_) {
+    ref.invalidateSelf();
+  });
+  ref.onDispose(() => sub.cancel());
+
+  try {
+    final snapshot = await db.ref('products').get();
+    if (snapshot.exists && snapshot.value != null) {
+      final data = snapshot.value;
+      if (data is Map) {
+        final list = data.entries
+            .map((e) {
+              final map = Map<String, dynamic>.from(e.value as Map);
+              map['id'] ??= e.key;
+              return ProductModel.fromJson(map);
+            })
+            .where((p) => p.isAvailable)
+            .toList();
+        if (list.isNotEmpty) return list;
+      }
+    }
+  } catch (e) {
+    debugPrint('[PopularProductsProvider] Firebase fetch error: $e');
+  }
   return demoData.products.where((p) => p.isAvailable).toList();
 });
 
@@ -195,21 +266,35 @@ final popularProductsProvider = FutureProvider<List<Product>>((ref) async {
 final productsByCategoryProvider =
     FutureProvider.family<List<Product>, String?>((ref, categoryId) async {
   final demoData = ref.watch(demoDataServiceProvider);
+  final db = ref.watch(firebaseDatabaseProvider);
+
+  // Real-time sync
+  final sub = db.ref('products').onValue.listen((_) {
+    ref.invalidateSelf();
+  });
+  ref.onDispose(() => sub.cancel());
+
   try {
-    final client = ref.watch(supabaseClientProvider);
-    var query = client
-        .from('products')
-        .select('*, vendors(*)')
-        .eq('is_available', true);
-    if (categoryId != null) {
-      query = query.eq('category_id', categoryId);
+    final snapshot = await db.ref('products').get();
+    if (snapshot.exists && snapshot.value != null) {
+      final data = snapshot.value;
+      if (data is Map) {
+        final list = data.entries
+            .map((e) {
+              final map = Map<String, dynamic>.from(e.value as Map);
+              map['id'] ??= e.key;
+              return ProductModel.fromJson(map);
+            })
+            .where((p) =>
+                p.isAvailable &&
+                (categoryId == null || p.categoryId == categoryId))
+            .toList();
+        if (list.isNotEmpty) return list;
+      }
     }
-    final data = await query.order('created_at', ascending: false).limit(30);
-    final list = (data as List)
-        .map((e) => ProductModel.fromJson(e as Map<String, dynamic>))
-        .toList();
-    if (list.isNotEmpty) return list;
-  } catch (_) {}
+  } catch (e) {
+    debugPrint('[ProductsByCategoryProvider] Firebase fetch error: $e');
+  }
 
   if (categoryId == null) return demoData.products;
   return demoData.products.where((p) => p.categoryId == categoryId).toList();
@@ -220,19 +305,25 @@ final productsByCategoryProvider =
 final vendorsProvider = FutureProvider<List<Vendor>>((ref) async {
   final demoData = ref.watch(demoDataServiceProvider);
   try {
-    final client = ref.watch(supabaseClientProvider);
-    final data = await client
-        .from('vendors')
-        .select()
-        .eq('is_active', true)
-        .order('rating', ascending: false)
-        .limit(20);
-
-    final list = (data as List)
-        .map((e) => VendorModel.fromJson(e as Map<String, dynamic>))
-        .toList();
-    if (list.isNotEmpty) return list;
-  } catch (_) {}
+    final db = ref.watch(firebaseDatabaseProvider);
+    final snapshot = await db.ref('vendors').get();
+    if (snapshot.exists && snapshot.value != null) {
+      final data = snapshot.value;
+      if (data is Map) {
+        final list = data.entries
+            .map((e) {
+              final map = Map<String, dynamic>.from(e.value as Map);
+              map['id'] ??= e.key;
+              return VendorModel.fromJson(map);
+            })
+            .where((v) => v.isActive)
+            .toList();
+        if (list.isNotEmpty) return list;
+      }
+    }
+  } catch (e) {
+    debugPrint('[VendorsProvider] Firebase fetch error: $e');
+  }
   return demoData.vendors;
 });
 
@@ -242,12 +333,16 @@ final vendorDetailProvider =
     FutureProvider.family<Vendor?, String>((ref, vendorId) async {
   final demoData = ref.watch(demoDataServiceProvider);
   try {
-    final client = ref.watch(supabaseClientProvider);
-    final data =
-        await client.from('vendors').select().eq('id', vendorId).maybeSingle();
-
-    if (data != null) return VendorModel.fromJson(data as Map<String, dynamic>);
-  } catch (_) {}
+    final db = ref.watch(firebaseDatabaseProvider);
+    final snapshot = await db.ref('vendors/$vendorId').get();
+    if (snapshot.exists && snapshot.value != null) {
+      final map = Map<String, dynamic>.from(snapshot.value as Map);
+      map['id'] ??= vendorId;
+      return VendorModel.fromJson(map);
+    }
+  } catch (e) {
+    debugPrint('[VendorDetailProvider] Firebase fetch error: $e');
+  }
 
   return demoData.vendors.firstWhere(
     (v) => v.id == vendorId,
@@ -261,19 +356,26 @@ final vendorProductsProvider =
     FutureProvider.family<List<Product>, String>((ref, vendorId) async {
   final demoData = ref.watch(demoDataServiceProvider);
   try {
-    final client = ref.watch(supabaseClientProvider);
-    final data = await client
-        .from('products')
-        .select('*, categories(*)')
-        .eq('vendor_id', vendorId)
-        .eq('is_available', true)
-        .order('created_at', ascending: false);
-
-    final list = (data as List)
-        .map((e) => ProductModel.fromJson(e as Map<String, dynamic>))
-        .toList();
-    if (list.isNotEmpty) return list;
-  } catch (_) {}
+    final db = ref.watch(firebaseDatabaseProvider);
+    final snapshot = await db.ref('products').get();
+    if (snapshot.exists && snapshot.value != null) {
+      final data = snapshot.value;
+      if (data is Map) {
+        final list = data.entries
+            .map((e) {
+              final map = Map<String, dynamic>.from(e.value as Map);
+              map['id'] ??= e.key;
+              return ProductModel.fromJson(map);
+            })
+            .where((p) =>
+                p.isAvailable && (vendorId.isEmpty || p.vendorId == vendorId))
+            .toList();
+        if (list.isNotEmpty) return list;
+      }
+    }
+  } catch (e) {
+    debugPrint('[VendorProductsProvider] Firebase fetch error: $e');
+  }
 
   return demoData.products
       .where((p) => p.vendorId == vendorId || vendorId.isEmpty)
@@ -290,19 +392,29 @@ final searchResultsProvider = FutureProvider<List<Product>>((ref) async {
   if (query.isEmpty) return [];
 
   try {
-    final client = ref.watch(supabaseClientProvider);
-    final data = await client
-        .from('products')
-        .select('*, vendors(*)')
-        .ilike('name', '%$query%')
-        .eq('is_available', true)
-        .limit(30);
-
-    final list = (data as List)
-        .map((e) => ProductModel.fromJson(e as Map<String, dynamic>))
-        .toList();
-    if (list.isNotEmpty) return list;
-  } catch (_) {}
+    final db = ref.watch(firebaseDatabaseProvider);
+    final snapshot = await db.ref('products').get();
+    if (snapshot.exists && snapshot.value != null) {
+      final data = snapshot.value;
+      if (data is Map) {
+        final list = data.entries
+            .map((e) {
+              final map = Map<String, dynamic>.from(e.value as Map);
+              map['id'] ??= e.key;
+              return ProductModel.fromJson(map);
+            })
+            .where((p) =>
+                p.isAvailable &&
+                (p.name.toLowerCase().contains(query) ||
+                    (p.description?.toLowerCase().contains(query) ?? false) ||
+                    (p.category?.name.toLowerCase().contains(query) ?? false)))
+            .toList();
+        if (list.isNotEmpty) return list;
+      }
+    }
+  } catch (e) {
+    debugPrint('[SearchResultsProvider] Firebase fetch error: $e');
+  }
 
   return demoData.products.where((p) {
     return p.name.toLowerCase().contains(query) ||
@@ -314,36 +426,40 @@ final searchResultsProvider = FutureProvider<List<Product>>((ref) async {
 // ── Favorites ─────────────────────────────────────────────────────────────────
 
 final favoritesProvider = FutureProvider<List<Product>>((ref) async {
-  final client = ref.watch(supabaseClientProvider);
-  final userId = client.auth.currentUser?.id;
+  final auth = ref.watch(firebaseAuthProvider);
+  final userId = auth.currentUser?.uid;
   if (userId == null) return [];
 
-  final data = await client
-      .from('favorites')
-      .select('products(*, vendors(*))')
-      .eq('user_id', userId);
-
-  return (data as List)
-      .map((e) => ProductModel.fromJson(e['products'] as Map<String, dynamic>))
-      .toList();
+  final demoData = ref.watch(demoDataServiceProvider);
+  try {
+    final db = ref.watch(firebaseDatabaseProvider);
+    final snapshot = await db.ref('favorites/$userId').get();
+    if (snapshot.exists && snapshot.value is Map) {
+      final favMap = snapshot.value as Map;
+      final productIds = favMap.keys.map((k) => k.toString()).toSet();
+      return demoData.products.where((p) => productIds.contains(p.id)).toList();
+    }
+  } catch (e) {
+    debugPrint('[FavoritesProvider] Firebase fetch error: $e');
+  }
+  return [];
 });
 
 // ── Toggle Favorite ────────────────────────────────────────────────────────────
 
 final isFavoriteProvider =
     FutureProvider.family<bool, String>((ref, productId) async {
-  final client = ref.watch(supabaseClientProvider);
-  final userId = client.auth.currentUser?.id;
+  final auth = ref.watch(firebaseAuthProvider);
+  final userId = auth.currentUser?.uid;
   if (userId == null) return false;
 
-  final data = await client
-      .from('favorites')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('product_id', productId)
-      .maybeSingle();
-
-  return data != null;
+  try {
+    final db = ref.watch(firebaseDatabaseProvider);
+    final snapshot = await db.ref('favorites/$userId/$productId').get();
+    return snapshot.exists && snapshot.value == true;
+  } catch (_) {
+    return false;
+  }
 });
 
 // ── Customer Orders ────────────────────────────────────────────────────────────
@@ -351,22 +467,27 @@ final isFavoriteProvider =
 final customerOrdersProvider = FutureProvider<List<OrderModel>>((ref) async {
   final demoData = ref.watch(demoDataServiceProvider);
   try {
-    final client = ref.watch(supabaseClientProvider);
-    final userId = client.auth.currentUser?.id;
+    final auth = ref.watch(firebaseAuthProvider);
+    final userId = auth.currentUser?.uid;
     if (userId != null) {
-      final data = await client
-          .from('orders')
-          .select('*, vendors(name), order_items(*, products(name, image_url))')
-          .eq('customer_id', userId)
-          .order('created_at', ascending: false);
-
-      final list = (data as List)
-          .map((e) => OrderModel.fromJson(e as Map<String, dynamic>))
-          .toList();
-      if (list.isNotEmpty) return list;
+      final db = ref.watch(firebaseDatabaseProvider);
+      final snapshot = await db
+          .ref('orders')
+          .orderByChild('customer_id')
+          .equalTo(userId)
+          .get();
+      if (snapshot.exists && snapshot.value is Map) {
+        final data = snapshot.value as Map;
+        final list = data.entries.map((e) {
+          final map = Map<String, dynamic>.from(e.value as Map);
+          map['id'] ??= e.key;
+          return OrderModel.fromJson(map);
+        }).toList();
+        if (list.isNotEmpty) return list;
+      }
     }
   } catch (e) {
-    debugPrint('[CustomerOrders] Supabase fetch fallback to demo: $e');
+    debugPrint('[CustomerOrders] Firebase fetch fallback to demo: $e');
   }
 
   return demoData.customerOrders;
@@ -376,17 +497,15 @@ final orderDetailProvider =
     FutureProvider.family<OrderModel?, String>((ref, orderId) async {
   final demoData = ref.watch(demoDataServiceProvider);
   try {
-    final client = ref.watch(supabaseClientProvider);
-    final data = await client
-        .from('orders')
-        .select(
-            '*, vendors(name, logo_url), order_items(*, products(name, image_url))')
-        .eq('id', orderId)
-        .maybeSingle();
-
-    if (data != null) return OrderModel.fromJson(data as Map<String, dynamic>);
+    final db = ref.watch(firebaseDatabaseProvider);
+    final snapshot = await db.ref('orders/$orderId').get();
+    if (snapshot.exists && snapshot.value is Map) {
+      final map = Map<String, dynamic>.from(snapshot.value as Map);
+      map['id'] ??= orderId;
+      return OrderModel.fromJson(map);
+    }
   } catch (e) {
-    debugPrint('[OrderDetail] Supabase fetch fallback to demo: $e');
+    debugPrint('[OrderDetail] Firebase fetch fallback to demo: $e');
   }
 
   return demoData.getCustomerOrderById(orderId);

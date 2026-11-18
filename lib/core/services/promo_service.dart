@@ -1,13 +1,14 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../domain/entities/promo_code.dart';
-import '../network/supabase_client.dart';
+import '../network/firebase_providers.dart';
 
 class PromoService {
-  final SupabaseClient _client;
+  final FirebaseDatabase _db;
 
-  PromoService(this._client);
+  PromoService(this._db);
 
   // Fallback demo promo codes
   static final List<PromoCode> demoPromoCodes = [
@@ -68,26 +69,35 @@ class PromoService {
     }
 
     try {
-      // 1. Fetch promo code from Supabase
-      final data = await _client
-          .from('promo_codes')
-          .select()
-          .eq('code', cleanCode)
-          .maybeSingle();
+      // 1. Fetch promo code from Firebase RTDB
+      final snapshot = await _db
+          .ref('promo_codes')
+          .orderByChild('code')
+          .equalTo(cleanCode)
+          .get();
 
       PromoCode? promo;
       int userUsageCount = 0;
 
-      if (data != null) {
-        promo = PromoCode.fromJson(data);
+      if (snapshot.exists && snapshot.value is Map) {
+        final data = snapshot.value as Map;
+        final entry = data.entries.first;
+        final map = Map<String, dynamic>.from(entry.value as Map);
+        map['id'] ??= entry.key;
+        promo = PromoCode.fromJson(map);
 
-        // Fetch user usage count
-        final usageData = await _client
-            .from('promo_code_usage')
-            .select('id')
-            .eq('promo_code_id', promo.id)
-            .eq('user_id', userId);
-        userUsageCount = (usageData as List).length;
+        // Fetch user usage count from `/promo_code_usage`
+        final usageSnap = await _db
+            .ref('promo_code_usage')
+            .orderByChild('user_id')
+            .equalTo(userId)
+            .get();
+        if (usageSnap.exists && usageSnap.value is Map) {
+          final usageMap = usageSnap.value as Map;
+          userUsageCount = usageMap.values
+              .where((v) => (v as Map)['promo_code_id'] == promo!.id)
+              .length;
+        }
       } else {
         // Fallback to demo codes
         final found = demoPromoCodes.where((p) => p.code == cleanCode);
@@ -111,7 +121,6 @@ class PromoService {
       );
     } catch (e) {
       debugPrint('[PromoService] Validation error: $e');
-      // Graceful fallback to demo codes on error
       final found = demoPromoCodes.where((p) => p.code == cleanCode);
       if (found.isNotEmpty) {
         return PromoValidator.validate(
@@ -136,7 +145,9 @@ class PromoService {
     required double discountAmount,
   }) async {
     try {
-      await _client.from('promo_code_usage').insert({
+      final usageId = _db.ref('promo_code_usage').push().key ??
+          'usage_${DateTime.now().millisecondsSinceEpoch}';
+      await _db.ref('promo_code_usage/$usageId').set({
         'promo_code_id': promoCodeId,
         'user_id': userId,
         'order_id': orderId,
@@ -144,9 +155,11 @@ class PromoService {
         'created_at': DateTime.now().toIso8601String(),
       });
 
-      // Increment usage count in promo_codes table
-      await _client.rpc('increment_promo_usage', params: {
-        'code_id': promoCodeId,
+      // Increment usage count using Firebase transaction
+      final promoRef = _db.ref('promo_codes/$promoCodeId/usage_count');
+      await promoRef.runTransaction((mutableData) {
+        final current = (mutableData as int?) ?? 0;
+        return Transaction.success(current + 1);
       });
     } catch (e) {
       debugPrint('[PromoService] Record usage error: $e');
@@ -156,16 +169,16 @@ class PromoService {
   /// Get all promo codes for Admin management
   Future<List<PromoCode>> getAllPromoCodes() async {
     try {
-      final data = await _client
-          .from('promo_codes')
-          .select()
-          .order('created_at', ascending: false);
-
-      final list = (data as List)
-          .map((e) => PromoCode.fromJson(e as Map<String, dynamic>))
-          .toList();
-
-      if (list.isNotEmpty) return list;
+      final snapshot = await _db.ref('promo_codes').get();
+      if (snapshot.exists && snapshot.value is Map) {
+        final data = snapshot.value as Map;
+        final list = data.entries.map((e) {
+          final map = Map<String, dynamic>.from(e.value as Map);
+          map['id'] ??= e.key;
+          return PromoCode.fromJson(map);
+        }).toList();
+        if (list.isNotEmpty) return list;
+      }
     } catch (e) {
       debugPrint('[PromoService] Error getting promo codes: $e');
     }
@@ -175,7 +188,11 @@ class PromoService {
   /// Create new promo code (Admin)
   Future<bool> createPromoCode(PromoCode promo) async {
     try {
-      await _client.from('promo_codes').insert(promo.toJson());
+      final id = promo.id.isNotEmpty
+          ? promo.id
+          : (_db.ref('promo_codes').push().key ??
+              'promo_${DateTime.now().millisecondsSinceEpoch}');
+      await _db.ref('promo_codes/$id').set(promo.toJson());
       return true;
     } catch (e) {
       debugPrint('[PromoService] Create error: $e');
@@ -186,10 +203,10 @@ class PromoService {
   /// Toggle promo code active status (Admin)
   Future<bool> togglePromoStatus(String id, bool isActive) async {
     try {
-      await _client.from('promo_codes').update({
+      await _db.ref('promo_codes/$id').update({
         'is_active': isActive,
         'updated_at': DateTime.now().toIso8601String(),
-      }).eq('id', id);
+      });
       return true;
     } catch (e) {
       debugPrint('[PromoService] Toggle error: $e');
@@ -199,8 +216,8 @@ class PromoService {
 }
 
 final promoServiceProvider = Provider<PromoService>((ref) {
-  final client = ref.watch(supabaseClientProvider);
-  return PromoService(client);
+  final db = ref.watch(firebaseDatabaseProvider);
+  return PromoService(db);
 });
 
 final allPromoCodesProvider = FutureProvider<List<PromoCode>>((ref) async {

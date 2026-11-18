@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/network/supabase_client.dart';
+import '../../../../core/network/firebase_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -128,13 +128,15 @@ class _VendorBizProfileScreenState
   Future<void> _save() async {
     setState(() => _isLoading = true);
     try {
-      final client = ref.read(supabaseClientProvider);
-      final userId = client.auth.currentUser?.id ??
+      final auth = ref.read(firebaseAuthProvider);
+      final db = ref.read(firebaseDatabaseProvider);
+      final userId = auth.currentUser?.uid ??
           ref.read(currentProfileProvider)?.id ??
-          '00000000-0000-0000-0000-000000000001';
+          'demo-vendor-omahmed-002';
 
-      await client.from('vendors').upsert({
+      await db.ref('vendors/$userId').update({
         'id': userId,
+        'business_name': _nameCtrl.text.trim(),
         'name': _nameCtrl.text.trim(),
         'description':
             _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),

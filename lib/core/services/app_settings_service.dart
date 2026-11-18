@@ -1,13 +1,14 @@
 import 'dart:async';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../network/supabase_client.dart';
+
+import '../network/firebase_providers.dart';
 
 class AppSettingsService {
-  final SupabaseClient _client;
+  final FirebaseDatabase _db;
 
-  AppSettingsService(this._client);
+  AppSettingsService(this._db);
 
   static const Map<String, dynamic> defaultSettings = {
     'maintenance_mode': false,
@@ -22,15 +23,19 @@ class AppSettingsService {
 
   Future<Map<String, dynamic>> getSettings() async {
     try {
-      final data = await _client.from('app_settings').select();
-      final map = Map<String, dynamic>.from(defaultSettings);
-      for (final row in (data as List)) {
-        final key = row['key'] as String;
-        final value = row['value'];
-        map[key] =
-            value is Map && value.containsKey('val') ? value['val'] : value;
+      final snapshot = await _db.ref('app_settings').get();
+      if (snapshot.exists && snapshot.value is Map) {
+        final map = Map<String, dynamic>.from(defaultSettings);
+        final data = snapshot.value as Map;
+        for (final entry in data.entries) {
+          final key = entry.key.toString();
+          final value = entry.value;
+          map[key] =
+              value is Map && value.containsKey('val') ? value['val'] : value;
+        }
+        return map;
       }
-      return map;
+      return defaultSettings;
     } catch (e) {
       debugPrint('[AppSettingsService] Error fetching settings: $e');
       return defaultSettings;
@@ -40,9 +45,8 @@ class AppSettingsService {
   Future<bool> updateSetting(String key, dynamic value,
       {String? adminId}) async {
     try {
-      await _client.from('app_settings').upsert({
-        'key': key,
-        'value': value is Map ? value : {'val': value},
+      await _db.ref('app_settings/$key').set({
+        'val': value,
         'updated_at': DateTime.now().toIso8601String(),
         if (adminId != null) 'updated_by': adminId,
       });
@@ -55,48 +59,39 @@ class AppSettingsService {
 }
 
 final appSettingsServiceProvider = Provider<AppSettingsService>((ref) {
-  final client = ref.watch(supabaseClientProvider);
-  return AppSettingsService(client);
+  final db = ref.watch(firebaseDatabaseProvider);
+  return AppSettingsService(db);
 });
 
-/// Realtime settings provider that listens to PostgreSQL changes and invalidates immediately
+/// Realtime settings provider that listens to Firebase RTDB changes natively
 final appSettingsProvider =
     StreamProvider.autoDispose<Map<String, dynamic>>((ref) {
-  final client = ref.watch(supabaseClientProvider);
-  final service = ref.watch(appSettingsServiceProvider);
-
+  final db = ref.watch(firebaseDatabaseProvider);
   final controller = StreamController<Map<String, dynamic>>();
 
-  // Initial load
-  service.getSettings().then((settings) {
-    if (!controller.isClosed) controller.add(settings);
+  // Initial default state
+  controller.add(AppSettingsService.defaultSettings);
+
+  final sub = db.ref('app_settings').onValue.listen((event) {
+    if (event.snapshot.exists && event.snapshot.value is Map) {
+      final map = Map<String, dynamic>.from(AppSettingsService.defaultSettings);
+      final data = event.snapshot.value as Map;
+      for (final entry in data.entries) {
+        final key = entry.key.toString();
+        final value = entry.value;
+        map[key] =
+            value is Map && value.containsKey('val') ? value['val'] : value;
+      }
+      if (!controller.isClosed) controller.add(map);
+    }
+  }, onError: (err) {
+    debugPrint('[Realtime] app_settings error: $err');
   });
 
-  // Supabase Realtime channel subscription
-  try {
-    final channel = client
-        .channel('public:app_settings')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'app_settings',
-          callback: (payload) async {
-            debugPrint(
-                '[Realtime] app_settings change received: ${payload.eventType}');
-            final fresh = await service.getSettings();
-            if (!controller.isClosed) controller.add(fresh);
-          },
-        )
-        .subscribe();
-
-    ref.onDispose(() {
-      channel.unsubscribe();
-      controller.close();
-    });
-  } catch (e) {
-    debugPrint('[Realtime] Failed to subscribe to app_settings: $e');
-    ref.onDispose(() => controller.close());
-  }
+  ref.onDispose(() {
+    sub.cancel();
+    controller.close();
+  });
 
   return controller.stream;
 });

@@ -25,12 +25,14 @@ class VendorDashboardScreen extends ConsumerWidget {
         title: const Text('لوحة التحكم — ست الكل'),
         actions: [
           IconButton(
-            tooltip: 'معاينة كـ عميل',
+            tooltip: 'التبديل إلى وضع العميل',
             icon: const Icon(Icons.shopping_bag_outlined,
                 color: AppColors.primary),
-            onPressed: () {
-              ref.read(authProvider.notifier).signInAsDemo(UserRole.customer);
-              context.go(RouteNames.customerHome);
+            onPressed: () async {
+              await ref.read(authProvider.notifier).switchRole();
+              if (context.mounted) {
+                context.go(RouteNames.customerHome);
+              }
             },
           ),
           IconButton(
@@ -45,6 +47,11 @@ class VendorDashboardScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () => context.push(RouteNames.notifications),
+          ),
+          IconButton(
+            tooltip: 'تسجيل الخروج',
+            icon: const Icon(Icons.logout, color: AppColors.error),
+            onPressed: () => _confirmLogout(context, ref),
           ),
         ],
       ),
@@ -190,6 +197,52 @@ class VendorDashboardScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _confirmLogout(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      useRootNavigator: true,
+      builder: (dialogCtx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'تسجيل الخروج',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+            fontSize: 18,
+          ),
+        ),
+        content: const Text(
+          'هل تريد تأكيد تسجيل الخروج والعودة للشاشة الرئيسية؟',
+          style: TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 14,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(dialogCtx).pop();
+              await ref.read(authProvider.notifier).signOut();
+              if (context.mounted) {
+                context.go(RouteNames.login);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('تسجيل الخروج'),
+          ),
+        ],
       ),
     );
   }
