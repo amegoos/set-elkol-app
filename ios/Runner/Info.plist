@@ -60,6 +60,8 @@
 			<string>com.setelkol.app</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
+				<string>com.googleusercontent.apps.387458633968-b2ajsdgq78829nckr9pgj1p8anp2dnta</string>
+				<string>com.setelkol.app</string>
 				<string>io.supabase.setelkol</string>
 			</array>
 		</dict>

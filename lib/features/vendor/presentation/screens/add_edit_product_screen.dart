@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
@@ -10,6 +11,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_smart_image.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/extensions/build_context_ext.dart';
 import '../../../../core/data/demo_data_service.dart';
@@ -36,7 +38,6 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
 
   String? _selectedCategoryId;
   String? _selectedImageUrl;
-  XFile? _pickedImageFile;
   bool _isVegetarian = false;
   bool _isSpicy = false;
   bool _isAvailable = true;
@@ -114,7 +115,6 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
     setState(() {
       _selectedImageUrl = preset.imageUrl;
       _imageUrlCtrl.text = preset.imageUrl;
-      _pickedImageFile = null;
 
       _nameCtrl.text = preset.title;
       _descCtrl.text = preset.suggestedDescription;
@@ -142,15 +142,17 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
       final picker = ImagePicker();
       final picked = await picker.pickImage(
         source: source,
-        maxWidth: 1024,
-        maxHeight: 1024,
-        imageQuality: 85,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 75,
       );
       if (picked != null) {
+        final bytes = await picked.readAsBytes();
+        final base64String = base64Encode(bytes);
+        final dataUri = 'data:image/jpeg;base64,$base64String';
         setState(() {
-          _pickedImageFile = picked;
-          _selectedImageUrl = picked.path;
-          _imageUrlCtrl.text = picked.path;
+          _selectedImageUrl = dataUri;
+          _imageUrlCtrl.text = dataUri;
         });
       }
     } catch (e) {
@@ -489,23 +491,10 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
         fit: StackFit.expand,
         children: [
           if (hasImage) ...[
-            if (_pickedImageFile != null && !kIsWeb)
-              Image.file(File(_pickedImageFile!.path), fit: BoxFit.cover)
-            else if (_selectedImageUrl!.startsWith('assets/'))
-              Image.asset(_selectedImageUrl!, fit: BoxFit.cover)
-            else
-              CachedNetworkImage(
-                imageUrl: _selectedImageUrl!,
-                fit: BoxFit.cover,
-                placeholder: (_, __) => const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary)),
-                errorWidget: (_, __, ___) => Container(
-                  color: AppColors.secondary,
-                  child: const Center(
-                      child: Icon(Icons.restaurant_rounded,
-                          size: 48, color: AppColors.primary)),
-                ),
-              ),
+            AppSmartImage(
+              imageUrl: _selectedImageUrl,
+              fit: BoxFit.cover,
+            ),
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(

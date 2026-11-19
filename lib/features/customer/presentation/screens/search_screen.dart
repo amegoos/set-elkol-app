@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/widgets/app_loading.dart';
+import '../../../../core/widgets/app_smart_image.dart';
 import '../../../../core/extensions/build_context_ext.dart';
 import '../providers/customer_providers.dart';
 
@@ -37,39 +37,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   Widget _buildProductThumbnail(String? imageUrl) {
-    if (imageUrl == null || imageUrl.isEmpty) {
-      return Container(
-        width: 60,
-        height: 60,
-        color: AppColors.secondary,
-        child: const Icon(Icons.restaurant, color: AppColors.primary),
-      );
-    }
-    if (imageUrl.startsWith('assets/')) {
-      return Image.asset(
-        imageUrl,
-        width: 60,
-        height: 60,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(
-          width: 60,
-          height: 60,
-          color: AppColors.secondary,
-          child: const Icon(Icons.restaurant, color: AppColors.primary),
-        ),
-      );
-    }
-    return CachedNetworkImage(
+    return AppSmartImage(
       imageUrl: imageUrl,
       width: 60,
       height: 60,
       fit: BoxFit.cover,
-      errorWidget: (_, __, ___) => Container(
-        width: 60,
-        height: 60,
-        color: AppColors.secondary,
-        child: const Icon(Icons.restaurant, color: AppColors.primary),
-      ),
+      borderRadius: AppRadius.chip,
     );
   }
 

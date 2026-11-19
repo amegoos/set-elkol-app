@@ -204,16 +204,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
         await profileRef.update({'role': 'admin'});
       }
 
-      final role = UserRole.values.firstWhere(
-        (r) => r.name == roleStr,
-        orElse: () => UserRole.customer,
-      );
+      // Always default active session to customer upon login/startup so user lands on Customer Home
+      final role = isAdminEmail ? UserRole.admin : UserRole.customer;
 
       final profile = UserProfile(
         id: user.uid,
         name: data['full_name'] as String? ??
             user.displayName ??
-            (isAdminEmail ? 'إدارة ست الكل' : 'مستخدم'),
+            (isAdminEmail ? 'إدارة ست الكل' : 'عميل ست الكل'),
         phone: data['phone'] as String? ?? user.phoneNumber,
         email: data['email'] as String? ?? user.email,
         profileImage: data['avatar_url'] as String? ?? user.photoURL,
@@ -435,6 +433,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
         }
       } else {
         final GoogleSignIn googleSignIn = GoogleSignIn(
+          clientId: defaultTargetPlatform == TargetPlatform.iOS
+              ? '387458633968-b2ajsdgq78829nckr9pgj1p8anp2dnta.apps.googleusercontent.com'
+              : null,
           serverClientId:
               '387458633968-b2ajsdgq78829nckr9pgj1p8anp2dnta.apps.googleusercontent.com',
           scopes: ['email', 'profile'],
@@ -474,7 +475,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
           status: AuthStatus.unauthenticated, errorMessage: msg);
       return msg;
     } on fb_auth.FirebaseAuthException catch (e) {
-      if (e.code == 'popup-closed-by-user') {
+      if (e.code == 'popup-closed-by-user' || e.code == 'canceled') {
         state = state.copyWith(status: AuthStatus.unauthenticated);
         return null;
       }
@@ -482,6 +483,47 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = AuthState(status: AuthStatus.unauthenticated, errorMessage: msg);
       return msg;
     } catch (e) {
+      debugPrint('[Auth] Google Sign-In error: $e');
+      final msg = _friendlyAuthError(e);
+      state = AuthState(status: AuthStatus.unauthenticated, errorMessage: msg);
+      return msg;
+    }
+  }
+
+  // ── Sign in with Apple (iOS) ────────────────────────────────────────────────
+
+  Future<String?> signInWithApple() async {
+    state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
+
+    try {
+      final appleProvider = fb_auth.AppleAuthProvider();
+      appleProvider.addScope('email');
+      appleProvider.addScope('name');
+
+      final userCredential = await _auth.signInWithProvider(appleProvider);
+      final user = userCredential.user;
+
+      if (user != null) {
+        await _loadProfile(user);
+        return null;
+      }
+
+      const msg = 'فشل تسجيل الدخول عبر حساب Apple';
+      state = const AuthState(
+          status: AuthStatus.unauthenticated, errorMessage: msg);
+      return msg;
+    } on fb_auth.FirebaseAuthException catch (e) {
+      if (e.code == 'popup-closed-by-user' ||
+          e.code == 'canceled' ||
+          e.code == 'web-context-cancelled') {
+        state = state.copyWith(status: AuthStatus.unauthenticated);
+        return null;
+      }
+      final msg = _friendlyAuthError(e);
+      state = AuthState(status: AuthStatus.unauthenticated, errorMessage: msg);
+      return msg;
+    } catch (e) {
+      debugPrint('[Auth] Apple Sign-In error: $e');
       final msg = _friendlyAuthError(e);
       state = AuthState(status: AuthStatus.unauthenticated, errorMessage: msg);
       return msg;

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -172,6 +173,35 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
     }
   }
 
+  Future<void> _appleSignIn() async {
+    if (_isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+      _loginError = null;
+      _signupError = null;
+    });
+
+    try {
+      final error = await ref.read(authProvider.notifier).signInWithApple();
+      if (!mounted) return;
+      if (error != null) {
+        setState(() => _loginError = error);
+        context.showSnack(error, isError: true);
+      }
+    } catch (e) {
+      if (mounted) {
+        final msg = 'حدث خطأ أثناء المتابعة مع Apple: $e';
+        setState(() => _loginError = msg);
+        context.showSnack(msg, isError: true);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   void _showEmailConfirmDialog() {
     showDialog(
       context: context,
@@ -306,7 +336,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                   const SizedBox(height: 24),
 
                   SizedBox(
-                    height: 600,
+                    height: 680,
                     child: TabBarView(
                       controller: _tabController,
                       children: [
@@ -319,6 +349,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                           infoMessage: _loginInfoMessage,
                           onLogin: _login,
                           onGoogle: _googleSignIn,
+                          onApple: _appleSignIn,
                           onPhone: () => context.push(RouteNames.phoneLogin),
                           onForgot: () =>
                               context.push(RouteNames.forgotPassword),
@@ -333,6 +364,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                           errorMessage: _signupError,
                           onSignup: _signup,
                           onGoogle: _googleSignIn,
+                          onApple: _appleSignIn,
                           onPhone: () => context.push(RouteNames.phoneLogin),
                         ),
                       ],
@@ -385,6 +417,7 @@ class _LoginTab extends StatelessWidget {
     this.infoMessage,
     required this.onLogin,
     required this.onGoogle,
+    required this.onApple,
     required this.onPhone,
     required this.onForgot,
   });
@@ -397,6 +430,7 @@ class _LoginTab extends StatelessWidget {
   final String? infoMessage;
   final VoidCallback onLogin;
   final VoidCallback onGoogle;
+  final VoidCallback onApple;
   final VoidCallback onPhone;
   final VoidCallback onForgot;
 
@@ -515,6 +549,10 @@ class _LoginTab extends StatelessWidget {
             const SizedBox(height: 16),
             _OrDivider(),
             const SizedBox(height: 16),
+            if (defaultTargetPlatform == TargetPlatform.iOS || kIsWeb) ...[
+              _AppleButton(onPressed: onApple, isLoading: isLoading),
+              const SizedBox(height: 12),
+            ],
             _GoogleButton(onPressed: onGoogle, isLoading: isLoading),
             const SizedBox(height: 12),
             _PhoneButton(onPressed: onPhone, isLoading: isLoading),
@@ -538,6 +576,7 @@ class _SignupTab extends StatelessWidget {
     this.errorMessage,
     required this.onSignup,
     required this.onGoogle,
+    required this.onApple,
     required this.onPhone,
   });
 
@@ -550,6 +589,7 @@ class _SignupTab extends StatelessWidget {
   final String? errorMessage;
   final VoidCallback onSignup;
   final VoidCallback onGoogle;
+  final VoidCallback onApple;
   final VoidCallback onPhone;
 
   @override
@@ -647,6 +687,10 @@ class _SignupTab extends StatelessWidget {
             const SizedBox(height: 16),
             _OrDivider(),
             const SizedBox(height: 16),
+            if (defaultTargetPlatform == TargetPlatform.iOS || kIsWeb) ...[
+              _AppleButton(onPressed: onApple, isLoading: isLoading),
+              const SizedBox(height: 12),
+            ],
             _GoogleButton(onPressed: onGoogle, isLoading: isLoading),
             const SizedBox(height: 12),
             _PhoneButton(onPressed: onPhone, isLoading: isLoading),
@@ -745,6 +789,40 @@ class _PhoneButton extends StatelessWidget {
             'المتابعة برقم الموبايل',
             style:
                 AppTypography.labelLarge.copyWith(color: AppColors.textPrimary),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AppleButton extends StatelessWidget {
+  const _AppleButton({required this.onPressed, required this.isLoading});
+  final VoidCallback onPressed;
+  final bool isLoading;
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: isLoading ? null : onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        minimumSize: const Size(double.infinity, 50),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.button),
+        elevation: 0,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.apple, color: Colors.white, size: 24),
+          const SizedBox(width: 10),
+          Text(
+            'المتابعة مع Apple',
+            style: AppTypography.labelLarge.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),

@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/widgets/app_loading.dart';
+import '../../../../core/widgets/app_smart_image.dart';
 import '../providers/customer_providers.dart';
 
 class VendorDetailScreen extends ConsumerWidget {
@@ -30,21 +30,11 @@ class VendorDetailScreen extends ConsumerWidget {
                 expandedHeight: 200,
                 pinned: true,
                 flexibleSpace: FlexibleSpaceBar(
-                  background: v.logoUrl != null
-                      ? CachedNetworkImage(
-                          imageUrl: v.logoUrl!,
-                          fit: BoxFit.cover,
-                          errorWidget: (_, __, ___) => Container(
-                            color: AppColors.secondary,
-                            child: const Icon(Icons.store,
-                                size: 60, color: AppColors.primary),
-                          ),
-                        )
-                      : Container(
-                          color: AppColors.secondary,
-                          child: const Icon(Icons.store,
-                              size: 60, color: AppColors.primary),
-                        ),
+                  background: AppSmartImage(
+                    imageUrl: v.logoUrl,
+                    fit: BoxFit.cover,
+                    fallbackIcon: Icons.store,
+                  ),
                 ),
               ),
               SliverToBoxAdapter(
@@ -194,22 +184,12 @@ class _ProductListItem extends ConsumerWidget {
         ),
         child: Row(
           children: [
-            ClipRRect(
+            AppSmartImage(
+              imageUrl: product.imageUrl,
+              width: 80,
+              height: 80,
+              fit: BoxFit.cover,
               borderRadius: BorderRadius.circular(10),
-              child: product.imageUrl != null
-                  ? CachedNetworkImage(
-                      imageUrl: product.imageUrl!,
-                      width: 80,
-                      height: 80,
-                      fit: BoxFit.cover,
-                    )
-                  : Container(
-                      width: 80,
-                      height: 80,
-                      color: AppColors.secondary,
-                      child: const Icon(Icons.restaurant,
-                          color: AppColors.primary),
-                    ),
             ),
             const SizedBox(width: 12),
             Expanded(

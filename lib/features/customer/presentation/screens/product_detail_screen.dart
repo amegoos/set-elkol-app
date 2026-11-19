@@ -9,6 +9,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_loading.dart';
+import '../../../../core/widgets/app_smart_image.dart';
 import '../../../../core/extensions/build_context_ext.dart';
 import '../providers/customer_providers.dart';
 
@@ -52,30 +53,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   }
 
   Widget _buildProductImage(String? imageUrl) {
-    if (imageUrl == null || imageUrl.isEmpty) {
-      return Container(
-        color: AppColors.secondary,
-        child: const Icon(Icons.restaurant, size: 80, color: AppColors.primary),
-      );
-    }
-    if (imageUrl.startsWith('assets/')) {
-      return Image.asset(
-        imageUrl,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(
-          color: AppColors.secondary,
-          child:
-              const Icon(Icons.restaurant, size: 80, color: AppColors.primary),
-        ),
-      );
-    }
-    return CachedNetworkImage(
+    return AppSmartImage(
       imageUrl: imageUrl,
       fit: BoxFit.cover,
-      errorWidget: (_, __, ___) => Container(
-        color: AppColors.secondary,
-        child: const Icon(Icons.restaurant, size: 80, color: AppColors.primary),
-      ),
+      width: double.infinity,
+      height: double.infinity,
     );
   }
 

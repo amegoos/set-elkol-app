@@ -8,6 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/widgets/app_loading.dart';
+import '../../../../core/widgets/app_smart_image.dart';
 import '../../../../core/data/demo_data_service.dart';
 import '../../../customer/presentation/providers/customer_providers.dart';
 import '../providers/vendor_providers.dart';
@@ -86,39 +87,12 @@ class _ProductTile extends StatelessWidget {
   final VoidCallback onToggle;
 
   Widget _buildImage(String? url) {
-    if (url == null || url.isEmpty) {
-      return Container(
-        width: 70,
-        height: 70,
-        color: AppColors.secondary,
-        child: const Icon(Icons.restaurant, color: AppColors.primary),
-      );
-    }
-    if (url.startsWith('assets/')) {
-      return Image.asset(
-        url,
-        width: 70,
-        height: 70,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(
-          width: 70,
-          height: 70,
-          color: AppColors.secondary,
-          child: const Icon(Icons.restaurant, color: AppColors.primary),
-        ),
-      );
-    }
-    return CachedNetworkImage(
+    return AppSmartImage(
       imageUrl: url,
       width: 70,
       height: 70,
       fit: BoxFit.cover,
-      errorWidget: (_, __, ___) => Container(
-        width: 70,
-        height: 70,
-        color: AppColors.secondary,
-        child: const Icon(Icons.restaurant, color: AppColors.primary),
-      ),
+      borderRadius: AppRadius.chip,
     );
   }
 
