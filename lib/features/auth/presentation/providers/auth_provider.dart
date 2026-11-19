@@ -155,7 +155,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
     try {
       final profileRef = _db.ref('profiles/${user.uid}');
-      final snapshot = await profileRef.get();
+      final snapshot = await profileRef
+          .get()
+          .timeout(const Duration(milliseconds: 1500));
 
       if (!snapshot.exists || snapshot.value == null) {
         // Create new profile record in Firebase Realtime Database

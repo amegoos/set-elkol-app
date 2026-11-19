@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart' hide Category;
@@ -171,7 +172,10 @@ final categoriesProvider = FutureProvider<List<Category>>((ref) async {
   final demoData = ref.watch(demoDataServiceProvider);
   try {
     final db = ref.watch(firebaseDatabaseProvider);
-    final snapshot = await db.ref('categories').get();
+    final snapshot = await db
+        .ref('categories')
+        .get()
+        .timeout(const Duration(milliseconds: 1500));
     if (snapshot.exists && snapshot.value != null) {
       final data = snapshot.value;
       if (data is Map) {
@@ -195,80 +199,109 @@ final selectedCategoryProvider = StateProvider<String?>((ref) => null);
 
 // ── Shared Root Products Provider (Single Network Call + Instant Cache) ───────
 
-final allProductsProvider = FutureProvider<List<Product>>((ref) async {
-  final demoData = ref.watch(demoDataServiceProvider);
-  final db = ref.watch(firebaseDatabaseProvider);
-
-  // Single subscription for live updates across the whole app
-  final sub = db.ref('products').onValue.listen((_) {
-    ref.invalidateSelf();
-  });
-  ref.onDispose(() => sub.cancel());
-
-  final Map<String, Product> productMap = {};
-
-  // 1. Authentic Egyptian dishes from presets
-  for (final p in demoData.products) {
-    productMap[p.id] = p;
+class AllProductsNotifier extends StateNotifier<AsyncValue<List<Product>>> {
+  AllProductsNotifier(this._demoData, this._db)
+      : super(AsyncValue.data(_demoData.products)) {
+    _init();
   }
 
-  // 2. Realtime Database products added by vendors
-  try {
-    final snapshot = await db.ref('products').get();
-    if (snapshot.exists && snapshot.value != null && snapshot.value is Map) {
-      final data = snapshot.value as Map;
-      for (final e in data.entries) {
-        final map = Map<String, dynamic>.from(e.value as Map);
-        map['id'] ??= e.key;
+  final DemoDataService _demoData;
+  final FirebaseDatabase _db;
+  StreamSubscription? _sub;
+
+  Future<void> _init() async {
+    final Map<String, Product> productMap = {
+      for (final p in _demoData.products) p.id: p,
+    };
+
+    try {
+      final snapshot = await _db
+          .ref('products')
+          .get()
+          .timeout(const Duration(milliseconds: 1500));
+      if (snapshot.exists && snapshot.value != null && snapshot.value is Map) {
+        final data = snapshot.value as Map;
+        for (final e in data.entries) {
+          final map = Map<String, dynamic>.from(e.value as Map);
+          map['id'] ??= e.key;
+          final prod = ProductModel.fromJson(map);
+          productMap[prod.id] = prod;
+        }
+        if (mounted) {
+          state = AsyncValue.data(productMap.values.toList());
+        }
+      }
+    } catch (e) {
+      debugPrint('[AllProductsNotifier] Firebase fetch note: $e');
+    }
+
+    _sub = _db.ref('products').onChildChanged.listen((event) {
+      if (!mounted) return;
+      if (event.snapshot.value != null && event.snapshot.value is Map) {
+        final map = Map<String, dynamic>.from(event.snapshot.value as Map);
+        map['id'] ??= event.snapshot.key;
         final prod = ProductModel.fromJson(map);
         productMap[prod.id] = prod;
+        state = AsyncValue.data(productMap.values.toList());
       }
-    }
-  } catch (e) {
-    debugPrint('[AllProductsProvider] Firebase fetch note: $e');
+    });
   }
 
-  return productMap.values.toList();
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
+}
+
+final allProductsProvider =
+    StateNotifierProvider<AllProductsNotifier, AsyncValue<List<Product>>>((ref) {
+  final demoData = ref.watch(demoDataServiceProvider);
+  final db = ref.watch(firebaseDatabaseProvider);
+  return AllProductsNotifier(demoData, db);
 });
 
 // ── Featured Products (Instant derived filter, zero redundant network calls) ─
 
-final featuredProductsProvider = FutureProvider<List<Product>>((ref) async {
-  final all = await ref.watch(allProductsProvider.future);
-  return all.where((p) => p.isFeatured && p.isAvailable).toList();
+final featuredProductsProvider = Provider<AsyncValue<List<Product>>>((ref) {
+  final allAsync = ref.watch(allProductsProvider);
+  return allAsync.whenData(
+      (all) => all.where((p) => p.isFeatured && p.isAvailable).toList());
 });
 
 // ── Popular Products (Instant derived filter) ────────────────────────────────
 
-final popularProductsProvider = FutureProvider<List<Product>>((ref) async {
-  final all = await ref.watch(allProductsProvider.future);
-  return all.where((p) => p.isAvailable).toList();
+final popularProductsProvider = Provider<AsyncValue<List<Product>>>((ref) {
+  final allAsync = ref.watch(allProductsProvider);
+  return allAsync
+      .whenData((all) => all.where((p) => p.isAvailable).toList());
 });
 
 // ── Products by Category (Instant derived filter) ────────────────────────────
 
 final productsByCategoryProvider =
-    FutureProvider.family<List<Product>, String?>((ref, categoryId) async {
-  final all = await ref.watch(allProductsProvider.future);
-  if (categoryId == null) return all.where((p) => p.isAvailable).toList();
-  return all.where((p) => p.isAvailable && p.categoryId == categoryId).toList();
+    Provider.family<AsyncValue<List<Product>>, String?>((ref, categoryId) {
+  final allAsync = ref.watch(allProductsProvider);
+  return allAsync.whenData((all) {
+    if (categoryId == null) return all.where((p) => p.isAvailable).toList();
+    return all.where((p) => p.isAvailable && p.categoryId == categoryId).toList();
+  });
 });
 
 // ── All Active Vendors ─────────────────────────────────────────────────────────
 
 final vendorsProvider = FutureProvider<List<Vendor>>((ref) async {
   final demoData = ref.watch(demoDataServiceProvider);
-  final Map<String, Vendor> vendorMap = {};
+  final Map<String, Vendor> vendorMap = {
+    for (final v in demoData.vendors) v.id: v,
+  };
 
-  // 1. Seed with authentic Egyptian kitchen presets
-  for (final v in demoData.vendors) {
-    vendorMap[v.id] = v;
-  }
-
-  // 2. Merge with vendors registered in Firebase RTDB
   try {
     final db = ref.watch(firebaseDatabaseProvider);
-    final snapshot = await db.ref('vendors').get();
+    final snapshot = await db
+        .ref('vendors')
+        .get()
+        .timeout(const Duration(milliseconds: 1500));
     if (snapshot.exists && snapshot.value != null && snapshot.value is Map) {
       final data = snapshot.value as Map;
       for (final e in data.entries) {
@@ -294,7 +327,10 @@ final vendorDetailProvider =
   final demoData = ref.watch(demoDataServiceProvider);
   try {
     final db = ref.watch(firebaseDatabaseProvider);
-    final snapshot = await db.ref('vendors/$vendorId').get();
+    final snapshot = await db
+        .ref('vendors/$vendorId')
+        .get()
+        .timeout(const Duration(milliseconds: 1500));
     if (snapshot.exists && snapshot.value != null) {
       final map = Map<String, dynamic>.from(snapshot.value as Map);
       map['id'] ??= vendorId;
@@ -313,74 +349,33 @@ final vendorDetailProvider =
 // ── Vendor Products ────────────────────────────────────────────────────────────
 
 final vendorProductsProvider =
-    FutureProvider.family<List<Product>, String>((ref, vendorId) async {
-  final demoData = ref.watch(demoDataServiceProvider);
-  try {
-    final db = ref.watch(firebaseDatabaseProvider);
-    final snapshot = await db.ref('products').get();
-    if (snapshot.exists && snapshot.value != null) {
-      final data = snapshot.value;
-      if (data is Map) {
-        final list = data.entries
-            .map((e) {
-              final map = Map<String, dynamic>.from(e.value as Map);
-              map['id'] ??= e.key;
-              return ProductModel.fromJson(map);
-            })
-            .where((p) =>
-                p.isAvailable && (vendorId.isEmpty || p.vendorId == vendorId))
-            .toList();
-        if (list.isNotEmpty) return list;
-      }
-    }
-  } catch (e) {
-    debugPrint('[VendorProductsProvider] Firebase fetch error: $e');
-  }
-
-  return demoData.products
-      .where((p) => p.vendorId == vendorId || vendorId.isEmpty)
-      .toList();
+    Provider.family<AsyncValue<List<Product>>, String>((ref, vendorId) {
+  final allAsync = ref.watch(allProductsProvider);
+  return allAsync.whenData((all) {
+    return all
+        .where((p) =>
+            p.isAvailable && (vendorId.isEmpty || p.vendorId == vendorId))
+        .toList();
+  });
 });
 
 // ── Search ────────────────────────────────────────────────────────────────────
 
 final searchQueryProvider = StateProvider<String>((ref) => '');
 
-final searchResultsProvider = FutureProvider<List<Product>>((ref) async {
+final searchResultsProvider = Provider<AsyncValue<List<Product>>>((ref) {
   final query = ref.watch(searchQueryProvider).trim().toLowerCase();
-  final demoData = ref.watch(demoDataServiceProvider);
-  if (query.isEmpty) return [];
+  final allAsync = ref.watch(allProductsProvider);
+  if (query.isEmpty) return const AsyncValue.data([]);
 
-  try {
-    final db = ref.watch(firebaseDatabaseProvider);
-    final snapshot = await db.ref('products').get();
-    if (snapshot.exists && snapshot.value != null) {
-      final data = snapshot.value;
-      if (data is Map) {
-        final list = data.entries
-            .map((e) {
-              final map = Map<String, dynamic>.from(e.value as Map);
-              map['id'] ??= e.key;
-              return ProductModel.fromJson(map);
-            })
-            .where((p) =>
-                p.isAvailable &&
-                (p.name.toLowerCase().contains(query) ||
-                    (p.description?.toLowerCase().contains(query) ?? false) ||
-                    (p.category?.name.toLowerCase().contains(query) ?? false)))
-            .toList();
-        if (list.isNotEmpty) return list;
-      }
-    }
-  } catch (e) {
-    debugPrint('[SearchResultsProvider] Firebase fetch error: $e');
-  }
-
-  return demoData.products.where((p) {
-    return p.name.toLowerCase().contains(query) ||
-        (p.description?.toLowerCase().contains(query) ?? false) ||
-        (p.category?.name.toLowerCase().contains(query) ?? false);
-  }).toList();
+  return allAsync.whenData((all) {
+    return all.where((p) {
+      return p.isAvailable &&
+          (p.name.toLowerCase().contains(query) ||
+              (p.description?.toLowerCase().contains(query) ?? false) ||
+              (p.category?.name.toLowerCase().contains(query) ?? false));
+    }).toList();
+  });
 });
 
 // ── Favorites ─────────────────────────────────────────────────────────────────
@@ -435,7 +430,8 @@ final customerOrdersProvider = FutureProvider<List<OrderModel>>((ref) async {
           .ref('orders')
           .orderByChild('customer_id')
           .equalTo(userId)
-          .get();
+          .get()
+          .timeout(const Duration(milliseconds: 1500));
       if (snapshot.exists && snapshot.value is Map) {
         final data = snapshot.value as Map;
         final list = data.entries.map((e) {
@@ -458,7 +454,10 @@ final orderDetailProvider =
   final demoData = ref.watch(demoDataServiceProvider);
   try {
     final db = ref.watch(firebaseDatabaseProvider);
-    final snapshot = await db.ref('orders/$orderId').get();
+    final snapshot = await db
+        .ref('orders/$orderId')
+        .get()
+        .timeout(const Duration(milliseconds: 1500));
     if (snapshot.exists && snapshot.value is Map) {
       final map = Map<String, dynamic>.from(snapshot.value as Map);
       map['id'] ??= orderId;
