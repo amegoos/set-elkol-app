@@ -12,6 +12,7 @@ import '../../../../core/extensions/build_context_ext.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
+import '../../../../core/theme/theme_provider.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../../../core/widgets/app_smart_image.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -33,16 +34,17 @@ class HomeScreen extends ConsumerWidget {
     final activeOrders = allOrders
         .where((o) => o.status != 'delivered' && o.status != 'cancelled')
         .toList();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
       body: CustomScrollView(
         slivers: [
           // ── Food Delivery Header (Talabat / Food App Style) ────────────────
           SliverAppBar(
             floating: true,
             pinned: true,
-            backgroundColor: Colors.white,
+            backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
             elevation: 1,
             toolbarHeight: 65,
             title: Row(
@@ -61,19 +63,19 @@ class HomeScreen extends ConsumerWidget {
                           Text(
                             'التوصيل إلى',
                             style: TextStyle(
-                              color: Colors.grey.shade600,
+                              color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
                               fontSize: 11,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          const Icon(Icons.keyboard_arrow_down,
-                              size: 16, color: Colors.grey),
+                          Icon(Icons.keyboard_arrow_down,
+                              size: 16, color: isDark ? Colors.grey.shade400 : Colors.grey),
                         ],
                       ),
                       Text(
                         '${profile?.name ?? 'ضيف ست الكل'} — القاهرة',
-                        style: const TextStyle(
-                          color: Color(0xFF1A1A2E),
+                        style: TextStyle(
+                          color: isDark ? Colors.white : const Color(0xFF1A1A2E),
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
@@ -114,6 +116,23 @@ class HomeScreen extends ConsumerWidget {
                   }
                 },
               ),
+              // Quick Theme Toggle Button
+              Consumer(
+                builder: (context, ref, _) {
+                  final currentMode = ref.watch(themeModeProvider);
+                  final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
+                  final iconData = currentMode == ThemeMode.system
+                      ? Icons.brightness_auto_rounded
+                      : (isDarkTheme ? Icons.dark_mode_rounded : Icons.light_mode_rounded);
+                  return IconButton(
+                    tooltip: 'المظهر (داكن / فاتح / تلقائي)',
+                    icon: Icon(iconData, color: AppColors.primary, size: 21),
+                    onPressed: () {
+                      ref.read(themeModeProvider.notifier).toggleTheme();
+                    },
+                  );
+                },
+              ),
               // Quick Language Switcher Pill
               Consumer(
                 builder: (context, ref, _) {
@@ -130,9 +149,10 @@ class HomeScreen extends ConsumerWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
+                          color: isDark ? const Color(0xFF2D2D3E) : const Color(0xFFF1F5F9),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.grey.shade300),
+                          border: Border.all(
+                              color: isDark ? Colors.white12 : Colors.grey.shade300),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -142,10 +162,10 @@ class HomeScreen extends ConsumerWidget {
                             const SizedBox(width: 4),
                             Text(
                               isAr ? 'EN' : 'عربي',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF1E293B),
+                                color: isDark ? Colors.white : const Color(0xFF1E293B),
                               ),
                             ),
                           ],
@@ -160,8 +180,8 @@ class HomeScreen extends ConsumerWidget {
                 alignment: Alignment.center,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.shopping_bag_outlined,
-                        color: Color(0xFF1A1A2E)),
+                    icon: Icon(Icons.shopping_bag_outlined,
+                        color: isDark ? Colors.white : const Color(0xFF1A1A2E)),
                     onPressed: () => context.go(RouteNames.cart),
                   ),
                   if (cart.totalItems > 0)
@@ -192,16 +212,17 @@ class HomeScreen extends ConsumerWidget {
           // ── Search Bar with Quick Chips ───────────────────────────────────
           SliverToBoxAdapter(
             child: Container(
-              color: Colors.white,
+              color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
               child: GestureDetector(
                 onTap: () => context.go(RouteNames.search),
                 child: Container(
                   height: 46,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF1F3F5),
+                    color: isDark ? const Color(0xFF2D2D3E) : const Color(0xFFF1F3F5),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(
+                        color: isDark ? Colors.white12 : Colors.grey.shade200),
                   ),
                   child: Row(
                     children: [
@@ -213,12 +234,14 @@ class HomeScreen extends ConsumerWidget {
                         child: Text(
                           'بتدور على إيه؟ (طاجن، محشي، كشري، ملوخية...)',
                           style: TextStyle(
-                              color: Colors.grey.shade600, fontSize: 13),
+                              color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                              fontSize: 13),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const Icon(Icons.tune_rounded,
-                          color: Colors.grey, size: 20),
+                      Icon(Icons.tune_rounded,
+                          color: isDark ? Colors.grey.shade400 : Colors.grey,
+                          size: 20),
                       const SizedBox(width: 12),
                     ],
                   ),
@@ -666,6 +689,7 @@ class _FoodDealCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () => context
           .push('/home/vendor/${product.vendorId}/product/${product.id}'),
@@ -673,12 +697,13 @@ class _FoodDealCard extends ConsumerWidget {
         width: 175,
         margin: const EdgeInsets.symmetric(horizontal: 4),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade200),
+          border: Border.all(
+              color: isDark ? Colors.white12 : Colors.grey.shade200),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
               blurRadius: 8,
               offset: const Offset(0, 3),
             ),
@@ -858,17 +883,19 @@ class _FoodProductCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () => context
           .push('/home/vendor/${product.vendorId}/product/${product.id}'),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade200),
+          border: Border.all(
+              color: isDark ? Colors.white12 : Colors.grey.shade200),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),

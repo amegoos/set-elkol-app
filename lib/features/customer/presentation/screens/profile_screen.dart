@@ -9,7 +9,9 @@ import '../../../../core/extensions/build_context_ext.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_provider.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
@@ -23,24 +25,28 @@ class ProfileScreen extends ConsumerWidget {
     final currentLocale = ref.watch(localeProvider);
     final isAr = currentLocale.languageCode == 'ar';
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final themeMode = ref.watch(themeModeProvider);
+
     if (profile == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (context.mounted) {
           context.go(RouteNames.login);
         }
       });
-      return const Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(
+      return Scaffold(
+        backgroundColor: isDark ? const Color(0xFF121212) : AppColors.background,
+        body: const Center(
           child: CircularProgressIndicator(color: AppColors.primary),
         ),
       );
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: isDark ? const Color(0xFF121212) : AppColors.background,
       appBar: AppBar(
         title: Text(isAr ? 'حسابي' : 'My Account'),
+        backgroundColor: isDark ? const Color(0xFF1E1E2E) : AppColors.surface,
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
@@ -55,12 +61,12 @@ class ProfileScreen extends ConsumerWidget {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
-              color: AppColors.surface,
+              color: isDark ? const Color(0xFF1E1E2E) : AppColors.surface,
               child: Column(
                 children: [
                   CircleAvatar(
                     radius: 44,
-                    backgroundColor: AppColors.secondary,
+                    backgroundColor: isDark ? const Color(0xFF2D2D3E) : AppColors.secondary,
                     child: Text(
                       profile.name.isNotEmpty
                           ? profile.name[0].toUpperCase()
@@ -70,12 +76,18 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Text(profile.name, style: AppTypography.headlineSmall),
+                  Text(
+                    profile.name,
+                    style: AppTypography.headlineSmall.copyWith(
+                      color: isDark ? Colors.white : AppColors.textPrimary,
+                    ),
+                  ),
                   if (profile.email != null)
                     Text(
                       profile.email!,
-                      style: AppTypography.bodySmall
-                          .copyWith(color: AppColors.textSecondary),
+                      style: AppTypography.bodySmall.copyWith(
+                        color: isDark ? Colors.grey.shade400 : AppColors.textSecondary,
+                      ),
                     ),
                   const SizedBox(height: 8),
                   Container(
@@ -180,6 +192,17 @@ class ProfileScreen extends ConsumerWidget {
               title: isAr ? 'الإعدادات والدعم' : 'Settings & Support',
               items: [
                 _MenuItem(
+                  icon: themeMode == ThemeMode.dark
+                      ? Icons.dark_mode_rounded
+                      : (themeMode == ThemeMode.light
+                          ? Icons.light_mode_rounded
+                          : Icons.brightness_auto_rounded),
+                  label: isAr
+                      ? 'المظهر (${_getThemeLabel(themeMode, isAr)})'
+                      : 'Appearance (${_getThemeLabel(themeMode, isAr)})',
+                  onTap: () => _showThemeModal(context, ref),
+                ),
+                _MenuItem(
                   icon: Icons.language_outlined,
                   label:
                       isAr ? 'اللغة (العربية 🇪🇬)' : 'Language (English 🇬🇧)',
@@ -209,6 +232,135 @@ class ProfileScreen extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+
+  String _getThemeLabel(ThemeMode mode, bool isAr) {
+    switch (mode) {
+      case ThemeMode.dark:
+        return isAr ? 'داكن 🌙' : 'Dark 🌙';
+      case ThemeMode.light:
+        return isAr ? 'فاتح ☀️' : 'Light ☀️';
+      case ThemeMode.system:
+        return isAr ? 'تلقائي 🌓' : 'Automatic 🌓';
+    }
+  }
+
+  void _showThemeModal(BuildContext context, WidgetRef ref) {
+    final currentMode = ref.read(themeModeProvider);
+    final isAr = ref.read(localeProvider).languageCode == 'ar';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetCtx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white24 : Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                isAr ? 'اختر مظهر التطبيق' : 'Choose App Theme',
+                style: AppTypography.titleLarge.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildThemeOption(
+                context: sheetCtx,
+                ref: ref,
+                mode: ThemeMode.system,
+                title: isAr ? 'تلقائي (حسب نظام الجهاز)' : 'Automatic (System Default)',
+                subtitle: isAr
+                    ? 'يتغير تلقائياً مع مظهر هاتفك'
+                    : 'Matches your phone system theme',
+                icon: Icons.brightness_auto_rounded,
+                isSelected: currentMode == ThemeMode.system,
+                isDark: isDark,
+              ),
+              Divider(color: isDark ? Colors.white12 : Colors.grey.shade200),
+              _buildThemeOption(
+                context: sheetCtx,
+                ref: ref,
+                mode: ThemeMode.light,
+                title: isAr ? 'الوضع الفاتح' : 'Light Mode',
+                subtitle: isAr ? 'ألوان ساطعة وواضحة' : 'Bright and clear colors',
+                icon: Icons.light_mode_rounded,
+                isSelected: currentMode == ThemeMode.light,
+                isDark: isDark,
+              ),
+              Divider(color: isDark ? Colors.white12 : Colors.grey.shade200),
+              _buildThemeOption(
+                context: sheetCtx,
+                ref: ref,
+                mode: ThemeMode.dark,
+                title: isAr ? 'الوضع الليلي (الداكن)' : 'Dark Mode',
+                subtitle: isAr ? 'مريح للعين وتوفير للبطارية' : 'Easy on eyes and saves battery',
+                icon: Icons.dark_mode_rounded,
+                isSelected: currentMode == ThemeMode.dark,
+                isDark: isDark,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildThemeOption({
+    required BuildContext context,
+    required WidgetRef ref,
+    required ThemeMode mode,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required bool isSelected,
+    required bool isDark,
+  }) {
+    return ListTile(
+      leading: Icon(icon,
+          color: isSelected ? AppColors.primary : (isDark ? Colors.grey.shade400 : Colors.grey)),
+      title: Text(
+        title,
+        style: TextStyle(
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          color: isSelected
+              ? AppColors.primary
+              : (isDark ? Colors.white : AppColors.textPrimary),
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: TextStyle(
+          fontSize: 12,
+          color: isDark ? Colors.grey.shade400 : AppColors.textSecondary,
+        ),
+      ),
+      trailing: isSelected
+          ? const Icon(Icons.check_circle, color: AppColors.primary)
+          : null,
+      onTap: () {
+        ref.read(themeModeProvider.notifier).setThemeMode(mode);
+        Navigator.of(context).pop();
+      },
     );
   }
 
@@ -370,6 +522,7 @@ class _MenuSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -377,32 +530,33 @@ class _MenuSection extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: Text(
             title,
-            style: AppTypography.labelMedium
-                .copyWith(color: AppColors.textSecondary),
+            style: AppTypography.labelMedium.copyWith(
+              color: isDark ? Colors.grey.shade400 : AppColors.textSecondary,
+            ),
           ),
         ),
         Material(
-          color: AppColors.surface,
+          color: isDark ? const Color(0xFF1E1E2E) : AppColors.surface,
           child: Column(
-            children: items.map((item) => _buildTile(item)).toList(),
+            children: items.map((item) => _buildTile(context, item, isDark)).toList(),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildTile(_MenuItem item) {
+  Widget _buildTile(BuildContext context, _MenuItem item, bool isDark) {
     return ListTile(
       leading:
           Icon(item.icon, color: item.color ?? AppColors.primary, size: 22),
       title: Text(
         item.label,
         style: AppTypography.bodyMedium.copyWith(
-          color: item.color ?? AppColors.textPrimary,
+          color: item.color ?? (isDark ? Colors.white : AppColors.textPrimary),
         ),
       ),
-      trailing: const Icon(Icons.arrow_forward_ios,
-          size: 14, color: AppColors.textHint),
+      trailing: Icon(Icons.arrow_forward_ios,
+          size: 14, color: isDark ? Colors.grey.shade500 : AppColors.textHint),
       onTap: item.onTap,
     );
   }

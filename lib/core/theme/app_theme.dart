@@ -281,6 +281,31 @@ abstract final class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: AppRadius.medium),
         behavior: SnackBarBehavior.floating,
       ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: darkSurface,
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.dialog),
+        titleTextStyle: const TextStyle(
+          fontFamily: 'Cairo',
+          color: Colors.white,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
+        contentTextStyle: const TextStyle(
+          fontFamily: 'Cairo',
+          color: Colors.white70,
+          fontSize: 14,
+        ),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: darkSurface,
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.bottomSheet),
+        elevation: 0,
+      ),
+      dividerTheme: DividerThemeData(
+        color: Colors.white.withOpacity(0.1),
+        thickness: 1,
+        space: 1,
+      ),
     );
   }
 }

@@ -13,6 +13,7 @@ import 'core/localization/app_localizations.dart';
 import 'core/providers/shared_preferences_provider.dart';
 import 'core/routing/router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -67,11 +68,14 @@ class SetElKolApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
     final locale = ref.watch(localeProvider);
+    final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp.router(
       title: AppConstants.appNameEn,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeMode,
       routerConfig: router,
       locale: locale,
       supportedLocales: AppLocalizationConfig.supportedLocales,
