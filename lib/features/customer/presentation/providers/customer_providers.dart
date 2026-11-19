@@ -205,26 +205,36 @@ final featuredProductsProvider = FutureProvider<List<Product>>((ref) async {
   });
   ref.onDispose(() => sub.cancel());
 
+  final Map<String, Product> productMap = {};
+
+  // 1. Seed with authentic Egyptian presets from DemoDataService
+  for (final p in demoData.products) {
+    if (p.isFeatured && p.isAvailable) {
+      productMap[p.id] = p;
+    }
+  }
+
+  // 2. Merge with live Firebase RTDB products added by vendors
   try {
     final snapshot = await db.ref('products').get();
     if (snapshot.exists && snapshot.value != null) {
       final data = snapshot.value;
       if (data is Map) {
-        final list = data.entries
-            .map((e) {
-              final map = Map<String, dynamic>.from(e.value as Map);
-              map['id'] ??= e.key;
-              return ProductModel.fromJson(map);
-            })
-            .where((p) => p.isFeatured && p.isAvailable)
-            .toList();
-        if (list.isNotEmpty) return list;
+        for (final e in data.entries) {
+          final map = Map<String, dynamic>.from(e.value as Map);
+          map['id'] ??= e.key;
+          final prod = ProductModel.fromJson(map);
+          if (prod.isFeatured && prod.isAvailable) {
+            productMap[prod.id] = prod;
+          }
+        }
       }
     }
   } catch (e) {
     debugPrint('[FeaturedProductsProvider] Firebase fetch error: $e');
   }
-  return demoData.products.where((p) => p.isFeatured && p.isAvailable).toList();
+
+  return productMap.values.toList();
 });
 
 // ── Popular Products ───────────────────────────────────────────────────────────
@@ -239,26 +249,36 @@ final popularProductsProvider = FutureProvider<List<Product>>((ref) async {
   });
   ref.onDispose(() => sub.cancel());
 
+  final Map<String, Product> productMap = {};
+
+  // 1. Seed with authentic Egyptian presets from DemoDataService
+  for (final p in demoData.products) {
+    if (p.isAvailable) {
+      productMap[p.id] = p;
+    }
+  }
+
+  // 2. Merge with live Firebase RTDB products added by vendors
   try {
     final snapshot = await db.ref('products').get();
     if (snapshot.exists && snapshot.value != null) {
       final data = snapshot.value;
       if (data is Map) {
-        final list = data.entries
-            .map((e) {
-              final map = Map<String, dynamic>.from(e.value as Map);
-              map['id'] ??= e.key;
-              return ProductModel.fromJson(map);
-            })
-            .where((p) => p.isAvailable)
-            .toList();
-        if (list.isNotEmpty) return list;
+        for (final e in data.entries) {
+          final map = Map<String, dynamic>.from(e.value as Map);
+          map['id'] ??= e.key;
+          final prod = ProductModel.fromJson(map);
+          if (prod.isAvailable) {
+            productMap[prod.id] = prod;
+          }
+        }
       }
     }
   } catch (e) {
     debugPrint('[PopularProductsProvider] Firebase fetch error: $e');
   }
-  return demoData.products.where((p) => p.isAvailable).toList();
+
+  return productMap.values.toList();
 });
 
 // ── Products by Category ───────────────────────────────────────────────────────
@@ -274,30 +294,37 @@ final productsByCategoryProvider =
   });
   ref.onDispose(() => sub.cancel());
 
+  final Map<String, Product> productMap = {};
+
+  // 1. Seed with authentic Egyptian presets from DemoDataService
+  for (final p in demoData.products) {
+    if (p.isAvailable && (categoryId == null || p.categoryId == categoryId)) {
+      productMap[p.id] = p;
+    }
+  }
+
+  // 2. Merge with live Firebase RTDB products added by vendors
   try {
     final snapshot = await db.ref('products').get();
     if (snapshot.exists && snapshot.value != null) {
       final data = snapshot.value;
       if (data is Map) {
-        final list = data.entries
-            .map((e) {
-              final map = Map<String, dynamic>.from(e.value as Map);
-              map['id'] ??= e.key;
-              return ProductModel.fromJson(map);
-            })
-            .where((p) =>
-                p.isAvailable &&
-                (categoryId == null || p.categoryId == categoryId))
-            .toList();
-        if (list.isNotEmpty) return list;
+        for (final e in data.entries) {
+          final map = Map<String, dynamic>.from(e.value as Map);
+          map['id'] ??= e.key;
+          final prod = ProductModel.fromJson(map);
+          if (prod.isAvailable &&
+              (categoryId == null || prod.categoryId == categoryId)) {
+            productMap[prod.id] = prod;
+          }
+        }
       }
     }
   } catch (e) {
     debugPrint('[ProductsByCategoryProvider] Firebase fetch error: $e');
   }
 
-  if (categoryId == null) return demoData.products;
-  return demoData.products.where((p) => p.categoryId == categoryId).toList();
+  return productMap.values.toList();
 });
 
 // ── All Active Vendors ─────────────────────────────────────────────────────────

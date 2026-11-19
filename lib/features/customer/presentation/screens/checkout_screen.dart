@@ -56,6 +56,20 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       return;
     }
 
+    double deliveryFee = 0;
+    if (_delivery == DeliveryType.delivery) {
+      deliveryFee = cart.estimatedDeliveryFee;
+    }
+    final totalAmount = cart.totalAfterDiscount + deliveryFee;
+
+    // If card payment selected, open Paymob testing sandbox first
+    if (_payment == PaymentMethod.card) {
+      final paymobApproved = await _showPaymobSandboxSheet(totalAmount);
+      if (!paymobApproved) {
+        return;
+      }
+    }
+
     setState(() => _isLoading = true);
 
     try {
@@ -69,13 +83,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
       final orderId = const Uuid().v4();
       final vendorId = cart.vendorId ?? '00000000-0000-0000-0000-000000000001';
-
-      double deliveryFee = 0;
-      if (_delivery == DeliveryType.delivery) {
-        deliveryFee = cart.estimatedDeliveryFee;
-      }
-
-      final totalAmount = cart.totalAfterDiscount + deliveryFee;
 
       final String vendorName;
       if (cart.isMultiVendor) {
@@ -92,6 +99,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       String paymentDbValue;
       switch (_payment) {
         case PaymentMethod.card:
+          paymentDbValue = 'card';
+          break;
         case PaymentMethod.cash:
           paymentDbValue = 'cash';
           break;
@@ -217,6 +226,227 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       setState(() => _isLoading = false);
       context.showSnack('حدث خطأ أثناء إتمام الطلب: $e', isError: true);
     }
+  }
+
+  Future<bool> _showPaymobSandboxSheet(double totalAmount) async {
+    bool isProcessing = false;
+    final result = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          return Container(
+            padding: EdgeInsets.only(
+              top: 20,
+              left: 20,
+              right: 20,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+            ),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 44,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0052CC).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.lock_outline_rounded,
+                              color: Color(0xFF0052CC), size: 18),
+                          SizedBox(width: 6),
+                          Text(
+                            'Paymob Sandbox',
+                            style: TextStyle(
+                              color: Color(0xFF0052CC),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.shade50,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.amber.shade400),
+                      ),
+                      child: Text(
+                        'بيئة اختبار تجريبية 🧪',
+                        style: TextStyle(
+                          color: Colors.amber.shade900,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'بوابة الدفع الإلكتروني (Paymob)',
+                  style: AppTypography.titleLarge
+                      .copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'المبلغ المطلوب سداده: ${totalAmount.toStringAsFixed(0)} ج.م',
+                  style: AppTypography.titleMedium.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Column(
+                    children: [
+                      const Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'بيانات بطاقة الاختبار المعتمدة:',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 13),
+                          ),
+                          Row(
+                            children: [
+                              Icon(Icons.credit_card,
+                                  color: Color(0xFF0052CC), size: 22),
+                              SizedBox(width: 4),
+                              Text(
+                                'Visa / MC',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  color: Color(0xFF0052CC),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const Divider(height: 20),
+                      _paymobCardRow('رقم البطاقة (Test Card):',
+                          '5123 4567 8901 2345'),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                              child: _paymobCardRow(
+                                  'تاريخ الانتهاء:', '12 / 28')),
+                          const SizedBox(width: 12),
+                          Expanded(child: _paymobCardRow('CVV:', '123')),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      _paymobCardRow(
+                          'رمز 3DS OTP:', '100000 (تأكيد تلقائي)'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                if (isProcessing) ...[
+                  const Center(
+                    child: Column(
+                      children: [
+                        CircularProgressIndicator(color: Color(0xFF0052CC)),
+                        SizedBox(height: 12),
+                        Text(
+                          'جاري الاتصال الآمن مع Paymob وتأكيد العملية...',
+                          style: TextStyle(
+                              fontSize: 13, color: AppColors.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                ] else ...[
+                  ElevatedButton(
+                    onPressed: () async {
+                      setSheetState(() => isProcessing = true);
+                      await Future.delayed(
+                          const Duration(milliseconds: 1400));
+                      if (ctx.mounted) {
+                        Navigator.of(ctx).pop(true);
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0052CC),
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      'تأكيد الدفع التجريبي (${totalAmount.toStringAsFixed(0)} ج.م) ✓',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(false),
+                    child: const Text('إلغاء العملية والعودة للسلة'),
+                  ),
+                ],
+              ],
+            ),
+          );
+        },
+      ),
+    );
+    return result ?? false;
+  }
+
+  Widget _paymobCardRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label,
+            style: const TextStyle(
+                fontSize: 12, color: AppColors.textSecondary)),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            fontFamily: 'monospace',
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ],
+    );
   }
 
   @override

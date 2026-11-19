@@ -8,6 +8,7 @@ import '../../../../core/domain/entities/category.dart';
 import '../../../../core/domain/entities/product.dart';
 import '../../../../core/domain/entities/user_profile.dart';
 import '../../../../core/domain/entities/vendor.dart';
+import '../../../../core/extensions/build_context_ext.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
@@ -91,13 +92,28 @@ class HomeScreen extends ConsumerWidget {
                       color: AppColors.primary),
                   onPressed: () => context.go(RouteNames.adminDashboard),
                 ),
-              if (profile?.isVendor == true)
-                IconButton(
-                  tooltip: 'لوحة تحكم المطبخ (Vendor)',
-                  icon: const Icon(Icons.storefront_rounded,
-                      color: AppColors.primary),
-                  onPressed: () => context.go(RouteNames.vendorDashboard),
+              IconButton(
+                tooltip: profile?.isVendor == true
+                    ? 'لوحة تحكم المطبخ (Vendor)'
+                    : 'التبديل إلى حساب طاهية منزلية (Vendor)',
+                icon: Icon(
+                  Icons.storefront_rounded,
+                  color: profile?.isVendor == true
+                      ? AppColors.primary
+                      : AppColors.accent,
                 ),
+                onPressed: () async {
+                  if (profile?.isVendor == true) {
+                    context.go(RouteNames.vendorDashboard);
+                  } else {
+                    await ref.read(authProvider.notifier).switchRole();
+                    if (context.mounted) {
+                      context.showSnack('تم التبديل إلى لوحة تحكم المطبخ ✓');
+                      context.go(RouteNames.vendorDashboard);
+                    }
+                  }
+                },
+              ),
               // Quick Language Switcher Pill
               Consumer(
                 builder: (context, ref, _) {

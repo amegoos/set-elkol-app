@@ -744,40 +744,34 @@ class AuthNotifier extends StateNotifier<AuthState> {
     final newRole =
         currentProfile.isVendor ? UserRole.customer : UserRole.vendor;
 
-    if (user == null) {
-      // Preserve current user name, email, avatar, phone and just toggle role
-      state = state.copyWith(
-        profile: currentProfile.copyWith(role: newRole),
-      );
-      return null;
-    }
+    // 1. Instantly update UI state without latency (0ms response on iOS/Android)
+    state = state.copyWith(
+      profile: currentProfile.copyWith(role: newRole),
+    );
 
-    try {
-      await _db.ref('profiles/${user.uid}').update({'role': newRole.name});
+    // 2. Persist to Firebase RTDB asynchronously in background
+    if (user != null) {
+      try {
+        await _db.ref('profiles/${user.uid}').update({'role': newRole.name});
 
-      if (newRole == UserRole.vendor) {
-        final vendorSnap = await _db.ref('vendors/${user.uid}').get();
-        if (!vendorSnap.exists) {
-          final nowIso = DateTime.now().toIso8601String();
-          await _db.ref('vendors/${user.uid}').set({
-            'id': user.uid,
-            'business_name': currentProfile.name,
-            'is_active': true,
-            'created_at': nowIso,
-            'updated_at': nowIso,
-          });
+        if (newRole == UserRole.vendor) {
+          final vendorSnap = await _db.ref('vendors/${user.uid}').get();
+          if (!vendorSnap.exists) {
+            final nowIso = DateTime.now().toIso8601String();
+            await _db.ref('vendors/${user.uid}').set({
+              'id': user.uid,
+              'business_name': currentProfile.name,
+              'is_active': true,
+              'created_at': nowIso,
+              'updated_at': nowIso,
+            });
+          }
         }
+      } catch (e) {
+        debugPrint('[Auth] Error syncing switched role to RTDB: $e');
       }
-
-      await _loadProfile(user);
-      return null;
-    } catch (e) {
-      // In-memory fallback keeping original user identity
-      state = state.copyWith(
-        profile: currentProfile.copyWith(role: newRole),
-      );
-      return null;
     }
+    return null;
   }
 
   // ── Password Reset ─────────────────────────────────────────────────────────
