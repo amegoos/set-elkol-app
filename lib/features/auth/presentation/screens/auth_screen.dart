@@ -333,14 +333,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
     );
   }
 
-  void _onDemoLogin(UserRole role) {
-    ref.read(authProvider.notifier).signInAsDemo(role);
-    final roleName = role == UserRole.admin
-        ? 'إدارة ست الكل'
-        : (role == UserRole.vendor ? 'مطبخ أم أحمد' : 'العميلة سارة');
-    context.showSnack('تم الدخول كـ $roleName ✓');
-  }
-
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
@@ -440,7 +432,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                   const SizedBox(height: 24),
 
                   SizedBox(
-                    height: 780,
+                    height: 680,
                     child: TabBarView(
                       controller: _tabController,
                       children: [
@@ -457,7 +449,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                           onPhone: () => context.push(RouteNames.phoneLogin),
                           onForgot: () =>
                               context.push(RouteNames.forgotPassword),
-                          onDemoLogin: _onDemoLogin,
                         ),
                         _SignupTab(
                           formKey: _signupFormKey,
@@ -471,7 +462,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                           onGoogle: _googleSignIn,
                           onApple: _appleSignIn,
                           onPhone: () => context.push(RouteNames.phoneLogin),
-                          onDemoLogin: _onDemoLogin,
                         ),
                       ],
                     ),
@@ -526,7 +516,6 @@ class _LoginTab extends StatelessWidget {
     required this.onApple,
     required this.onPhone,
     required this.onForgot,
-    required this.onDemoLogin,
   });
 
   final GlobalKey<FormState> formKey;
@@ -540,7 +529,6 @@ class _LoginTab extends StatelessWidget {
   final VoidCallback onApple;
   final VoidCallback onPhone;
   final VoidCallback onForgot;
-  final void Function(UserRole role) onDemoLogin;
 
   @override
   Widget build(BuildContext context) {
@@ -656,9 +644,7 @@ class _LoginTab extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _OrDivider(),
-            const SizedBox(height: 14),
-            _DemoLoginSection(onDemoLogin: onDemoLogin),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
             if (defaultTargetPlatform == TargetPlatform.iOS || kIsWeb) ...[
               _AppleButton(onPressed: onApple, isLoading: isLoading),
               const SizedBox(height: 12),
@@ -688,7 +674,6 @@ class _SignupTab extends StatelessWidget {
     required this.onGoogle,
     required this.onApple,
     required this.onPhone,
-    required this.onDemoLogin,
   });
 
   final GlobalKey<FormState> formKey;
@@ -702,7 +687,6 @@ class _SignupTab extends StatelessWidget {
   final VoidCallback onGoogle;
   final VoidCallback onApple;
   final VoidCallback onPhone;
-  final void Function(UserRole role) onDemoLogin;
 
   @override
   Widget build(BuildContext context) {
@@ -798,9 +782,7 @@ class _SignupTab extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _OrDivider(),
-            const SizedBox(height: 14),
-            _DemoLoginSection(onDemoLogin: onDemoLogin),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
             if (defaultTargetPlatform == TargetPlatform.iOS || kIsWeb) ...[
               _AppleButton(onPressed: onApple, isLoading: isLoading),
               const SizedBox(height: 12),
@@ -833,137 +815,6 @@ class _OrDivider extends StatelessWidget {
         ),
         const Expanded(child: Divider()),
       ],
-    );
-  }
-}
-
-class _DemoLoginSection extends StatelessWidget {
-  const _DemoLoginSection({required this.onDemoLogin});
-  final void Function(UserRole role) onDemoLogin;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: AppRadius.card,
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.flash_on_rounded,
-                  color: AppColors.accent, size: 18),
-              const SizedBox(width: 6),
-              Text(
-                'تسجيل الدخول السريع (للتجربة والاختبار)',
-                style: AppTypography.labelMedium.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: _QuickRoleChip(
-                  emoji: '🛒',
-                  label: 'عميل',
-                  subtitle: 'سارة محمود',
-                  color: AppColors.primary,
-                  onTap: () => onDemoLogin(UserRole.customer),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _QuickRoleChip(
-                  emoji: '👩‍🍳',
-                  label: 'مطبخ',
-                  subtitle: 'أم أحمد',
-                  color: AppColors.accent,
-                  onTap: () => onDemoLogin(UserRole.vendor),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _QuickRoleChip(
-                  emoji: '🛡️',
-                  label: 'إدارة',
-                  subtitle: 'أحمد أمجد',
-                  color: AppColors.primaryDark,
-                  onTap: () => onDemoLogin(UserRole.admin),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _QuickRoleChip extends StatelessWidget {
-  const _QuickRoleChip({
-    required this.emoji,
-    required this.label,
-    required this.subtitle,
-    required this.color,
-    required this.onTap,
-  });
-
-  final String emoji;
-  final String label;
-  final String subtitle;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.4), width: 1.2),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 18)),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: AppTypography.labelMedium.copyWith(
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-            Text(
-              subtitle,
-              style: AppTypography.bodySmall.copyWith(
-                fontSize: 10,
-                color: AppColors.textSecondary,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
