@@ -91,6 +91,13 @@ class HomeScreen extends ConsumerWidget {
                       color: AppColors.primary),
                   onPressed: () => context.go(RouteNames.adminDashboard),
                 ),
+              if (profile?.isVendor == true)
+                IconButton(
+                  tooltip: 'لوحة تحكم المطبخ (Vendor)',
+                  icon: const Icon(Icons.storefront_rounded,
+                      color: AppColors.primary),
+                  onPressed: () => context.go(RouteNames.vendorDashboard),
+                ),
               // Quick Language Switcher Pill
               Consumer(
                 builder: (context, ref, _) {

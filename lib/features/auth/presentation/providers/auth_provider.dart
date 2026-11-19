@@ -204,8 +204,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
         await profileRef.update({'role': 'admin'});
       }
 
-      // Always default active session to customer upon login/startup so user lands on Customer Home
-      final role = isAdminEmail ? UserRole.admin : UserRole.customer;
+      final role = isAdminEmail
+          ? UserRole.admin
+          : UserRole.values.firstWhere(
+              (r) => r.name == roleStr,
+              orElse: () => UserRole.customer,
+            );
 
       final profile = UserProfile(
         id: user.uid,
