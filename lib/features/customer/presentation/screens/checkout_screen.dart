@@ -179,6 +179,34 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         debugPrint('[Checkout] Firebase order sync error: $fbErr');
       }
 
+      // Create Order Notification in Firebase for Customer and Vendor
+      final nowIso = DateTime.now().toIso8601String();
+      final customerNotifId = const Uuid().v4();
+      final shortOrderId = orderId.length > 8 ? orderId.substring(0, 8) : orderId;
+
+      try {
+        await db.ref('notifications/$userId/$customerNotifId').set({
+          'id': customerNotifId,
+          'title': 'تم تأكيد طلبك بنجاح! 🍲',
+          'body': 'طلبك رقم #$shortOrderId من $vendorName قيد التجهيز الآن. تم إرسال تفاصيل الفاتورة إلى بريدك الإلكتروني.',
+          'order_id': orderId,
+          'created_at': nowIso,
+          'is_read': false,
+        });
+
+        final vendorNotifId = const Uuid().v4();
+        await db.ref('notifications/$vendorId/$vendorNotifId').set({
+          'id': vendorNotifId,
+          'title': 'طلب جديد وارد للمطبخ! 🔔',
+          'body': 'وصلك طلب جديد رقم #$shortOrderId بقيمة ${totalAmount.toStringAsFixed(0)} ج.م من ${profile?.name ?? "عميل ست الكل"}.',
+          'order_id': orderId,
+          'created_at': nowIso,
+          'is_read': false,
+        });
+      } catch (notifErr) {
+        debugPrint('[Checkout] Notification dispatch note: $notifErr');
+      }
+
       try {
         final paymentService = ref.read(paymentServiceProvider);
         PaymentGatewayType gatewayType;
@@ -219,7 +247,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
       if (!mounted) return;
       setState(() => _isLoading = false);
-      context.showSnack('تم إرسال طلبك بنجاح! 🎉');
+      context.showSnack('تم إرسال طلبك بنجاح! 🎉 وأرسلنا إشعاراً وتفاصيل الفاتورة إلى بريدك الإلكتروني');
       context.go('/cart/order-confirm/$orderId');
     } catch (e) {
       if (!mounted) return;

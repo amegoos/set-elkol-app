@@ -36,20 +36,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
     super.dispose();
   }
 
-  void _switchToRole(UserRole targetRole) {
-    ref.read(authProvider.notifier).signInAsDemo(targetRole);
-    context.showSnack(
-      targetRole == UserRole.customer
-          ? 'تم التحويل إلى وضع العميل (Sara) 🛒'
-          : 'تم التحويل إلى وضع ست الكل / البائعة (Om Ahmed) 👩‍🍳',
-    );
-    if (targetRole == UserRole.customer) {
-      context.go(RouteNames.customerHome);
-    } else {
-      context.go(RouteNames.vendorDashboard);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final demoData = ref.watch(demoDataServiceProvider);
@@ -96,81 +82,14 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
           ],
         ),
       ),
-      body: Column(
+      body: TabBarView(
+        controller: _tabController,
         children: [
-          // ── Quick Demo Role Switcher Bar ──────────────────────────────
-          _buildRoleSwitcherBanner(),
-
-          // ── Tab Views ──────────────────────────────────────────────────
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildOverviewTab(
-                    rawProducts.length, vendors.length, orders.length),
-                _buildVendorsTab(vendors),
-                _buildOrdersTab(orders),
-                _buildProductsTab(rawProducts),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRoleSwitcherBanner() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.08),
-        border: Border(
-          bottom: BorderSide(color: AppColors.primary.withOpacity(0.2)),
-        ),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.swap_horiz_rounded,
-              color: AppColors.primary, size: 22),
-          const SizedBox(width: 8),
-          const Expanded(
-            child: Text(
-              'تبديل سريع للعرض التجريبي:',
-              style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                  color: AppColors.textPrimary),
-            ),
-          ),
-          OutlinedButton.icon(
-            onPressed: () => _switchToRole(UserRole.customer),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              minimumSize: Size.zero,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
-              side: const BorderSide(color: AppColors.primary),
-            ),
-            icon: const Icon(Icons.person, size: 14, color: AppColors.primary),
-            label: const Text('عميل',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-          ),
-          const SizedBox(width: 8),
-          ElevatedButton.icon(
-            onPressed: () => _switchToRole(UserRole.vendor),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.vendorBadge,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              minimumSize: Size.zero,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
-            ),
-            icon: const Icon(Icons.restaurant_menu, size: 14),
-            label: const Text('ست الكل',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-          ),
+          _buildOverviewTab(
+              rawProducts.length, vendors.length, orders.length),
+          _buildVendorsTab(vendors),
+          _buildOrdersTab(orders),
+          _buildProductsTab(rawProducts),
         ],
       ),
     );
@@ -189,6 +108,54 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
             children: [
               Expanded(
                 child: _buildMetricCard(
+                  title: 'حسابات العملاء',
+                  value: '142 عميل',
+                  subtitle: 'حسابات نشطة بالمنصة 👥',
+                  icon: Icons.people_alt_rounded,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildMetricCard(
+                  title: 'المطابخ والبائعين',
+                  value: '$vendorsCount مطبخ',
+                  subtitle: 'طاهيات معتمدات 👩‍🍳',
+                  icon: Icons.storefront_rounded,
+                  color: AppColors.vendorBadge,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildMetricCard(
+                  title: 'الناس الشغالة الآن',
+                  value: '38 متصل',
+                  subtitle: 'نشط حالياً بالمنصة 🟢',
+                  icon: Icons.bolt_rounded,
+                  color: AppColors.accent,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildMetricCard(
+                  title: 'إجمالي الطلبات',
+                  value: '${ordersCount + 24} طلب',
+                  subtitle: 'مكتمل وقيد التوصيل 📦',
+                  icon: Icons.receipt_long_rounded,
+                  color: AppColors.success,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildMetricCard(
                   title: 'إجمالي المبيعات',
                   value: '48,500 ج.م',
                   subtitle: '+18% هذا الأسبوع 📈',
@@ -199,33 +166,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
               const SizedBox(width: 12),
               Expanded(
                 child: _buildMetricCard(
-                  title: 'طلبات اليوم',
-                  value: '24 طلب',
-                  subtitle: '8 قيد التجهيز ⏳',
-                  icon: Icons.delivery_dining_rounded,
-                  color: AppColors.accent,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildMetricCard(
-                  title: 'المطابخ الشريكة',
-                  value: '$vendorsCount مطبخ',
-                  subtitle: '15 موثق بالعلامة الزرقاء ✓',
-                  icon: Icons.storefront_rounded,
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildMetricCard(
-                  title: 'الأكلات المتاحة',
+                  title: 'الأكلات المعروضة',
                   value: '$productsCount أكلة',
-                  subtitle: 'بأصناف وأسعار حقيقية',
+                  subtitle: 'وجبات منزلية متاحة 🍲',
                   icon: Icons.ramen_dining_rounded,
                   color: AppColors.primaryLight,
                 ),

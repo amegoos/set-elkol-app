@@ -193,165 +193,98 @@ final categoriesProvider = FutureProvider<List<Category>>((ref) async {
 
 final selectedCategoryProvider = StateProvider<String?>((ref) => null);
 
-// ── Featured Products ──────────────────────────────────────────────────────────
+// ── Shared Root Products Provider (Single Network Call + Instant Cache) ───────
+
+final allProductsProvider = FutureProvider<List<Product>>((ref) async {
+  final demoData = ref.watch(demoDataServiceProvider);
+  final db = ref.watch(firebaseDatabaseProvider);
+
+  // Single subscription for live updates across the whole app
+  final sub = db.ref('products').onValue.listen((_) {
+    ref.invalidateSelf();
+  });
+  ref.onDispose(() => sub.cancel());
+
+  final Map<String, Product> productMap = {};
+
+  // 1. Authentic Egyptian dishes from presets
+  for (final p in demoData.products) {
+    productMap[p.id] = p;
+  }
+
+  // 2. Realtime Database products added by vendors
+  try {
+    final snapshot = await db.ref('products').get();
+    if (snapshot.exists && snapshot.value != null && snapshot.value is Map) {
+      final data = snapshot.value as Map;
+      for (final e in data.entries) {
+        final map = Map<String, dynamic>.from(e.value as Map);
+        map['id'] ??= e.key;
+        final prod = ProductModel.fromJson(map);
+        productMap[prod.id] = prod;
+      }
+    }
+  } catch (e) {
+    debugPrint('[AllProductsProvider] Firebase fetch note: $e');
+  }
+
+  return productMap.values.toList();
+});
+
+// ── Featured Products (Instant derived filter, zero redundant network calls) ─
 
 final featuredProductsProvider = FutureProvider<List<Product>>((ref) async {
-  final demoData = ref.watch(demoDataServiceProvider);
-  final db = ref.watch(firebaseDatabaseProvider);
-
-  // Real-time sync: automatically updates across all Android and iOS phones
-  final sub = db.ref('products').onValue.listen((_) {
-    ref.invalidateSelf();
-  });
-  ref.onDispose(() => sub.cancel());
-
-  final Map<String, Product> productMap = {};
-
-  // 1. Seed with authentic Egyptian presets from DemoDataService
-  for (final p in demoData.products) {
-    if (p.isFeatured && p.isAvailable) {
-      productMap[p.id] = p;
-    }
-  }
-
-  // 2. Merge with live Firebase RTDB products added by vendors
-  try {
-    final snapshot = await db.ref('products').get();
-    if (snapshot.exists && snapshot.value != null) {
-      final data = snapshot.value;
-      if (data is Map) {
-        for (final e in data.entries) {
-          final map = Map<String, dynamic>.from(e.value as Map);
-          map['id'] ??= e.key;
-          final prod = ProductModel.fromJson(map);
-          if (prod.isFeatured && prod.isAvailable) {
-            productMap[prod.id] = prod;
-          }
-        }
-      }
-    }
-  } catch (e) {
-    debugPrint('[FeaturedProductsProvider] Firebase fetch error: $e');
-  }
-
-  return productMap.values.toList();
+  final all = await ref.watch(allProductsProvider.future);
+  return all.where((p) => p.isFeatured && p.isAvailable).toList();
 });
 
-// ── Popular Products ───────────────────────────────────────────────────────────
+// ── Popular Products (Instant derived filter) ────────────────────────────────
 
 final popularProductsProvider = FutureProvider<List<Product>>((ref) async {
-  final demoData = ref.watch(demoDataServiceProvider);
-  final db = ref.watch(firebaseDatabaseProvider);
-
-  // Real-time sync: automatically updates across all Android and iOS phones
-  final sub = db.ref('products').onValue.listen((_) {
-    ref.invalidateSelf();
-  });
-  ref.onDispose(() => sub.cancel());
-
-  final Map<String, Product> productMap = {};
-
-  // 1. Seed with authentic Egyptian presets from DemoDataService
-  for (final p in demoData.products) {
-    if (p.isAvailable) {
-      productMap[p.id] = p;
-    }
-  }
-
-  // 2. Merge with live Firebase RTDB products added by vendors
-  try {
-    final snapshot = await db.ref('products').get();
-    if (snapshot.exists && snapshot.value != null) {
-      final data = snapshot.value;
-      if (data is Map) {
-        for (final e in data.entries) {
-          final map = Map<String, dynamic>.from(e.value as Map);
-          map['id'] ??= e.key;
-          final prod = ProductModel.fromJson(map);
-          if (prod.isAvailable) {
-            productMap[prod.id] = prod;
-          }
-        }
-      }
-    }
-  } catch (e) {
-    debugPrint('[PopularProductsProvider] Firebase fetch error: $e');
-  }
-
-  return productMap.values.toList();
+  final all = await ref.watch(allProductsProvider.future);
+  return all.where((p) => p.isAvailable).toList();
 });
 
-// ── Products by Category ───────────────────────────────────────────────────────
+// ── Products by Category (Instant derived filter) ────────────────────────────
 
 final productsByCategoryProvider =
     FutureProvider.family<List<Product>, String?>((ref, categoryId) async {
-  final demoData = ref.watch(demoDataServiceProvider);
-  final db = ref.watch(firebaseDatabaseProvider);
-
-  // Real-time sync
-  final sub = db.ref('products').onValue.listen((_) {
-    ref.invalidateSelf();
-  });
-  ref.onDispose(() => sub.cancel());
-
-  final Map<String, Product> productMap = {};
-
-  // 1. Seed with authentic Egyptian presets from DemoDataService
-  for (final p in demoData.products) {
-    if (p.isAvailable && (categoryId == null || p.categoryId == categoryId)) {
-      productMap[p.id] = p;
-    }
-  }
-
-  // 2. Merge with live Firebase RTDB products added by vendors
-  try {
-    final snapshot = await db.ref('products').get();
-    if (snapshot.exists && snapshot.value != null) {
-      final data = snapshot.value;
-      if (data is Map) {
-        for (final e in data.entries) {
-          final map = Map<String, dynamic>.from(e.value as Map);
-          map['id'] ??= e.key;
-          final prod = ProductModel.fromJson(map);
-          if (prod.isAvailable &&
-              (categoryId == null || prod.categoryId == categoryId)) {
-            productMap[prod.id] = prod;
-          }
-        }
-      }
-    }
-  } catch (e) {
-    debugPrint('[ProductsByCategoryProvider] Firebase fetch error: $e');
-  }
-
-  return productMap.values.toList();
+  final all = await ref.watch(allProductsProvider.future);
+  if (categoryId == null) return all.where((p) => p.isAvailable).toList();
+  return all.where((p) => p.isAvailable && p.categoryId == categoryId).toList();
 });
 
 // ── All Active Vendors ─────────────────────────────────────────────────────────
 
 final vendorsProvider = FutureProvider<List<Vendor>>((ref) async {
   final demoData = ref.watch(demoDataServiceProvider);
+  final Map<String, Vendor> vendorMap = {};
+
+  // 1. Seed with authentic Egyptian kitchen presets
+  for (final v in demoData.vendors) {
+    vendorMap[v.id] = v;
+  }
+
+  // 2. Merge with vendors registered in Firebase RTDB
   try {
     final db = ref.watch(firebaseDatabaseProvider);
     final snapshot = await db.ref('vendors').get();
-    if (snapshot.exists && snapshot.value != null) {
-      final data = snapshot.value;
-      if (data is Map) {
-        final list = data.entries
-            .map((e) {
-              final map = Map<String, dynamic>.from(e.value as Map);
-              map['id'] ??= e.key;
-              return VendorModel.fromJson(map);
-            })
-            .where((v) => v.isActive)
-            .toList();
-        if (list.isNotEmpty) return list;
+    if (snapshot.exists && snapshot.value != null && snapshot.value is Map) {
+      final data = snapshot.value as Map;
+      for (final e in data.entries) {
+        final map = Map<String, dynamic>.from(e.value as Map);
+        map['id'] ??= e.key;
+        final vendor = VendorModel.fromJson(map);
+        if (vendor.isActive) {
+          vendorMap[vendor.id] = vendor;
+        }
       }
     }
   } catch (e) {
-    debugPrint('[VendorsProvider] Firebase fetch error: $e');
+    debugPrint('[VendorsProvider] Firebase fetch note: $e');
   }
-  return demoData.vendors;
+
+  return vendorMap.values.toList();
 });
 
 // ── Vendor Detail ──────────────────────────────────────────────────────────────

@@ -119,19 +119,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     // Check auth state only if NOT explicitly logged out
     final authState = ref.read(authProvider);
     if (!wasLoggedOut && authState.status == AuthStatus.authenticated) {
-      await Future.delayed(const Duration(milliseconds: 1500));
+      await Future.delayed(const Duration(milliseconds: 600));
       if (!mounted) return;
       _navigateBasedOnAuth(authState);
       return;
     }
 
     // Phase 2: Show headline
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: 200));
     if (!mounted) return;
     _textController.forward();
 
-    // Phase 3: Show auth options (fast if returning from logout, else natural intro)
-    final delayMs = wasLoggedOut ? 400 : 2200;
+    // Phase 3: Show auth options (fast and responsive)
+    final delayMs = wasLoggedOut ? 150 : 600;
     await Future.delayed(Duration(milliseconds: delayMs));
     if (!mounted) return;
     setState(() => _showButtons = true);

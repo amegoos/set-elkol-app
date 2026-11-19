@@ -12,6 +12,20 @@ import '../../../../core/network/firebase_providers.dart';
 import '../../../../core/providers/shared_preferences_provider.dart';
 import '../../../../core/utils/validators.dart';
 
+/// Helper to detect Set El Kol platform admin / management email
+bool isSetElKolAdminEmail(String? email) {
+  if (email == null) return false;
+  final e = email.trim().toLowerCase();
+  return e == 'setelkol.support@gmail.com' ||
+      e == 'setelkol@gmail.com' ||
+      e == 'setelkol.app@gmail.com' ||
+      e == 'admin@setelkol.app' ||
+      e == 'admin@setelkol.com' ||
+      e.endsWith('@setelkol.app') ||
+      (e.contains('setelkol') &&
+          (e.contains('admin') || e.contains('support')));
+}
+
 // ── Auth State ───────────────────────────────────────────────────────────────
 
 enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
@@ -137,8 +151,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> _loadProfile(fb_auth.User user) async {
     debugPrint('[Auth] Profile lookup started: uid=${user.uid}');
     _clearLoggedOutFlag();
-    final isAdminEmail =
-        user.email?.trim().toLowerCase() == 'setelkol.support@gmail.com';
+    final isAdminEmail = isSetElKolAdminEmail(user.email);
 
     try {
       final profileRef = _db.ref('profiles/${user.uid}');
@@ -164,16 +177,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
         };
 
         await profileRef.set(initialData);
-
-        if (role == UserRole.vendor) {
-          await _db.ref('vendors/${user.uid}').set({
-            'id': user.uid,
-            'business_name': user.displayName ?? 'مطبخ ست الكل',
-            'is_active': true,
-            'created_at': nowIso,
-            'updated_at': nowIso,
-          });
-        }
 
         final profile = UserProfile(
           id: user.uid,
@@ -204,12 +207,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
         await profileRef.update({'role': 'admin'});
       }
 
-      final role = isAdminEmail
-          ? UserRole.admin
-          : UserRole.values.firstWhere(
-              (r) => r.name == roleStr,
-              orElse: () => UserRole.customer,
-            );
+      // Admin email lands on adminDashboard.
+      // All other users (customers and home chefs) land on customerHome.
+      final role = isAdminEmail ? UserRole.admin : UserRole.customer;
 
       final profile = UserProfile(
         id: user.uid,
@@ -369,8 +369,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         await user.updateDisplayName(name.trim());
 
         final nowIso = DateTime.now().toIso8601String();
-        final isAdminEmail =
-            email.trim().toLowerCase() == 'setelkol.support@gmail.com';
+        final isAdminEmail = isSetElKolAdminEmail(email);
         final role = isAdminEmail ? UserRole.admin : UserRole.customer;
 
         await _db.ref('profiles/${user.uid}').set({
@@ -852,7 +851,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     final sanitizedKey = cleanEmail.replaceAll(RegExp(r'[.#$\[\]]'), '_');
     final userId = 'google_$sanitizedKey';
     final profileRef = _db.ref('profiles/$userId');
-    final isAdminEmail = cleanEmail == 'setelkol.support@gmail.com';
+    final isAdminEmail = isSetElKolAdminEmail(cleanEmail);
 
     try {
       final snapshot = await profileRef.get();

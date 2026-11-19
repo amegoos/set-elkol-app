@@ -44,3 +44,6 @@ migrate_working_dir/
 build/
 *.apk
 *.aab
+*.ipa
+*.zip
+extracted_ipa/
