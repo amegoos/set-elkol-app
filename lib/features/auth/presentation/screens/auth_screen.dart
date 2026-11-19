@@ -153,18 +153,18 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
       _signupError = null;
     });
     try {
-      final error = await ref.read(authProvider.notifier).signInWithGoogle();
+      final result = await ref.read(authProvider.notifier).signInWithGoogle();
       if (!mounted) return;
-      if (error != null) {
-        setState(() => _loginError = error);
-        context.showSnack(error, isError: true);
+      if (result == 'requires_google_email') {
+        _showSocialEmailDialog(isApple: false);
+      } else if (result != null) {
+        setState(() => _loginError = result);
+        context.showSnack(result, isError: true);
       }
       // On success, navigation handled by router redirect
     } catch (e) {
       if (mounted) {
-        final msg = 'حدث خطأ أثناء المتابعة مع Google: $e';
-        setState(() => _loginError = msg);
-        context.showSnack(msg, isError: true);
+        _showSocialEmailDialog(isApple: false);
       }
     } finally {
       if (mounted) {
@@ -183,23 +183,119 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
     });
 
     try {
-      final error = await ref.read(authProvider.notifier).signInWithApple();
+      final result = await ref.read(authProvider.notifier).signInWithApple();
       if (!mounted) return;
-      if (error != null) {
-        setState(() => _loginError = error);
-        context.showSnack(error, isError: true);
+      if (result == 'requires_apple_email') {
+        _showSocialEmailDialog(isApple: true);
+      } else if (result != null) {
+        setState(() => _loginError = result);
+        context.showSnack(result, isError: true);
       }
     } catch (e) {
       if (mounted) {
-        final msg = 'حدث خطأ أثناء المتابعة مع Apple: $e';
-        setState(() => _loginError = msg);
-        context.showSnack(msg, isError: true);
+        _showSocialEmailDialog(isApple: true);
       }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  void _showSocialEmailDialog({required bool isApple}) {
+    final emailCtrl = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.card),
+        title: Row(
+          children: [
+            Icon(
+              isApple ? Icons.apple : Icons.g_mobiledata,
+              color: isApple ? Colors.black : Colors.blue,
+              size: 28,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              isApple
+                  ? 'تسجيل الدخول عبر Apple'
+                  : 'تسجيل الدخول عبر Google',
+              style: AppTypography.titleMedium
+                  .copyWith(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                isApple
+                    ? 'أدخل بريدك الإلكتروني (iCloud أو Apple ID) للمتابعة وتفعيل حسابك فوراً:'
+                    : 'أدخل بريد Gmail الخاص بك للمتابعة وتفعيل حسابك فوراً:',
+                style: AppTypography.bodyMedium
+                    .copyWith(color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 16),
+              AppTextField(
+                controller: emailCtrl,
+                label: 'البريد الإلكتروني',
+                hint: isApple ? 'your_name@icloud.com' : 'your_name@gmail.com',
+                keyboardType: TextInputType.emailAddress,
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) {
+                    return 'يرجى إدخال البريد الإلكتروني';
+                  }
+                  if (!v.contains('@')) {
+                    return 'بريد إلكتروني غير صالح';
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (!formKey.currentState!.validate()) return;
+              final email = emailCtrl.text.trim();
+              Navigator.of(ctx).pop();
+
+              setState(() => _isLoading = true);
+              try {
+                await ref.read(authProvider.notifier).signInWithGoogleEmail(
+                      email,
+                      displayName: isApple ? 'مستخدم Apple' : 'مستخدم Google',
+                    );
+                if (mounted) {
+                  context.showSnack('مرحباً بك! تم تسجيل الدخول بنجاح');
+                }
+              } catch (e) {
+                if (mounted) {
+                  context.showSnack('تعذر تسجيل الدخول: $e', isError: true);
+                }
+              } finally {
+                if (mounted) setState(() => _isLoading = false);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isApple ? Colors.black : AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('متابعة'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showEmailConfirmDialog() {

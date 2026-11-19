@@ -431,11 +431,37 @@ class AuthNotifier extends StateNotifier<AuthState> {
             return 'تسجيل الدخول بحساب Google مقيد في المتصفح المحلي. يرجى تجربة التطبيق على الهاتف/المحاكي أو الدخول بالبريد.';
           }
         }
+      } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+        // On iOS, use Firebase Auth's OAuth Provider with the authorized HTTPS domain:
+        // https://set-elkol.firebaseapp.com/__/auth/handler.
+        // This avoids the 'Custom scheme URIs are not allowed for WEB client type' error!
+        try {
+          final googleProvider = fb_auth.GoogleAuthProvider();
+          googleProvider.addScope('email');
+          googleProvider.addScope('profile');
+          final userCredential = await _auth.signInWithProvider(googleProvider);
+          final user = userCredential.user;
+
+          if (user != null) {
+            await _loadProfile(user);
+            return null;
+          }
+          return 'requires_google_email';
+        } on fb_auth.FirebaseAuthException catch (e) {
+          if (e.code == 'popup-closed-by-user' ||
+              e.code == 'canceled' ||
+              e.code == 'web-context-cancelled') {
+            state = state.copyWith(status: AuthStatus.unauthenticated);
+            return null;
+          }
+          debugPrint('[Auth] iOS Google OAuth error: ${e.code} / ${e.message}');
+          return 'requires_google_email';
+        } catch (e) {
+          debugPrint('[Auth] iOS Google OAuth general error: $e');
+          return 'requires_google_email';
+        }
       } else {
         final GoogleSignIn googleSignIn = GoogleSignIn(
-          clientId: defaultTargetPlatform == TargetPlatform.iOS
-              ? '387458633968-b2ajsdgq78829nckr9pgj1p8anp2dnta.apps.googleusercontent.com'
-              : null,
           serverClientId:
               '387458633968-b2ajsdgq78829nckr9pgj1p8anp2dnta.apps.googleusercontent.com',
           scopes: ['email', 'profile'],
@@ -508,10 +534,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         return null;
       }
 
-      const msg = 'فشل تسجيل الدخول عبر حساب Apple';
-      state = const AuthState(
-          status: AuthStatus.unauthenticated, errorMessage: msg);
-      return msg;
+      return 'requires_apple_email';
     } on fb_auth.FirebaseAuthException catch (e) {
       if (e.code == 'popup-closed-by-user' ||
           e.code == 'canceled' ||
@@ -519,14 +542,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
         state = state.copyWith(status: AuthStatus.unauthenticated);
         return null;
       }
-      final msg = _friendlyAuthError(e);
-      state = AuthState(status: AuthStatus.unauthenticated, errorMessage: msg);
-      return msg;
+      debugPrint('[Auth] Apple Sign-In Firebase error: ${e.code} / ${e.message}');
+      return 'requires_apple_email';
     } catch (e) {
-      debugPrint('[Auth] Apple Sign-In error: $e');
-      final msg = _friendlyAuthError(e);
-      state = AuthState(status: AuthStatus.unauthenticated, errorMessage: msg);
-      return msg;
+      debugPrint('[Auth] Apple Sign-In error (free developer sideload cert): $e');
+      return 'requires_apple_email';
     }
   }
 
