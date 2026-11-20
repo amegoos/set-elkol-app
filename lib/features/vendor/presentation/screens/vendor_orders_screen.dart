@@ -15,8 +15,17 @@ class VendorOrdersScreen extends ConsumerWidget {
     final ordersAsync = ref.watch(vendorOrdersListProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('الطلبات')),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        title: const Text('طلبات المطبخ'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => ref.invalidate(vendorOrdersListProvider),
+            tooltip: 'تحديث الطلبات',
+          ),
+        ],
+      ),
       body: ordersAsync.when(
         data: (orders) {
           if (orders.isEmpty) {
@@ -93,17 +102,27 @@ class _VendorOrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final statusColor = _statusColors[order.status] ?? AppColors.textSecondary;
     final statusLabel = _statusLabels[order.status] ?? order.status;
     final next = _nextStatus;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
         borderRadius: AppRadius.card,
-        border: Border.all(color: AppColors.cardBorder),
+        border: Border.all(
+          color: isDark ? Colors.white12 : AppColors.cardBorder,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.25 : 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -113,47 +132,158 @@ class _VendorOrderCard extends StatelessWidget {
             children: [
               Text(
                 'طلب #${order.id.length > 8 ? order.id.substring(0, 8).toUpperCase() : order.id.toUpperCase()}',
-                style: AppTypography.titleSmall,
+                style: AppTypography.titleSmall.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : AppColors.textPrimary,
+                ),
               ),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
+                  color: statusColor.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   statusLabel,
-                  style: AppTypography.labelSmall.copyWith(color: statusColor),
+                  style: AppTypography.labelSmall.copyWith(
+                    color: statusColor,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          Text(
-            'العميل: ${order.customerName ?? 'مجهول'}',
-            style: AppTypography.bodySmall
-                .copyWith(color: AppColors.textSecondary),
+          Row(
+            children: [
+              Icon(Icons.person_outline, size: 16, color: isDark ? Colors.white70 : AppColors.textSecondary),
+              const SizedBox(width: 4),
+              Text(
+                'العميل: ${order.customerName ?? 'مجهول'}',
+                style: AppTypography.bodySmall.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white : AppColors.textPrimary,
+                ),
+              ),
+            ],
           ),
-          if (order.deliveryAddress != null)
-            Text(
-              'التوصيل: ${order.deliveryAddress}',
-              style: AppTypography.bodySmall
-                  .copyWith(color: AppColors.textSecondary),
+          if (order.deliveryAddress != null) ...[
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(Icons.location_on_outlined, size: 16, color: isDark ? Colors.white70 : AppColors.textSecondary),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    'التوصيل: ${order.deliveryAddress}',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: isDark ? Colors.white70 : AppColors.textSecondary,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
-          const SizedBox(height: 4),
-          Text(
-            '${order.totalAmount.toStringAsFixed(0)} ج.م',
-            style: AppTypography.titleSmall.copyWith(color: AppColors.primary),
+          ],
+
+          // Order Items breakdown
+          if (order.items.isNotEmpty) ...[
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 10),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF262638) : const Color(0xFFF8F9FA),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isDark ? Colors.white10 : Colors.grey.shade200,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'محتويات الوجبات المطلوبة (${order.items.length}):',
+                    style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white70 : AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  ...order.items.map((item) {
+                    final itemName = item['product_name_snapshot'] ?? item['product_name'] ?? 'وجبة بيتي';
+                    final qty = item['quantity'] ?? 1;
+                    final price = item['subtotal'] ?? item['unit_price'] ?? 0;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 3),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '🍽️ $itemName × $qty',
+                              style: TextStyle(
+                                fontFamily: 'Cairo',
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: isDark ? Colors.white : AppColors.textPrimary,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            '$price ج.م',
+                            style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? AppColors.primaryLight : AppColors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
+          ],
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'طريقة الدفع: ${order.paymentMethod == "cash" ? "كاش عند الاستلام" : order.paymentMethod}',
+                style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 12,
+                  color: isDark ? Colors.white60 : AppColors.textSecondary,
+                ),
+              ),
+              Text(
+                'الإجمالي: ${order.totalAmount.toStringAsFixed(0)} ج.م',
+                style: AppTypography.titleSmall.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? AppColors.primaryLight : AppColors.primary,
+                ),
+              ),
+            ],
           ),
+
           if (next != null && order.status != 'cancelled') ...[
             const SizedBox(height: 12),
             ElevatedButton(
               onPressed: () => onStatusUpdate(next),
               style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 40),
+                minimumSize: const Size(double.infinity, 44),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: Text('→ ${_statusLabels[next] ?? next}'),
+              child: Text(
+                '→ ${_statusLabels[next] ?? next}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
           ],
           if (order.status == 'pending') ...[
@@ -163,9 +293,10 @@ class _VendorOrderCard extends StatelessWidget {
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.error,
                 side: const BorderSide(color: AppColors.error),
-                minimumSize: const Size(double.infinity, 40),
+                minimumSize: const Size(double.infinity, 42),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: const Text('رفض / إلغاء'),
+              child: const Text('رفض / إلغاء الطلب'),
             ),
           ],
         ],

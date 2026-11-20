@@ -306,6 +306,22 @@ abstract final class AppTheme {
         thickness: 1,
         space: 1,
       ),
+      listTileTheme: const ListTileThemeData(
+        titleTextStyle: TextStyle(
+          fontFamily: 'Cairo',
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+        subtitleTextStyle: TextStyle(
+          fontFamily: 'Cairo',
+          fontSize: 12,
+          color: Colors.white70,
+        ),
+        textColor: Colors.white,
+        iconColor: AppColors.primaryLight,
+        contentPadding: EdgeInsets.symmetric(horizontal: 16),
+      ),
     );
   }
 }

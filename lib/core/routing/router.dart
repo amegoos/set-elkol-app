@@ -81,8 +81,19 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: RouteNames.splash,
     refreshListenable: refreshNotifier,
     debugLogDiagnostics: true,
+    errorBuilder: (context, state) {
+      debugPrint('[Router] Recovering gracefully from unhandled location or OAuth callback: ${state.uri}');
+      return const SplashScreen();
+    },
     redirect: (context, state) {
       final authState = ref.read(authProvider);
+
+      final uriString = state.uri.toString();
+      if (uriString.contains('firebaseauth') ||
+          uriString.contains('googleusercontent') ||
+          uriString.startsWith('com.googleusercontent.apps')) {
+        return RouteNames.splash;
+      }
 
       final isOnSplash = state.matchedLocation == RouteNames.splash;
       final isOnAuth = state.matchedLocation == RouteNames.login ||

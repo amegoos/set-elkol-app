@@ -210,15 +210,18 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           'is_read': false,
         });
 
-        final vendorNotifId = const Uuid().v4();
-        await db.ref('notifications/$vendorId/$vendorNotifId').set({
-          'id': vendorNotifId,
-          'title': 'طلب جديد وارد للمطبخ! 🔔',
-          'body': 'وصلك طلب جديد رقم #$shortOrderId بقيمة ${totalAmount.toStringAsFixed(0)} ج.م من ${profile?.name ?? "عميل ست الكل"}.',
-          'order_id': orderId,
-          'created_at': nowIso,
-          'is_read': false,
-        });
+        final targetVendors = cart.vendorIds.isNotEmpty ? cart.vendorIds : {vendorId};
+        for (final vId in targetVendors) {
+          final vendorNotifId = const Uuid().v4();
+          await db.ref('notifications/$vId/$vendorNotifId').set({
+            'id': vendorNotifId,
+            'title': 'طلب جديد وارد للمطبخ! 🔔',
+            'body': 'وصلك طلب جديد رقم #$shortOrderId بقيمة ${totalAmount.toStringAsFixed(0)} ج.م من ${profile?.name ?? "عميل ست الكل"}.',
+            'order_id': orderId,
+            'created_at': nowIso,
+            'is_read': false,
+          });
+        }
       } catch (notifErr) {
         debugPrint('[Checkout] Notification dispatch note: $notifErr');
       }

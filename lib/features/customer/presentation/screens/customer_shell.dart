@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/constants/route_names.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../providers/customer_providers.dart';
@@ -13,15 +13,18 @@ class CustomerShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cartState = ref.watch(cartProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final locale = ref.watch(localeProvider);
+    final isAr = locale.languageCode == 'ar';
 
     return Scaffold(
       body: shell,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: AppColors.navBackground,
+          color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
           boxShadow: [
             BoxShadow(
-              color: AppColors.shadow,
+              color: isDark ? Colors.black45 : AppColors.shadow,
               blurRadius: 12,
               offset: const Offset(0, -4),
             ),
@@ -35,43 +38,48 @@ class CustomerShell extends ConsumerWidget {
                 _NavItem(
                   icon: Icons.home_outlined,
                   activeIcon: Icons.home,
-                  label: 'الرئيسية',
+                  label: isAr ? 'الرئيسية' : 'Home',
                   index: 0,
                   currentIndex: shell.currentIndex,
-                  onTap: () => shell.goBranch(0),
+                  isDark: isDark,
+                  onTap: () => shell.goBranch(0, initialLocation: shell.currentIndex == 0),
                 ),
                 _NavItem(
                   icon: Icons.search_outlined,
                   activeIcon: Icons.search,
-                  label: 'بحث',
+                  label: isAr ? 'بحث' : 'Search',
                   index: 1,
                   currentIndex: shell.currentIndex,
-                  onTap: () => shell.goBranch(1),
+                  isDark: isDark,
+                  onTap: () => shell.goBranch(1, initialLocation: shell.currentIndex == 1),
                 ),
                 _NavItemBadge(
                   icon: Icons.shopping_basket_outlined,
                   activeIcon: Icons.shopping_basket,
-                  label: 'السلة',
+                  label: isAr ? 'السلة' : 'Cart',
                   index: 2,
                   currentIndex: shell.currentIndex,
                   badgeCount: cartState.totalItems,
-                  onTap: () => shell.goBranch(2),
+                  isDark: isDark,
+                  onTap: () => shell.goBranch(2, initialLocation: shell.currentIndex == 2),
                 ),
                 _NavItem(
                   icon: Icons.receipt_long_outlined,
                   activeIcon: Icons.receipt_long,
-                  label: 'طلباتي',
+                  label: isAr ? 'طلباتي' : 'Orders',
                   index: 3,
                   currentIndex: shell.currentIndex,
-                  onTap: () => shell.goBranch(3),
+                  isDark: isDark,
+                  onTap: () => shell.goBranch(3, initialLocation: shell.currentIndex == 3),
                 ),
                 _NavItem(
                   icon: Icons.person_outline,
                   activeIcon: Icons.person,
-                  label: 'حسابي',
+                  label: isAr ? 'حسابي' : 'Profile',
                   index: 4,
                   currentIndex: shell.currentIndex,
-                  onTap: () => shell.goBranch(4),
+                  isDark: isDark,
+                  onTap: () => shell.goBranch(4, initialLocation: shell.currentIndex == 4),
                 ),
               ],
             ),
@@ -89,6 +97,7 @@ class _NavItem extends StatelessWidget {
     required this.label,
     required this.index,
     required this.currentIndex,
+    required this.isDark,
     required this.onTap,
   });
 
@@ -97,12 +106,16 @@ class _NavItem extends StatelessWidget {
   final String label;
   final int index;
   final int currentIndex;
+  final bool isDark;
   final VoidCallback onTap;
 
   bool get isActive => index == currentIndex;
 
   @override
   Widget build(BuildContext context) {
+    final activeColor = isDark ? AppColors.primaryLight : AppColors.navSelected;
+    final unselectedColor = isDark ? Colors.white60 : AppColors.navUnselected;
+
     return Expanded(
       child: InkWell(
         onTap: onTap,
@@ -112,15 +125,14 @@ class _NavItem extends StatelessWidget {
           children: [
             Icon(
               isActive ? activeIcon : icon,
-              color: isActive ? AppColors.navSelected : AppColors.navUnselected,
+              color: isActive ? activeColor : unselectedColor,
               size: 24,
             ),
             const SizedBox(height: 2),
             Text(
               label,
               style: AppTypography.labelSmall.copyWith(
-                color:
-                    isActive ? AppColors.navSelected : AppColors.navUnselected,
+                color: isActive ? activeColor : unselectedColor,
                 fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
               ),
             ),
@@ -139,6 +151,7 @@ class _NavItemBadge extends StatelessWidget {
     required this.index,
     required this.currentIndex,
     required this.badgeCount,
+    required this.isDark,
     required this.onTap,
   });
 
@@ -148,12 +161,16 @@ class _NavItemBadge extends StatelessWidget {
   final int index;
   final int currentIndex;
   final int badgeCount;
+  final bool isDark;
   final VoidCallback onTap;
 
   bool get isActive => index == currentIndex;
 
   @override
   Widget build(BuildContext context) {
+    final activeColor = isDark ? AppColors.primaryLight : AppColors.navSelected;
+    final unselectedColor = isDark ? Colors.white60 : AppColors.navUnselected;
+
     return Expanded(
       child: InkWell(
         onTap: onTap,
@@ -166,9 +183,7 @@ class _NavItemBadge extends StatelessWidget {
               children: [
                 Icon(
                   isActive ? activeIcon : icon,
-                  color: isActive
-                      ? AppColors.navSelected
-                      : AppColors.navUnselected,
+                  color: isActive ? activeColor : unselectedColor,
                   size: 24,
                 ),
                 if (badgeCount > 0)
@@ -198,8 +213,7 @@ class _NavItemBadge extends StatelessWidget {
             Text(
               label,
               style: AppTypography.labelSmall.copyWith(
-                color:
-                    isActive ? AppColors.navSelected : AppColors.navUnselected,
+                color: isActive ? activeColor : unselectedColor,
                 fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
               ),
             ),

@@ -205,16 +205,18 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
   void _showSocialEmailDialog({required bool isApple}) {
     final emailCtrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: AppRadius.card),
         title: Row(
           children: [
             Icon(
               isApple ? Icons.apple : Icons.g_mobiledata,
-              color: isApple ? Colors.black : Colors.blue,
+              color: isApple ? (isDark ? Colors.white : Colors.black) : Colors.blue,
               size: 28,
             ),
             const SizedBox(width: 8),
@@ -222,8 +224,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
               isApple
                   ? 'تسجيل الدخول عبر Apple'
                   : 'تسجيل الدخول عبر Google',
-              style: AppTypography.titleMedium
-                  .copyWith(fontWeight: FontWeight.bold),
+              style: AppTypography.titleMedium.copyWith(
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : AppColors.textPrimary,
+              ),
             ),
           ],
         ),
@@ -237,8 +241,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                 isApple
                     ? 'أدخل بريدك الإلكتروني (iCloud أو Apple ID) للمتابعة وتفعيل حسابك فوراً:'
                     : 'أدخل بريد Gmail الخاص بك للمتابعة وتفعيل حسابك فوراً:',
-                style: AppTypography.bodyMedium
-                    .copyWith(color: AppColors.textSecondary),
+                style: AppTypography.bodyMedium.copyWith(
+                  color: isDark ? Colors.white70 : AppColors.textSecondary,
+                ),
               ),
               const SizedBox(height: 16),
               AppTextField(
@@ -262,7 +267,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('إلغاء'),
+            child: Text(
+              'إلغاء',
+              style: TextStyle(color: isDark ? Colors.white70 : AppColors.textSecondary),
+            ),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -288,7 +296,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: isApple ? Colors.black : AppColors.primary,
+              backgroundColor: isApple ? (isDark ? Colors.white24 : Colors.black) : AppColors.primary,
               foregroundColor: Colors.white,
             ),
             child: const Text('متابعة'),

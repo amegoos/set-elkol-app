@@ -35,6 +35,16 @@ class HomeScreen extends ConsumerWidget {
         .where((o) => o.status != 'delivered' && o.status != 'cancelled')
         .toList();
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final locale = ref.watch(localeProvider);
+    final isAr = locale.languageCode == 'ar';
+    final categoryProducts = selectedCat != null
+        ? ref.watch(productsByCategoryProvider(selectedCat))
+        : null;
+    final selectedCatName = categories.asData?.value
+            .where((c) => c.id == selectedCat)
+            .firstOrNull
+            ?.name ??
+        (isAr ? 'الأكلات' : 'Dishes');
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
@@ -232,7 +242,9 @@ class HomeScreen extends ConsumerWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'بتدور على إيه؟ (طاجن، محشي، كشري، ملوخية...)',
+                          isAr
+                              ? 'بتدور على إيه؟ (طاجن، محشي، كشري، ملوخية...)'
+                              : 'Craving something? (Tagine, Mahshi, Koshari...)',
                           style: TextStyle(
                               color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
                               fontSize: 13),
@@ -434,14 +446,14 @@ class HomeScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                   child: Text(
-                    'أقسام الأكلات 🍽️',
+                    isAr ? 'أقسام الأكلات 🍽️' : 'Food Categories 🍽️',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF1A1A2E),
+                      color: isDark ? Colors.white : const Color(0xFF1A1A2E),
                     ),
                   ),
                 ),
@@ -455,7 +467,7 @@ class HomeScreen extends ConsumerWidget {
                       itemBuilder: (_, i) {
                         if (i == 0) {
                           return _CategoryPill(
-                            label: 'الكل 🥘',
+                            label: isAr ? 'الكل 🥘' : 'All 🥘',
                             isSelected: selectedCat == null,
                             onTap: () => ref
                                 .read(selectedCategoryProvider.notifier)
@@ -481,150 +493,246 @@ class HomeScreen extends ConsumerWidget {
             ),
           ),
 
-          // ── Deals of the Day (Amazon / Talabat Flash Deals) ───────────────
-          SliverToBoxAdapter(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'أكلات مميزة وعروض اليوم ✨',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1A1A2E),
-                        ),
+          // ── Category Filtered View OR Default Homepage View ───────────────
+          if (selectedCat != null) ...[
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      isAr ? 'أشهى وجبات قسم $selectedCatName 🍲' : '$selectedCatName Dishes 🍲',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : const Color(0xFF1A1A2E),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: Colors.amber.shade50,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: Colors.amber.shade300),
-                        ),
-                        child: const Row(
+                    ),
+                    TextButton.icon(
+                      onPressed: () => ref.read(selectedCategoryProvider.notifier).state = null,
+                      icon: const Icon(Icons.close, size: 16),
+                      label: Text(
+                        isAr ? 'عرض الكل' : 'Clear',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            categoryProducts!.when(
+              data: (products) {
+                if (products.isEmpty) {
+                  return SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(40),
+                      child: Center(
+                        child: Column(
                           children: [
-                            Icon(Icons.timer_outlined,
-                                color: Colors.amber, size: 14),
-                            SizedBox(width: 3),
+                            Icon(Icons.restaurant_outlined,
+                                size: 48,
+                                color: isDark ? Colors.white38 : Colors.grey),
+                            const SizedBox(height: 12),
                             Text(
-                              'عروض طازجة',
+                              isAr
+                                  ? 'لا توجد وجبات متوفرة في قسم $selectedCatName حالياً'
+                                  : 'No dishes available in $selectedCatName right now',
                               style: TextStyle(
-                                  color: Colors.brown,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold),
+                                color: isDark ? Colors.white70 : Colors.grey.shade600,
+                                fontSize: 13,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
                           ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                featuredProducts.when(
-                  data: (products) => SizedBox(
-                    height: 250,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      itemCount: products.length,
-                      itemBuilder: (_, i) =>
-                          _FoodDealCard(product: products[i]),
+                    ),
+                  );
+                }
+                return SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
+                  sliver: SliverGrid(
+                    delegate: SliverChildBuilderDelegate(
+                      (_, i) => _FoodProductCard(product: products[i]),
+                      childCount: products.length,
+                    ),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 10,
+                      childAspectRatio: 0.68,
                     ),
                   ),
-                  loading: () => const SizedBox(
-                      height: 250, child: Center(child: AppLoadingSpinner())),
-                  error: (e, _) => const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: AppErrorWidget(message: 'تعذر تحميل المنتجات'),
-                  ),
+                );
+              },
+              loading: () => const SliverToBoxAdapter(child: AppLoadingSpinner()),
+              error: (_, __) => SliverToBoxAdapter(
+                child: AppErrorWidget(
+                  message: isAr
+                      ? 'تعذر تحميل وجبات هذا القسم'
+                      : 'Failed to load category dishes',
                 ),
-              ],
+              ),
             ),
-          ),
-
-          // ── Partner Home Kitchens (ستات الكل الموثقين) ────────────────────
-          SliverToBoxAdapter(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: Text(
-                    'أشهر مطابخ ست الكل 👩‍🍳',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1A1A2E),
-                    ),
-                  ),
-                ),
-                vendors.when(
-                  data: (vs) => SizedBox(
-                    height: 125,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      itemCount: vs.length,
-                      itemBuilder: (_, i) => _VendorFoodCard(vendor: vs[i]),
-                    ),
-                  ),
-                  loading: () => const SizedBox(
-                      height: 125, child: Center(child: AppLoadingSpinner())),
-                  error: (_, __) => const SizedBox.shrink(),
-                ),
-              ],
-            ),
-          ),
-
-          // ── Popular Dishes Grid (Talabat Style Food Cards) ───────────────
-          const SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(16, 18, 16, 10),
-              child: Row(
+          ] else ...[
+            // ── Deals of the Day (Amazon / Talabat Flash Deals) ───────────────
+            SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'الأكثر طلباً 🔥',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1A1A2E),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          isAr ? 'أكلات مميزة وعروض اليوم ✨' : 'Featured Daily Meals ✨',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : const Color(0xFF1A1A2E),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF2D2515) : Colors.amber.shade50,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                                color: isDark ? Colors.amber.shade700 : Colors.amber.shade300),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.timer_outlined,
+                                  color: Colors.amber, size: 14),
+                              const SizedBox(width: 3),
+                              Text(
+                                isAr ? 'عروض طازجة' : 'Fresh Deals',
+                                style: TextStyle(
+                                    color: isDark ? Colors.amber.shade200 : Colors.brown,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  SizedBox(width: 8),
-                  Text(
-                    '(Best Sellers)',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  featuredProducts.when(
+                    data: (products) => SizedBox(
+                      height: 250,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        itemCount: products.length,
+                        itemBuilder: (_, i) =>
+                            _FoodDealCard(product: products[i]),
+                      ),
+                    ),
+                    loading: () => const SizedBox(
+                        height: 250, child: Center(child: AppLoadingSpinner())),
+                    error: (e, _) => Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: AppErrorWidget(
+                        message: isAr ? 'تعذر تحميل المنتجات' : 'Failed to load products',
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-          ),
-          popularProducts.when(
-            data: (products) => SliverPadding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
-              sliver: SliverGrid(
-                delegate: SliverChildBuilderDelegate(
-                  (_, i) => _FoodProductCard(product: products[i]),
-                  childCount: products.length,
-                ),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                  childAspectRatio: 0.68,
+
+            // ── Partner Home Kitchens (ستات الكل الموثقين) ────────────────────
+            SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    child: Text(
+                      isAr ? 'أشهر مطابخ ست الكل 👩‍🍳' : 'Top Home Kitchens 👩‍🍳',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : const Color(0xFF1A1A2E),
+                      ),
+                    ),
+                  ),
+                  vendors.when(
+                    data: (vs) => SizedBox(
+                      height: 125,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        itemCount: vs.length,
+                        itemBuilder: (_, i) => _VendorFoodCard(vendor: vs[i]),
+                      ),
+                    ),
+                    loading: () => const SizedBox(
+                        height: 125, child: Center(child: AppLoadingSpinner())),
+                    error: (_, __) => const SizedBox.shrink(),
+                  ),
+                ],
+              ),
+            ),
+
+            // ── Popular Dishes Grid (Talabat Style Food Cards) ───────────────
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 18, 16, 10),
+                child: Row(
+                  children: [
+                    Text(
+                      isAr ? 'الأكثر طلباً 🔥' : 'Best Sellers 🔥',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : const Color(0xFF1A1A2E),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      isAr ? '(الأعلى تقييماً)' : '(Top Rated)',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? Colors.grey.shade400 : Colors.grey,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            loading: () => const SliverToBoxAdapter(child: AppLoadingSpinner()),
-            error: (_, __) => const SliverToBoxAdapter(
-              child: AppErrorWidget(message: 'تعذر تحميل قائمة الأكلات'),
+            popularProducts.when(
+              data: (products) => SliverPadding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
+                sliver: SliverGrid(
+                  delegate: SliverChildBuilderDelegate(
+                    (_, i) => _FoodProductCard(product: products[i]),
+                    childCount: products.length,
+                  ),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
+                    childAspectRatio: 0.68,
+                  ),
+                ),
+              ),
+              loading: () => const SliverToBoxAdapter(child: AppLoadingSpinner()),
+              error: (_, __) => SliverToBoxAdapter(
+                child: AppErrorWidget(
+                  message: isAr ? 'تعذر تحميل قائمة الأكلات' : 'Failed to load meals',
+                ),
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );

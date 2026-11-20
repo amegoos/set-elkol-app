@@ -141,7 +141,8 @@ class VendorDashboardScreen extends ConsumerWidget {
                               label: 'إجمالي الطلبات',
                               value: '${e.totalOrders}',
                               icon: Icons.shopping_bag_outlined,
-                              color: AppColors.acceptedStatus)),
+                              color: AppColors.acceptedStatus,
+                              onTap: () => context.go(RouteNames.vendorOrders))),
                     ],
                   ),
                 ],
@@ -202,31 +203,35 @@ class VendorDashboardScreen extends ConsumerWidget {
   }
 
   void _confirmLogout(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       useRootNavigator: true,
       builder: (dialogCtx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
+        title: Text(
           'تسجيل الخروج',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+            color: isDark ? Colors.white : AppColors.textPrimary,
             fontSize: 18,
           ),
         ),
-        content: const Text(
+        content: Text(
           'هل تريد تأكيد تسجيل الخروج والعودة للشاشة الرئيسية؟',
           style: TextStyle(
-            color: AppColors.textSecondary,
+            color: isDark ? Colors.white70 : AppColors.textSecondary,
             fontSize: 14,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogCtx).pop(),
-            child: const Text('إلغاء'),
+            child: Text(
+              'إلغاء',
+              style: TextStyle(color: isDark ? Colors.white70 : AppColors.textSecondary),
+            ),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -249,36 +254,60 @@ class VendorDashboardScreen extends ConsumerWidget {
 }
 
 class _StatCard extends StatelessWidget {
-  const _StatCard(
-      {required this.label,
-      required this.value,
-      required this.icon,
-      required this.color});
+  const _StatCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+    this.onTap,
+  });
   final String label, value;
   final IconData icon;
   final Color color;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final content = Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
         borderRadius: AppRadius.card,
-        border: Border.all(color: AppColors.cardBorder),
+        border: Border.all(color: isDark ? Colors.white12 : AppColors.cardBorder),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, color: color, size: 24),
           const SizedBox(height: 8),
-          Text(value, style: AppTypography.titleLarge.copyWith(color: color)),
-          Text(label,
-              style: AppTypography.bodySmall
-                  .copyWith(color: AppColors.textSecondary)),
+          Text(value, style: AppTypography.titleLarge.copyWith(color: color, fontWeight: FontWeight.bold)),
+          Text(
+            label,
+            style: AppTypography.bodySmall.copyWith(
+              color: isDark ? Colors.white70 : AppColors.textSecondary,
+            ),
+          ),
         ],
       ),
     );
+
+    if (onTap != null) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: content,
+      );
+    }
+    return content;
   }
 }
 
@@ -326,44 +355,58 @@ class _OrderSummaryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.card,
-        border: Border.all(color: AppColors.cardBorder),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  order.customerName ?? 'عميل',
-                  style: AppTypography.titleSmall,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return InkWell(
+      onTap: () => context.go(RouteNames.vendorOrders),
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+          borderRadius: AppRadius.card,
+          border: Border.all(color: isDark ? Colors.white12 : AppColors.cardBorder),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    order.customerName ?? 'عميل',
+                    style: AppTypography.titleSmall.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : AppColors.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    '${order.totalAmount.toStringAsFixed(0)} ج.م',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: isDark ? AppColors.primaryLight : AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: _statusColor.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                _statusLabel,
+                style: AppTypography.labelSmall.copyWith(
+                  color: _statusColor,
+                  fontWeight: FontWeight.bold,
                 ),
-                Text(
-                  '${order.totalAmount.toStringAsFixed(0)} ج.م',
-                  style: AppTypography.bodySmall
-                      .copyWith(color: AppColors.primary),
-                ),
-              ],
+              ),
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: _statusColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              _statusLabel,
-              style: AppTypography.labelSmall.copyWith(color: _statusColor),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

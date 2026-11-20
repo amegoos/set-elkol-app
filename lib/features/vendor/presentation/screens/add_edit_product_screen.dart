@@ -134,30 +134,145 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
     super.dispose();
   }
 
-  void _applyDishPreset(DishPhotoPreset preset) {
+  void _applyDishPreset(DishPhotoPreset preset, {bool imageOnly = false}) {
     setState(() {
       _selectedImageUrl = preset.imageUrl;
       _imageUrlCtrl.text = preset.imageUrl;
 
-      _nameCtrl.text = preset.title;
-      _descCtrl.text = preset.suggestedDescription;
-      _priceCtrl.text = preset.suggestedPrice.toStringAsFixed(0);
-      _qtyCtrl.text = preset.suggestedQuantity.toString();
-      _prepTimeCtrl.text = preset.suggestedPrepTime.toString();
+      if (!imageOnly) {
+        _nameCtrl.text = preset.title;
+        _descCtrl.text = preset.suggestedDescription;
+        _priceCtrl.text = preset.suggestedPrice.toStringAsFixed(0);
+        _qtyCtrl.text = preset.suggestedQuantity.toString();
+        _prepTimeCtrl.text = preset.suggestedPrepTime.toString();
 
-      final categories = ref.read(categoriesProvider).asData?.value ??
-          DemoDataService.instance.categories;
-      final matchedCat = categories
-          .where((c) =>
-              c.name.contains(preset.categoryName) ||
-              preset.categoryName.contains(c.name))
-          .toList();
-      if (matchedCat.isNotEmpty) {
-        _selectedCategoryId = matchedCat.first.id;
+        final categories = ref.read(categoriesProvider).asData?.value ??
+            DemoDataService.instance.categories;
+        final matchedCat = categories
+            .where((c) =>
+                c.name.contains(preset.categoryName) ||
+                preset.categoryName.contains(c.name))
+            .toList();
+        if (matchedCat.isNotEmpty) {
+          _selectedCategoryId = matchedCat.first.id;
+        }
       }
     });
 
-    context.showSnack('تم اختيار "${preset.title}" وتعبئة البيانات المقترحة ✨');
+    if (imageOnly) {
+      context.showSnack('تم تعيين صورة "${preset.title}" بنجاح 🍲');
+    } else {
+      context.showSnack('تم اختيار "${preset.title}" وتعبئة البيانات المقترحة ✨');
+    }
+  }
+
+  void _showPresetPickerModal() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'اختيار صورة طعام جاهزة 🍲',
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.close, color: isDark ? Colors.white70 : Colors.grey),
+                  onPressed: () => Navigator.pop(ctx),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'اختر صورة شهية لأكلتك دون الحاجة لتصويرها (تحافظ على اسم وسعر وجبتك):',
+              style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 12,
+                color: isDark ? Colors.white70 : AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 220,
+              child: GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                  childAspectRatio: 0.85,
+                ),
+                itemCount: DemoDataService.dishPresets.length,
+                itemBuilder: (c, idx) {
+                  final preset = DemoDataService.dishPresets[idx];
+                  final isSelected = _selectedImageUrl == preset.imageUrl;
+                  return InkWell(
+                    onTap: () {
+                      _applyDishPreset(preset, imageOnly: true);
+                      Navigator.pop(ctx);
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isSelected
+                              ? AppColors.primary
+                              : (isDark ? Colors.white12 : AppColors.cardBorder),
+                          width: isSelected ? 2.5 : 1,
+                        ),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                            child: AppSmartImage(
+                              imageUrl: preset.imageUrl,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(4),
+                            child: Text(
+                              preset.title,
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontFamily: 'Cairo',
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.white : AppColors.textPrimary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _pickImage(ImageSource source) async {
@@ -330,6 +445,7 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final categoriesAsync = ref.watch(categoriesProvider);
     final categories =
         categoriesAsync.asData?.value ?? DemoDataService.instance.categories;
@@ -490,35 +606,95 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
                 icon: Icons.tune_rounded,
                 children: [
                   SwitchListTile(
-                    title: const Text('متاح للطلب الآن'),
-                    subtitle:
-                        const Text('يظهر في المنيو ويمكن للعملاء طلبه مباشرة'),
+                    title: Text(
+                      'متاح للطلب الآن',
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'يظهر في المنيو ويمكن للعملاء طلبه مباشرة',
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 11,
+                        color: isDark ? Colors.white70 : AppColors.textSecondary,
+                      ),
+                    ),
                     value: _isAvailable,
                     onChanged: (v) => setState(() => _isAvailable = v),
                     activeColor: AppColors.success,
                     contentPadding: EdgeInsets.zero,
                   ),
-                  const Divider(height: 1),
+                  Divider(height: 1, color: isDark ? Colors.white12 : AppColors.divider),
                   SwitchListTile(
-                    title: const Text('أكلة مميزة (في واجهة التطبيق)'),
-                    subtitle: const Text(
-                        'عرض الأكلة في قسم "المميز ✨" على الصفحة الرئيسية'),
+                    title: Text(
+                      'أكلة مميزة (في واجهة التطبيق ✨)',
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'عرض الأكلة في قسم "المميز ✨" على الصفحة الرئيسية',
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 11,
+                        color: isDark ? Colors.white70 : AppColors.textSecondary,
+                      ),
+                    ),
                     value: _isFeatured,
                     onChanged: (v) => setState(() => _isFeatured = v),
                     activeColor: AppColors.primary,
                     contentPadding: EdgeInsets.zero,
                   ),
-                  const Divider(height: 1),
+                  Divider(height: 1, color: isDark ? Colors.white12 : AppColors.divider),
                   SwitchListTile(
-                    title: const Text('أكل نباتي / صيامي'),
+                    title: Text(
+                      'أكل نباتي / صيامي 🌱',
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'مناسب لمن يفضلون الأكل النباتي والصيامي',
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 11,
+                        color: isDark ? Colors.white70 : AppColors.textSecondary,
+                      ),
+                    ),
                     value: _isVegetarian,
                     onChanged: (v) => setState(() => _isVegetarian = v),
                     activeColor: AppColors.success,
                     contentPadding: EdgeInsets.zero,
                   ),
-                  const Divider(height: 1),
+                  Divider(height: 1, color: isDark ? Colors.white12 : AppColors.divider),
                   SwitchListTile(
-                    title: const Text('أكل حار (سبايسي 🌶️)'),
+                    title: Text(
+                      'أكل حار (سبايسي 🌶️)',
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'إضافة شطة وتوابل حارة للوجبة',
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 11,
+                        color: isDark ? Colors.white70 : AppColors.textSecondary,
+                      ),
+                    ),
                     value: _isSpicy,
                     onChanged: (v) => setState(() => _isSpicy = v),
                     activeColor: AppColors.warning,
@@ -567,15 +743,16 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
     required IconData icon,
     required List<Widget> children,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
         borderRadius: AppRadius.card,
-        border: Border.all(color: AppColors.cardBorder),
+        border: Border.all(color: isDark ? Colors.white12 : AppColors.cardBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -588,9 +765,13 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
             children: [
               Icon(icon, color: AppColors.primary, size: 20),
               const SizedBox(width: 8),
-              Text(title,
-                  style: AppTypography.titleMedium
-                      .copyWith(fontWeight: FontWeight.bold)),
+              Text(
+                title,
+                style: AppTypography.titleMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : AppColors.textPrimary,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -602,16 +783,17 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
 
   Widget _buildImageHeader() {
     final hasImage = _selectedImageUrl != null && _selectedImageUrl!.isNotEmpty;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       height: 220,
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: isDark ? const Color(0xFF1E1E2E) : AppColors.surface,
         borderRadius: AppRadius.card,
-        border: Border.all(color: AppColors.cardBorder),
+        border: Border.all(color: isDark ? Colors.white12 : AppColors.cardBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.06),
             blurRadius: 14,
             offset: const Offset(0, 6),
           ),
@@ -641,17 +823,17 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
             ),
           ] else ...[
             Container(
-              color: AppColors.secondary.withOpacity(0.5),
-              child: const Column(
+              color: isDark ? const Color(0xFF262638) : AppColors.secondary.withOpacity(0.5),
+              child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.add_a_photo_outlined,
+                  const Icon(Icons.add_a_photo_outlined,
                       size: 48, color: AppColors.primary),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text('أضيفي صورة شهية للأكلة البيتي',
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary)),
+                          color: isDark ? Colors.white : AppColors.textPrimary)),
                 ],
               ),
             ),
@@ -664,6 +846,25 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
+                    onPressed: _showPresetPickerModal,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white.withValues(alpha: 0.95),
+                      foregroundColor: AppColors.primary,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                    icon: const Icon(Icons.auto_awesome,
+                        size: 16, color: AppColors.accent),
+                    label: const Text('صورة جاهزة 🍲',
+                        style: TextStyle(
+                            fontSize: 11, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: ElevatedButton.icon(
                     onPressed: () => _pickImage(ImageSource.gallery),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white.withValues(alpha: 0.9),
@@ -674,13 +875,13 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
                     icon: const Icon(Icons.photo_library_outlined,
-                        size: 18, color: AppColors.primary),
-                    label: const Text('من المعرض',
+                        size: 16, color: AppColors.primary),
+                    label: const Text('المعرض',
                         style: TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.bold)),
+                            fontSize: 11, fontWeight: FontWeight.bold)),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () => _pickImage(ImageSource.camera),
@@ -693,10 +894,10 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
                     icon: const Icon(Icons.camera_alt_outlined,
-                        size: 18, color: AppColors.primary),
-                    label: const Text('التقاط بالكاميرا',
+                        size: 16, color: AppColors.primary),
+                    label: const Text('الكاميرا',
                         style: TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.bold)),
+                            fontSize: 11, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
