@@ -10,6 +10,7 @@ import '../../../../core/theme/app_radius.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../../../core/widgets/app_smart_image.dart';
 import '../../../../core/data/demo_data_service.dart';
+import '../../../../core/extensions/build_context_ext.dart';
 import '../../../customer/presentation/providers/customer_providers.dart';
 import '../providers/vendor_providers.dart';
 
@@ -50,6 +51,7 @@ class VendorProductsScreen extends ConsumerWidget {
                 product: p,
                 onEdit: () => context
                     .push('${RouteNames.vendorProducts}/${p['id']}/edit'),
+                onDelete: () => _confirmDelete(context, ref, p),
                 onToggle: () async {
                   final newAvailable = !(p['is_available'] as bool? ?? true);
                   DemoDataService.instance.toggleProductAvailability(
@@ -62,6 +64,7 @@ class VendorProductsScreen extends ConsumerWidget {
                     });
                   } catch (_) {}
                   ref.invalidate(myProductsProvider);
+                  ref.invalidate(allProductsProvider);
                   ref.invalidate(featuredProductsProvider);
                   ref.invalidate(popularProductsProvider);
                 },
@@ -77,13 +80,106 @@ class VendorProductsScreen extends ConsumerWidget {
       ),
     );
   }
+
+  void _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    Map<String, dynamic> product,
+  ) {
+    final mealName = product['name'] as String? ?? 'هذه الأكلة';
+    final productId = product['id'] as String;
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.delete_forever_rounded,
+                color: AppColors.error, size: 28),
+            const SizedBox(width: 8),
+            const Expanded(
+              child: Text(
+                'حذف الأكلة من المنيو',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'هل أنت متأكد من رغبتك في حذف "$mealName" من قائمة الطعام؟',
+              style: const TextStyle(fontSize: 14, height: 1.4),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.warning.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: const [
+                  Icon(Icons.info_outline, color: AppColors.warning, size: 18),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'سيتم إخفاء الوجبة فوراً من تطبيق العملاء، مع الحفاظ الكامل على سجل الطلبات السابقة.',
+                      style: TextStyle(fontSize: 11, color: Colors.black87),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(dialogCtx).pop();
+              try {
+                await ref
+                    .read(vendorProductServiceProvider)
+                    .deleteMeal(productId);
+                if (context.mounted) {
+                  context.showSnack('تم حذف "$mealName" من المنيو بنجاح ✓');
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  context.showSnack('حدث خطأ: $e', isError: true);
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('تأكيد الحذف'),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _ProductTile extends StatelessWidget {
-  const _ProductTile(
-      {required this.product, required this.onEdit, required this.onToggle});
+  const _ProductTile({
+    required this.product,
+    required this.onEdit,
+    required this.onDelete,
+    required this.onToggle,
+  });
   final Map<String, dynamic> product;
   final VoidCallback onEdit;
+  final VoidCallback onDelete;
   final VoidCallback onToggle;
 
   Widget _buildImage(String? url) {
@@ -151,16 +247,37 @@ class _ProductTile extends StatelessWidget {
               ),
             ),
             Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined, size: 20),
-                  onPressed: onEdit,
-                  color: AppColors.primary,
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined, size: 20),
+                      onPressed: onEdit,
+                      color: AppColors.primary,
+                      tooltip: 'تعديل الوجبة',
+                      padding: const EdgeInsets.all(6),
+                      constraints: const BoxConstraints(),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline, size: 20),
+                      onPressed: onDelete,
+                      color: AppColors.error,
+                      tooltip: 'حذف الوجبة',
+                      padding: const EdgeInsets.all(6),
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 6),
                 Switch(
                   value: isAvailable,
                   onChanged: (_) => onToggle(),
                   activeColor: AppColors.success,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
               ],
             ),

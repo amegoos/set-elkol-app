@@ -1,0 +1,37 @@
+{
+  "rules": {
+    "products": {
+      ".read": true,
+      "$productId": {
+        // Only authenticated users can write:
+        // 1. Admin can write/edit/delete any product.
+        // 2. If new product, vendor_id must match authenticated user's uid.
+        // 3. If existing product, existing vendor_id must match authenticated user's uid.
+        ".write": "auth != null && (root.child('profiles').child(auth.uid).child('is_admin').val() === true || (data.exists() ? data.child('vendor_id').val() === auth.uid : newData.child('vendor_id').val() === auth.uid))",
+        ".validate": "newData.hasChildren(['name', 'price', 'vendor_id']) && newData.child('name').isString() && newData.child('price').isNumber() && newData.child('price').val() > 0"
+      }
+    },
+    "orders": {
+      ".read": "auth != null",
+      "$orderId": {
+        ".write": "auth != null"
+      }
+    },
+    "profiles": {
+      "$uid": {
+        ".read": true,
+        ".write": "auth != null && (auth.uid === $uid || root.child('profiles').child(auth.uid).child('is_admin').val() === true)"
+      }
+    },
+    "vendors": {
+      ".read": true,
+      "$vendorId": {
+        ".write": "auth != null && (auth.uid === $vendorId || root.child('profiles').child(auth.uid).child('is_admin').val() === true)"
+      }
+    },
+    "categories": {
+      ".read": true,
+      ".write": "auth != null && root.child('profiles').child(auth.uid).child('is_admin').val() === true"
+    }
+  }
+}

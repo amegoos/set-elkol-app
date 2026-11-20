@@ -92,6 +92,9 @@ class CartNotifier extends StateNotifier<CartState> {
   /// Multi-vendor cart supported! Any product from any vendor can be added.
   /// Always returns false (no conflict).
   bool addItem(Product product) {
+    if (!product.isAvailable || product.isDeleted) {
+      return false;
+    }
     final newItems = Map<String, CartItem>.from(state.items);
     if (newItems.containsKey(product.id)) {
       newItems[product.id]!.quantity++;
@@ -201,17 +204,20 @@ final selectedCategoryProvider = StateProvider<String?>((ref) => null);
 
 class AllProductsNotifier extends StateNotifier<AsyncValue<List<Product>>> {
   AllProductsNotifier(this._demoData, this._db)
-      : super(AsyncValue.data(_demoData.products)) {
+      : super(AsyncValue.data(
+            _demoData.products.where((p) => !p.isDeleted).toList())) {
     _init();
   }
 
   final DemoDataService _demoData;
   final FirebaseDatabase _db;
-  StreamSubscription? _sub;
+  StreamSubscription? _subChanged;
+  StreamSubscription? _subAdded;
+  StreamSubscription? _subRemoved;
 
   Future<void> _init() async {
     final Map<String, Product> productMap = {
-      for (final p in _demoData.products) p.id: p,
+      for (final p in _demoData.products.where((p) => !p.isDeleted)) p.id: p,
     };
 
     try {
@@ -224,8 +230,12 @@ class AllProductsNotifier extends StateNotifier<AsyncValue<List<Product>>> {
         for (final e in data.entries) {
           final map = Map<String, dynamic>.from(e.value as Map);
           map['id'] ??= e.key;
-          final prod = ProductModel.fromJson(map);
-          productMap[prod.id] = prod;
+          if (map['is_deleted'] == true) {
+            productMap.remove(map['id']);
+          } else {
+            final prod = ProductModel.fromJson(map);
+            productMap[prod.id] = prod;
+          }
         }
         if (mounted) {
           state = AsyncValue.data(productMap.values.toList());
@@ -235,13 +245,41 @@ class AllProductsNotifier extends StateNotifier<AsyncValue<List<Product>>> {
       debugPrint('[AllProductsNotifier] Firebase fetch note: $e');
     }
 
-    _sub = _db.ref('products').onChildChanged.listen((event) {
+    _subChanged = _db.ref('products').onChildChanged.listen((event) {
       if (!mounted) return;
       if (event.snapshot.value != null && event.snapshot.value is Map) {
         final map = Map<String, dynamic>.from(event.snapshot.value as Map);
-        map['id'] ??= event.snapshot.key;
-        final prod = ProductModel.fromJson(map);
-        productMap[prod.id] = prod;
+        final key = event.snapshot.key ?? map['id'];
+        if (key != null) map['id'] ??= key;
+        if (map['is_deleted'] == true) {
+          productMap.remove(key);
+        } else {
+          final prod = ProductModel.fromJson(map);
+          productMap[prod.id] = prod;
+        }
+        state = AsyncValue.data(productMap.values.toList());
+      }
+    });
+
+    _subAdded = _db.ref('products').onChildAdded.listen((event) {
+      if (!mounted) return;
+      if (event.snapshot.value != null && event.snapshot.value is Map) {
+        final map = Map<String, dynamic>.from(event.snapshot.value as Map);
+        final key = event.snapshot.key ?? map['id'];
+        if (key != null) map['id'] ??= key;
+        if (map['is_deleted'] != true) {
+          final prod = ProductModel.fromJson(map);
+          productMap[prod.id] = prod;
+          state = AsyncValue.data(productMap.values.toList());
+        }
+      }
+    });
+
+    _subRemoved = _db.ref('products').onChildRemoved.listen((event) {
+      if (!mounted) return;
+      final key = event.snapshot.key;
+      if (key != null) {
+        productMap.remove(key);
         state = AsyncValue.data(productMap.values.toList());
       }
     });
@@ -249,7 +287,9 @@ class AllProductsNotifier extends StateNotifier<AsyncValue<List<Product>>> {
 
   @override
   void dispose() {
-    _sub?.cancel();
+    _subChanged?.cancel();
+    _subAdded?.cancel();
+    _subRemoved?.cancel();
     super.dispose();
   }
 }
@@ -265,16 +305,17 @@ final allProductsProvider =
 
 final featuredProductsProvider = Provider<AsyncValue<List<Product>>>((ref) {
   final allAsync = ref.watch(allProductsProvider);
-  return allAsync.whenData(
-      (all) => all.where((p) => p.isFeatured && p.isAvailable).toList());
+  return allAsync.whenData((all) => all
+      .where((p) => p.isFeatured && p.isAvailable && !p.isDeleted)
+      .toList());
 });
 
 // ── Popular Products (Instant derived filter) ────────────────────────────────
 
 final popularProductsProvider = Provider<AsyncValue<List<Product>>>((ref) {
   final allAsync = ref.watch(allProductsProvider);
-  return allAsync
-      .whenData((all) => all.where((p) => p.isAvailable).toList());
+  return allAsync.whenData(
+      (all) => all.where((p) => p.isAvailable && !p.isDeleted).toList());
 });
 
 // ── Products by Category (Instant derived filter) ────────────────────────────
@@ -283,8 +324,13 @@ final productsByCategoryProvider =
     Provider.family<AsyncValue<List<Product>>, String?>((ref, categoryId) {
   final allAsync = ref.watch(allProductsProvider);
   return allAsync.whenData((all) {
-    if (categoryId == null) return all.where((p) => p.isAvailable).toList();
-    return all.where((p) => p.isAvailable && p.categoryId == categoryId).toList();
+    if (categoryId == null) {
+      return all.where((p) => p.isAvailable && !p.isDeleted).toList();
+    }
+    return all
+        .where((p) =>
+            p.isAvailable && !p.isDeleted && p.categoryId == categoryId)
+        .toList();
   });
 });
 
@@ -354,7 +400,9 @@ final vendorProductsProvider =
   return allAsync.whenData((all) {
     return all
         .where((p) =>
-            p.isAvailable && (vendorId.isEmpty || p.vendorId == vendorId))
+            p.isAvailable &&
+            !p.isDeleted &&
+            (vendorId.isEmpty || p.vendorId == vendorId))
         .toList();
   });
 });
@@ -371,6 +419,7 @@ final searchResultsProvider = Provider<AsyncValue<List<Product>>>((ref) {
   return allAsync.whenData((all) {
     return all.where((p) {
       return p.isAvailable &&
+          !p.isDeleted &&
           (p.name.toLowerCase().contains(query) ||
               (p.description?.toLowerCase().contains(query) ?? false) ||
               (p.category?.name.toLowerCase().contains(query) ?? false));

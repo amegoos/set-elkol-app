@@ -188,7 +188,9 @@ class DemoDataService extends ChangeNotifier {
   List<OrderModel> get customerOrders => List.unmodifiable(_customerOrders);
 
   List<Product> get products {
-    return _rawProducts.map((json) {
+    return _rawProducts
+        .where((json) => json['is_deleted'] != true)
+        .map((json) {
       final vendorMatch = _vendors.firstWhere(
         (v) => v.id == json['vendor_id'],
         orElse: () => _vendors.first,
@@ -213,6 +215,7 @@ class DemoDataService extends ChangeNotifier {
         isFeatured: json['is_featured'] as bool? ?? false,
         isVegetarian: json['is_vegetarian'] as bool? ?? false,
         isSpicy: json['is_spicy'] as bool? ?? false,
+        isDeleted: json['is_deleted'] as bool? ?? false,
         createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ??
             DateTime.now(),
         updatedAt: DateTime.tryParse(json['updated_at'] as String? ?? '') ??
@@ -692,6 +695,12 @@ class DemoDataService extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  @override
+  // ignore: must_call_super
+  void dispose() {
+    // Singleton pattern: prevent disposing the global singleton across test containers
   }
 }
 

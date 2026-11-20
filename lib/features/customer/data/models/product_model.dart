@@ -22,6 +22,7 @@ class ProductModel extends Product {
     super.preparationTimeMinutes,
     super.vendor,
     super.category,
+    super.isDeleted = false,
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
@@ -44,8 +45,13 @@ class ProductModel extends Product {
       isFeatured: json['is_featured'] as bool? ?? false,
       isVegetarian: json['is_vegetarian'] as bool? ?? false,
       isSpicy: json['is_spicy'] as bool? ?? false,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      isDeleted: json['is_deleted'] as bool? ?? false,
+      createdAt: json['created_at'] != null
+          ? (DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now())
+          : DateTime.now(),
+      updatedAt: json['updated_at'] != null
+          ? (DateTime.tryParse(json['updated_at'].toString()) ?? DateTime.now())
+          : DateTime.now(),
     );
   }
 
@@ -64,6 +70,7 @@ class ProductModel extends Product {
         'is_featured': isFeatured,
         'is_vegetarian': isVegetarian,
         'is_spicy': isSpicy,
+        'is_deleted': isDeleted,
         'created_at': createdAt.toIso8601String(),
         'updated_at': updatedAt.toIso8601String(),
       };

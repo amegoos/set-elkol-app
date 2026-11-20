@@ -22,6 +22,7 @@ class Product extends Equatable {
     this.preparationTimeMinutes,
     this.vendor,
     this.category,
+    this.isDeleted = false,
   });
 
   final String id;
@@ -38,6 +39,7 @@ class Product extends Equatable {
   final bool isFeatured;
   final bool isVegetarian;
   final bool isSpicy;
+  final bool isDeleted;
   final DateTime createdAt;
   final DateTime updatedAt;
   final Vendor? vendor;
@@ -61,6 +63,7 @@ class Product extends Equatable {
     bool? isFeatured,
     bool? isVegetarian,
     bool? isSpicy,
+    bool? isDeleted,
     DateTime? createdAt,
     DateTime? updatedAt,
     Vendor? vendor,
@@ -82,6 +85,7 @@ class Product extends Equatable {
       isFeatured: isFeatured ?? this.isFeatured,
       isVegetarian: isVegetarian ?? this.isVegetarian,
       isSpicy: isSpicy ?? this.isSpicy,
+      isDeleted: isDeleted ?? this.isDeleted,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       vendor: vendor ?? this.vendor,
@@ -105,6 +109,7 @@ class Product extends Equatable {
         isFeatured,
         isVegetarian,
         isSpicy,
+        isDeleted,
         createdAt,
         updatedAt,
         vendor,

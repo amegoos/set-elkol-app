@@ -15,6 +15,7 @@ import '../../../../core/widgets/app_smart_image.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/extensions/build_context_ext.dart';
 import '../../../../core/data/demo_data_service.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../customer/presentation/providers/customer_providers.dart';
 import '../providers/vendor_providers.dart';
 
@@ -60,11 +61,32 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
     }
   }
 
+  bool _verifyOwnership(Map<String, dynamic> data) {
+    final currentUserId = ref.read(firebaseAuthProvider).currentUser?.uid;
+    final profile = ref.read(authProvider).profile;
+    final isAdmin = profile?.isAdmin == true;
+    final ownerVendorId = data['vendor_id']?.toString();
+
+    if (currentUserId != null &&
+        ownerVendorId != null &&
+        ownerVendorId != currentUserId &&
+        !isAdmin) {
+      if (mounted) {
+        context.showSnack('غير مصرح لك بتعديل هذه الأكلة لأنها تابعة لمطبخ آخر.',
+            isError: true);
+        context.pop();
+      }
+      return false;
+    }
+    return true;
+  }
+
   Future<void> _loadProduct() async {
     final demoProducts = DemoDataService.instance.rawProducts;
     final match =
         demoProducts.where((p) => p['id'] == widget.productId).toList();
     if (match.isNotEmpty) {
+      if (!_verifyOwnership(match.first)) return;
       _fillFromMap(match.first);
       return;
     }
@@ -75,6 +97,7 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
       if (snapshot.exists && snapshot.value is Map && mounted) {
         final map = Map<String, dynamic>.from(snapshot.value as Map);
         map['id'] ??= widget.productId;
+        if (!_verifyOwnership(map)) return;
         _fillFromMap(map);
       }
     } catch (_) {}
@@ -166,7 +189,6 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
 
     try {
       final auth = ref.read(firebaseAuthProvider);
-      final db = ref.read(firebaseDatabaseProvider);
       final userId = auth.currentUser?.uid ?? 'demo-vendor-omahmed-002';
       final productId =
           widget.productId ?? 'prod-${DateTime.now().millisecondsSinceEpoch}';
@@ -194,29 +216,21 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
         'is_spicy': _isSpicy,
         'is_available': _isAvailable,
         'is_featured': _isFeatured,
-        'updated_at': DateTime.now().toIso8601String(),
       };
 
-      DemoDataService.instance.addOrUpdateProduct(productData);
-
-      try {
-        if (!isEditing) {
-          productData['created_at'] = DateTime.now().toIso8601String();
-        }
-        await db.ref('products/$productId').update(productData);
-      } catch (err) {
-        debugPrint('[ProductSave] Firebase sync error: $err');
+      if (isEditing) {
+        await ref.read(vendorProductServiceProvider).editMeal(
+              productId: widget.productId!,
+              updates: productData,
+            );
+      } else {
+        await ref.read(vendorProductServiceProvider).addMeal(productData);
       }
 
       if (!mounted) return;
       context.showSnack(isEditing
           ? 'تم تحديث الأكلة بنجاح ✓'
           : 'تم إضافة الأكلة إلى المنيو بنجاح ✓');
-
-      ref.invalidate(myProductsProvider);
-      ref.invalidate(featuredProductsProvider);
-      ref.invalidate(popularProductsProvider);
-      ref.invalidate(productsByCategoryProvider);
 
       context.pop();
     } catch (e) {
@@ -225,6 +239,93 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _confirmDelete() {
+    final mealName = _nameCtrl.text.trim().isNotEmpty
+        ? _nameCtrl.text.trim()
+        : 'هذه الأكلة';
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.delete_forever_rounded,
+                color: AppColors.error, size: 28),
+            const SizedBox(width: 8),
+            const Expanded(
+              child: Text(
+                'حذف الأكلة من المنيو',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'هل أنت متأكد من رغبتك في حذف "$mealName" من قائمة الطعام؟',
+              style: const TextStyle(fontSize: 14, height: 1.4),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.warning.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: const [
+                  Icon(Icons.info_outline, color: AppColors.warning, size: 18),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'سيتم إخفاء الوجبة فوراً من تطبيق العملاء، مع الحفاظ الكامل على سجل الطلبات السابقة.',
+                      style: TextStyle(fontSize: 11, color: Colors.black87),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(dialogCtx).pop();
+              setState(() => _isLoading = true);
+              try {
+                await ref
+                    .read(vendorProductServiceProvider)
+                    .deleteMeal(widget.productId!);
+                if (!mounted) return;
+                context.showSnack('تم حذف "$mealName" من المنيو بنجاح ✓');
+                context.pop();
+              } catch (e) {
+                if (!mounted) return;
+                context.showSnack('حدث خطأ أثناء الحذف: $e', isError: true);
+              } finally {
+                if (mounted) setState(() => _isLoading = false);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('تأكيد الحذف'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -242,6 +343,14 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
       appBar: AppBar(
         title: Text(isEditing ? 'تعديل الأكلة' : 'إضافة أكلة بيتي جديدة'),
         centerTitle: true,
+        actions: [
+          if (isEditing)
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: AppColors.error),
+              tooltip: 'حذف الأكلة',
+              onPressed: _isLoading ? null : _confirmDelete,
+            ),
+        ],
       ),
       body: Form(
         key: _formKey,
@@ -423,6 +532,28 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
                 onPressed: _save,
                 isLoading: _isLoading,
               ),
+              if (isEditing) ...[
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: _isLoading ? null : _confirmDelete,
+                  icon:
+                      const Icon(Icons.delete_outline, color: AppColors.error),
+                  label: const Text(
+                    'حذف هذه الأكلة من المنيو',
+                    style: TextStyle(
+                      color: AppColors.error,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.error),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: AppRadius.button,
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 24),
             ],
           ),
