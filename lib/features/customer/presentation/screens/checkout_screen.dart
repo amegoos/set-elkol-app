@@ -84,6 +84,22 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       final orderId = const Uuid().v4();
       final vendorId = cart.vendorId ?? '00000000-0000-0000-0000-000000000001';
 
+      // Security & Inventory Check: Validate no items in cart are deleted or unavailable
+      final invalidItems = cart.items.values
+          .where((item) => !item.product.isAvailable || item.product.isDeleted)
+          .toList();
+      if (invalidItems.isNotEmpty) {
+        if (mounted) {
+          final names = invalidItems.map((e) => e.product.name).join('، ');
+          context.showSnack(
+            'نعتذر، الوجبات التالية غير متوفرة حالياً: $names. يرجى إزالتها من السلة لإكمال الطلب.',
+            isError: true,
+          );
+          setState(() => _isLoading = false);
+        }
+        return;
+      }
+
       final String vendorName;
       if (cart.isMultiVendor) {
         final names = cart.itemsByVendor.values

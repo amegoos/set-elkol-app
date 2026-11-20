@@ -20,7 +20,12 @@
     "profiles": {
       "$uid": {
         ".read": true,
-        ".write": "auth != null && (auth.uid === $uid || root.child('profiles').child(auth.uid).child('is_admin').val() === true)"
+        // Regular users can only write their own profile, but CANNOT self-grant admin rights
+        ".write": "auth != null && (auth.uid === $uid || root.child('profiles').child(auth.uid).child('is_admin').val() === true)",
+        "is_admin": {
+          // Users cannot escalate privileges. Only an existing admin can set is_admin to true
+          ".validate": "newData.val() === false || root.child('profiles').child(auth.uid).child('is_admin').val() === true"
+        }
       }
     },
     "vendors": {
