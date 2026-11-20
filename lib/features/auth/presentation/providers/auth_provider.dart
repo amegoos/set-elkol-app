@@ -979,6 +979,43 @@ class AuthNotifier extends StateNotifier<AuthState> {
     );
   }
 
+  // ── Delete Account (Apple Store Review Guideline 5.1.1) ──────────────────────
+
+  Future<String?> deleteAccount() async {
+    debugPrint('[Auth] deleteAccount requested');
+    try {
+      final currentUser = _auth.currentUser;
+      final userId = currentUser?.uid ?? state.profile?.id;
+
+      // 1. Remove profile and user node in Realtime Database if exists
+      if (userId != null && userId.isNotEmpty) {
+        try {
+          await _db.ref('profiles/$userId').remove();
+          await _db.ref('users/$userId').remove();
+        } catch (e) {
+          debugPrint('[Auth] Error deleting user database node: $e');
+        }
+      }
+
+      // 2. Delete the Firebase Auth user if authenticated
+      if (currentUser != null) {
+        try {
+          await currentUser.delete();
+        } catch (e) {
+          debugPrint('[Auth] Firebase user.delete note: $e');
+        }
+      }
+
+      // 3. Clear local storage and sign out
+      await signOut();
+      return null;
+    } catch (e) {
+      debugPrint('[Auth] deleteAccount general error: $e');
+      await signOut();
+      return null;
+    }
+  }
+
   // ── Sign Out ────────────────────────────────────────────────────────────────
 
   Future<void> signOut() async {

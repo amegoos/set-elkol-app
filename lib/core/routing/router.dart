@@ -23,6 +23,7 @@ import '../../features/customer/presentation/screens/order_tracking_screen.dart'
 import '../../features/customer/presentation/screens/favorites_screen.dart';
 import '../../features/customer/presentation/screens/addresses_screen.dart';
 import '../../features/customer/presentation/screens/support_screen.dart';
+import '../../features/customer/presentation/screens/legal_screen.dart';
 import '../../features/vendor/presentation/screens/vendor_shell.dart';
 import '../../features/vendor/presentation/screens/vendor_dashboard_screen.dart';
 import '../../features/vendor/presentation/screens/vendor_products_screen.dart';
@@ -331,6 +332,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RouteNames.support,
         builder: (_, __) => const SupportScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.legal,
+        builder: (_, __) => const LegalScreen(),
       ),
       GoRoute(
         path: RouteNames.adminDashboard,

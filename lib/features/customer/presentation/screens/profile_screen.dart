@@ -220,10 +220,23 @@ class ProfileScreen extends ConsumerWidget {
                   },
                 ),
                 _MenuItem(
+                  icon: Icons.shield_outlined,
+                  label: isAr
+                      ? 'الشروط وسياسة الخصوصية'
+                      : 'Terms & Privacy Policy',
+                  onTap: () => context.push(RouteNames.legal),
+                ),
+                _MenuItem(
                   icon: Icons.logout,
                   label: isAr ? 'تسجيل الخروج' : 'Logout',
-                  color: AppColors.error,
+                  color: isDark ? Colors.orange.shade300 : Colors.orange.shade800,
                   onTap: () => _confirmLogout(context, ref),
+                ),
+                _MenuItem(
+                  icon: Icons.delete_forever_outlined,
+                  label: isAr ? 'حذف الحساب نهائياً' : 'Delete Account',
+                  color: AppColors.error,
+                  onTap: () => _confirmDeleteAccount(context, ref, isAr),
                 ),
               ],
             ),
@@ -508,6 +521,71 @@ class ProfileScreen extends ConsumerWidget {
               foregroundColor: Colors.white,
             ),
             child: const Text('تسجيل الخروج'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteAccount(BuildContext context, WidgetRef ref, bool isAr) {
+    showDialog(
+      context: context,
+      useRootNavigator: true,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded,
+                color: AppColors.error, size: 28),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                isAr ? 'حذف الحساب نهائياً' : 'Delete Account',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          isAr
+              ? 'تحذير: سيؤدي حذف الحساب إلى مسح جميع بياناتك، سجل طلباتك، وعناوينك بشكل دائم ولا يمكن التراجع عن هذا الإجراء.\n\nهل أنت متأكد من رغبتك في حذف الحساب نهائياً؟'
+              : 'Warning: Deleting your account will permanently remove all your profile data, order history, and addresses. This action cannot be undone.\n\nAre you sure you want to proceed?',
+          style: const TextStyle(
+            fontSize: 14,
+            height: 1.5,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(),
+            child: Text(isAr ? 'إلغاء' : 'Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(dialogCtx).pop();
+              context.showSnack(
+                isAr
+                    ? 'جاري حذف الحساب والبيانات...'
+                    : 'Deleting account and data...',
+              );
+              await ref.read(authProvider.notifier).deleteAccount();
+              if (context.mounted) {
+                context.showSnack(
+                  isAr
+                      ? 'تم حذف حسابك بنجاح. نتمنى رؤيتك مرة أخرى في ست الكل!'
+                      : 'Account deleted successfully.',
+                );
+                context.go(RouteNames.login);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(isAr ? 'نعم، احذف حسابي' : 'Yes, Delete Account'),
           ),
         ],
       ),

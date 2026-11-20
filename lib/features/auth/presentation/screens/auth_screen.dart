@@ -780,6 +780,34 @@ class _SignupTab extends StatelessWidget {
               onPressed: onSignup,
               isLoading: isLoading,
             ),
+            const SizedBox(height: 12),
+            Center(
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    'بالتسجيل، أنت توافق على ',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => context.push(RouteNames.legal),
+                    child: Text(
+                      'شروط الاستخدام وسياسة الخصوصية',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.primary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 16),
             _OrDivider(),
             const SizedBox(height: 16),
